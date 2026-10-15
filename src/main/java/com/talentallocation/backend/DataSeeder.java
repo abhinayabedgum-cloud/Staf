@@ -1,4 +1,4 @@
-package com.talentallocation.backend;
+﻿package com.talentallocation.backend;
 
 import com.talentallocation.backend.model.*;
 import com.talentallocation.backend.repository.*;
@@ -12,7 +12,7 @@ import java.util.List;
 
 /**
  * Seeds the database with synthetic test data on startup.
- * Uses SYNTHETIC data only — no real employee information.
+ * Uses SYNTHETIC data only â€” no real employee information.
  */
 @Configuration
 @RequiredArgsConstructor
@@ -47,53 +47,53 @@ public class DataSeeder {
             Skill kubernetes = skill(skillRepo, "Kubernetes", "DevOps", "Container orchestration with Kubernetes");
 
             // === EMPLOYEES (Synthetic Data) ===
-            Employee alice = employee(employeeRepo, "EMP001", "Alice Johnson", "New York",
-                Employee.EmploymentStatus.ACTIVE, "Engineering", "alice@example.com");
-            Employee bob = employee(employeeRepo, "EMP002", "Bob Smith", "London",
-                Employee.EmploymentStatus.ACTIVE, "Engineering", "bob@example.com");
-            Employee carol = employee(employeeRepo, "EMP003", "Carol Williams", "New York",
-                Employee.EmploymentStatus.ACTIVE, "Data Science", "carol@example.com");
-            Employee dave = employee(employeeRepo, "EMP004", "Dave Brown", "Berlin",
-                Employee.EmploymentStatus.ACTIVE, "DevOps", "dave@example.com");
-            Employee eve = employee(employeeRepo, "EMP005", "Eve Davis", "New York",
-                Employee.EmploymentStatus.ACTIVE, "Frontend", "eve@example.com");
-            Employee frank = employee(employeeRepo, "EMP006", "Frank Miller", "London",
-                Employee.EmploymentStatus.ON_LEAVE, "Engineering", "frank@example.com");
+            Employee ram = employee(employeeRepo, "EMP001", "Ram", "Hyderabad",
+                Employee.EmploymentStatus.ACTIVE, "Engineering", "ram@example.com");
+            Employee nikhil = employee(employeeRepo, "EMP002", "Nikhil", "Pune",
+                Employee.EmploymentStatus.ACTIVE, "Engineering", "nikhil@example.com");
+            Employee shree = employee(employeeRepo, "EMP003", "Shree", "Hyderabad",
+                Employee.EmploymentStatus.ACTIVE, "Data Science", "shree@example.com");
+            Employee preethi = employee(employeeRepo, "EMP004", "Preethi", "Pune",
+                Employee.EmploymentStatus.ACTIVE, "DevOps", "preethi@example.com");
+            Employee shruthi = employee(employeeRepo, "EMP005", "Shruthi", "Hyderabad",
+                Employee.EmploymentStatus.ACTIVE, "Frontend", "shruthi@example.com");
+            Employee ashu = employee(employeeRepo, "EMP006", "Ashu", "Pune",
+                Employee.EmploymentStatus.ON_LEAVE, "Engineering", "ashu@example.com");
 
             // === EMPLOYEE SKILLS ===
-            // Alice: Senior Java developer
-            empSkill(empSkillRepo, alice, java, 5, LocalDate.of(2024, 3, 15), "Oracle Java SE 17 Certified");
-            empSkill(empSkillRepo, alice, springBoot, 4, LocalDate.of(2024, 3, 15), "Built 3 production microservices");
-            empSkill(empSkillRepo, alice, sql, 3, LocalDate.of(2023, 6, 1), "PostgreSQL experience");
-            empSkill(empSkillRepo, alice, docker, 3, LocalDate.of(2023, 11, 1), "Docker Certified Associate");
+            // Ram: Senior Java developer
+            empSkill(empSkillRepo, ram, java, 5, LocalDate.of(2024, 3, 15), "Oracle Java SE 17 Certified");
+            empSkill(empSkillRepo, ram, springBoot, 4, LocalDate.of(2024, 3, 15), "Built 3 production microservices");
+            empSkill(empSkillRepo, ram, sql, 3, LocalDate.of(2023, 6, 1), "PostgreSQL experience");
+            empSkill(empSkillRepo, ram, docker, 3, LocalDate.of(2023, 11, 1), "Docker Certified Associate");
 
-            // Bob: Full stack, no ML
-            empSkill(empSkillRepo, bob, java, 3, LocalDate.of(2023, 8, 10), "Java Developer certification");
-            empSkill(empSkillRepo, bob, springBoot, 3, LocalDate.of(2023, 8, 10), "Spring Boot training completed");
-            empSkill(empSkillRepo, bob, react, 4, LocalDate.of(2024, 1, 20), "React advanced course");
-            empSkill(empSkillRepo, bob, sql, 4, LocalDate.of(2024, 2, 1), "MySQL DBA certification");
+            // Nikhil: Full stack, no ML
+            empSkill(empSkillRepo, nikhil, java, 3, LocalDate.of(2023, 8, 10), "Java Developer certification");
+            empSkill(empSkillRepo, nikhil, springBoot, 3, LocalDate.of(2023, 8, 10), "Spring Boot training completed");
+            empSkill(empSkillRepo, nikhil, react, 4, LocalDate.of(2024, 1, 20), "React advanced course");
+            empSkill(empSkillRepo, nikhil, sql, 4, LocalDate.of(2024, 2, 1), "MySQL DBA certification");
 
-            // Carol: Data scientist
-            empSkill(empSkillRepo, carol, python, 5, LocalDate.of(2024, 5, 1), "Python certified expert");
-            empSkill(empSkillRepo, carol, ml, 4, LocalDate.of(2024, 4, 1), "Kaggle Grandmaster");
-            empSkill(empSkillRepo, carol, sql, 3, LocalDate.of(2023, 9, 1), "Data analysis with SQL");
+            // Shree: Data scientist
+            empSkill(empSkillRepo, shree, python, 5, LocalDate.of(2024, 5, 1), "Python certified expert");
+            empSkill(empSkillRepo, shree, ml, 4, LocalDate.of(2024, 4, 1), "Kaggle Grandmaster");
+            empSkill(empSkillRepo, shree, sql, 3, LocalDate.of(2023, 9, 1), "Data analysis with SQL");
 
-            // Dave: DevOps expert
-            empSkill(empSkillRepo, dave, docker, 5, LocalDate.of(2024, 6, 1), "Docker certified expert");
-            empSkill(empSkillRepo, dave, kubernetes, 4, LocalDate.of(2024, 6, 1), "CKA certified");
-            empSkill(empSkillRepo, dave, aws, 4, LocalDate.of(2024, 3, 1), "AWS Solutions Architect");
+            // Preethi: DevOps expert
+            empSkill(empSkillRepo, preethi, docker, 5, LocalDate.of(2024, 6, 1), "Docker certified expert");
+            empSkill(empSkillRepo, preethi, kubernetes, 4, LocalDate.of(2024, 6, 1), "CKA certified");
+            empSkill(empSkillRepo, preethi, aws, 4, LocalDate.of(2024, 3, 1), "AWS Solutions Architect");
 
-            // Eve: Frontend developer
-            empSkill(empSkillRepo, eve, react, 5, LocalDate.of(2024, 7, 1), "React core team contributor");
-            empSkill(empSkillRepo, eve, python, 2, null, "Self-taught, no certification");
+            // Shruthi: Frontend developer
+            empSkill(empSkillRepo, shruthi, react, 5, LocalDate.of(2024, 7, 1), "React core team contributor");
+            empSkill(empSkillRepo, shruthi, python, 2, null, "Self-taught, no certification");
 
-            // Frank is on leave, no allocations
+            // Ashu is on leave, no allocations
 
             // === PROJECT DEMANDS ===
             demand(demandRepo, "Project Phoenix", "Senior Java Developer",
                 List.of(java.getId(), springBoot.getId()),
                 LocalDate.now().plusDays(5), LocalDate.now().plusDays(90),
-                "New York", 80, ProjectDemand.Priority.HIGH);
+                "Hyderabad", 80, ProjectDemand.Priority.HIGH);
 
             demand(demandRepo, "Data Platform", "Data Scientist",
                 List.of(python.getId(), ml.getId(), sql.getId()),
@@ -103,14 +103,14 @@ public class DataSeeder {
             demand(demandRepo, "Cloud Migration", "DevOps Engineer",
                 List.of(docker.getId(), kubernetes.getId(), aws.getId()),
                 LocalDate.now().plusDays(1), LocalDate.now().plusDays(60),
-                "Berlin", 50, ProjectDemand.Priority.MEDIUM);
+                "Pune", 50, ProjectDemand.Priority.MEDIUM);
 
             demand(demandRepo, "Frontend Revamp", "React Developer",
                 List.of(react.getId()),
                 LocalDate.now().plusDays(14), LocalDate.now().plusDays(75),
-                "New York", 100, ProjectDemand.Priority.LOW);
+                "Hyderabad", 100, ProjectDemand.Priority.LOW);
 
-            log.info("✅ Seeded: {} skills, {} employees, {} demands",
+            log.info("âœ… Seeded: {} skills, {} employees, {} demands",
                 skillRepo.count(), employeeRepo.count(), demandRepo.count());
         };
     }

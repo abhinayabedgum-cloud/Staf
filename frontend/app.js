@@ -246,7 +246,7 @@ function showCreateDemandModal() {
                         <option value="HIGH">High</option><option value="CRITICAL">Critical</option>
                     </select>
                 </div>
-                <div class="form-group"><label>Location</label><input type="text" id="df-location" placeholder="e.g. New York or Remote"></div>
+                <div class="form-group"><label>Location</label><input type="text" id="df-location" placeholder="e.g. Hyderabad, Pune or Remote"></div>
                 <div class="form-group full-width"><label>Required Skills (hold Ctrl to select multiple)</label>
                     <select id="df-skills" multiple style="height:120px">${opts}</select>
                 </div>
@@ -373,7 +373,7 @@ function showCreateEmployeeModal() {
             <div class="form-group"><label>Employee Code *</label><input type="text" id="ef-code" placeholder="e.g. EMP007" required></div>
             <div class="form-group"><label>Full Name *</label><input type="text" id="ef-name" placeholder="e.g. Jane Smith" required></div>
             <div class="form-group"><label>Email</label><input type="email" id="ef-email" placeholder="jane@example.com"></div>
-            <div class="form-group"><label>Location</label><input type="text" id="ef-location" placeholder="e.g. New York"></div>
+            <div class="form-group"><label>Location</label><input type="text" id="ef-location" placeholder="e.g. Hyderabad or Pune"></div>
             <div class="form-group"><label>Department</label><input type="text" id="ef-dept" placeholder="e.g. Engineering"></div>
             <div class="form-group"><label>Status *</label>
                 <select id="ef-status">
