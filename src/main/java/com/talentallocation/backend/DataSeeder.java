@@ -1,4 +1,4 @@
-﻿package com.talentallocation.backend;
+package com.talentallocation.backend;
 
 import com.talentallocation.backend.model.*;
 import com.talentallocation.backend.repository.*;
