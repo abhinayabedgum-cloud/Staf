@@ -469,3 +469,354 @@ code { font-family: monospace; background: rgba(99,102,241,0.1); border: 1px sol
     .stats-grid { grid-template-columns: 1fr; }
     .search-bar input { width: 130px; }
 }
+
+/* ============================================================
+   ENTERPRISE SKILLS MATRIX HEATMAP & VISUALIZATION SYSTEM
+   ============================================================ */
+
+/* Metric Summary Cards */
+.matrix-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+.metric-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: all var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+.metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: var(--grad-primary);
+    opacity: 0.6;
+}
+.metric-card:hover {
+    border-color: var(--border-hover);
+    box-shadow: var(--shadow-glow);
+    transform: translateY(-2px);
+}
+.metric-icon-box {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 18px;
+}
+.metric-icon-box.blue   { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+.metric-icon-box.green  { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+.metric-icon-box.purple { background: rgba(139, 92, 246, 0.15); color: #c084fc; border: 1px solid rgba(139, 92, 246, 0.3); }
+.metric-icon-box.amber  { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+
+.metric-info {
+    display: flex;
+    flex-direction: column;
+}
+.metric-value {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.15;
+}
+.metric-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    margin-top: 2px;
+}
+.metric-meta {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+/* Matrix Controls & Filters Toolbar */
+.matrix-toolbar {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    margin-bottom: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+}
+.matrix-filters-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    flex: 1;
+}
+.matrix-search-input {
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    color: var(--text-primary);
+    font-size: 13px;
+    min-width: 190px;
+    flex: 1;
+    max-width: 260px;
+}
+.matrix-select {
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    color: var(--text-primary);
+    font-size: 12.5px;
+    cursor: pointer;
+}
+.matrix-reset-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 7px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+.matrix-reset-btn:hover {
+    color: var(--text-primary);
+    border-color: var(--border-hover);
+}
+
+/* Legend */
+.matrix-legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 18px;
+    background: rgba(13, 20, 36, 0.6);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    margin-bottom: 16px;
+    font-size: 12px;
+}
+.legend-title {
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-right: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-secondary);
+    font-size: 11.5px;
+}
+
+/* Heatmap Badges & Cells */
+.heatmap-cell {
+    text-align: center;
+    padding: 8px 6px !important;
+    vertical-align: middle;
+}
+.heatmap-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 32px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    user-select: none;
+    margin: 0 auto;
+}
+.heatmap-badge:hover {
+    transform: scale(1.18);
+    z-index: 10;
+}
+
+/* Level 5: Green / Master */
+.heatmap-badge.lvl-5 {
+    background: rgba(16, 185, 129, 0.20);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.5);
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.15);
+}
+.heatmap-badge.lvl-5:hover {
+    background: rgba(16, 185, 129, 0.38);
+    box-shadow: 0 0 16px rgba(16, 185, 129, 0.45);
+}
+
+/* Level 4: Teal / Expert */
+.heatmap-badge.lvl-4 {
+    background: rgba(20, 184, 166, 0.18);
+    color: #2dd4bf;
+    border: 1px solid rgba(20, 184, 166, 0.45);
+    box-shadow: 0 0 8px rgba(20, 184, 166, 0.12);
+}
+.heatmap-badge.lvl-4:hover {
+    background: rgba(20, 184, 166, 0.35);
+    box-shadow: 0 0 16px rgba(20, 184, 166, 0.4);
+}
+
+/* Level 3: Blue / Advanced */
+.heatmap-badge.lvl-3 {
+    background: rgba(59, 130, 246, 0.18);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.45);
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.12);
+}
+.heatmap-badge.lvl-3:hover {
+    background: rgba(59, 130, 246, 0.35);
+    box-shadow: 0 0 16px rgba(59, 130, 246, 0.4);
+}
+
+/* Level 2: Amber / Intermediate */
+.heatmap-badge.lvl-2 {
+    background: rgba(245, 158, 11, 0.18);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.45);
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.12);
+}
+.heatmap-badge.lvl-2:hover {
+    background: rgba(245, 158, 11, 0.35);
+    box-shadow: 0 0 16px rgba(245, 158, 11, 0.4);
+}
+
+/* Level 1: Muted Red / Beginner */
+.heatmap-badge.lvl-1 {
+    background: rgba(239, 68, 68, 0.18);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.45);
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.12);
+}
+.heatmap-badge.lvl-1:hover {
+    background: rgba(239, 68, 68, 0.35);
+    box-shadow: 0 0 16px rgba(239, 68, 68, 0.4);
+}
+
+/* Empty / Missing / Not Rated */
+.heatmap-badge.lvl-none {
+    background: rgba(255, 255, 255, 0.02);
+    color: var(--text-muted);
+    border: 1px dashed rgba(255, 255, 255, 0.12);
+    font-size: 14px;
+    font-weight: 400;
+}
+.heatmap-badge.lvl-none:hover {
+    background: rgba(99, 102, 241, 0.08);
+    border-color: rgba(99, 102, 241, 0.3);
+    color: var(--text-secondary);
+}
+
+/* Table Header for Employees */
+.emp-col-header {
+    cursor: pointer;
+    transition: all var(--transition);
+    padding: 10px 8px !important;
+    text-align: center;
+}
+.emp-col-header:hover {
+    background: rgba(99, 102, 241, 0.08);
+}
+.emp-col-header:hover .emp-col-name {
+    color: var(--accent-primary);
+}
+.emp-col-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--grad-primary);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+    box-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+}
+.emp-col-name {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--text-primary);
+    transition: color var(--transition);
+}
+
+/* Horizontal Proficiency Progress Bars (for Details View) */
+.skill-bar-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    transition: all var(--transition);
+}
+.skill-bar-card:hover {
+    border-color: var(--border-hover);
+}
+.skill-bar-card.highlighted {
+    border-color: var(--accent-primary);
+    background: rgba(99, 102, 241, 0.08);
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.15);
+}
+.skill-bar-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+.skill-bar-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.skill-bar-score {
+    font-size: 12px;
+    font-weight: 700;
+}
+.skill-bar-track {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+.skill-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.skill-bar-fill.lvl-5 { background: linear-gradient(90deg, #10b981, #34d399); box-shadow: 0 0 10px rgba(16,185,129,0.5); }
+.skill-bar-fill.lvl-4 { background: linear-gradient(90deg, #0d9488, #2dd4bf); box-shadow: 0 0 10px rgba(20,184,166,0.5); }
+.skill-bar-fill.lvl-3 { background: linear-gradient(90deg, #2563eb, #60a5fa); box-shadow: 0 0 10px rgba(59,130,246,0.5); }
+.skill-bar-fill.lvl-2 { background: linear-gradient(90deg, #d97706, #fbbf24); box-shadow: 0 0 10px rgba(245,158,11,0.5); }
+.skill-bar-fill.lvl-1 { background: linear-gradient(90deg, #dc2626, #f87171); box-shadow: 0 0 10px rgba(239,68,68,0.5); }
+
+.skill-bar-meta {
+    margin-top: 8px;
+    font-size: 11.5px;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}

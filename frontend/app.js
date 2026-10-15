@@ -447,62 +447,340 @@ async function showAddSkillModal(empId, empName) {
     });
 }
 
-async function showEmployeeDetail(id) {
+// State for Skills Matrix interactive filtering
+let matrixState = {
+    skills: [],
+    employees: [],
+    search: '',
+    category: 'ALL',
+    minLevel: 'ALL',
+    employeeId: 'ALL'
+};
+
+function getProfColorClass(level) {
+    if (level === 5) return 'lvl-5';
+    if (level === 4) return 'lvl-4';
+    if (level === 3) return 'lvl-3';
+    if (level === 2) return 'lvl-2';
+    if (level === 1) return 'lvl-1';
+    return 'lvl-none';
+}
+
+async function showEmployeeDetail(id, highlightSkillName = null) {
     const emp = await apiFetch(`/employees/${id}`);
-    openModal(`${emp.name} - Profile`, `
-    <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:20px">
-        <div class="candidate-avatar" style="width:64px;height:64px;font-size:24px;border-radius:12px">${emp.name.charAt(0)}</div>
-        <div>
-            <div style="font-size:18px;font-weight:700">${emp.name}</div>
-            <div style="color:var(--text-secondary)">${emp.employeeCode} &bull; ${emp.department || 'N/A'} &bull; ${IC.loc} ${emp.location || 'N/A'}</div>
-            <div style="margin-top:8px">${badgeHtml(emp.employmentStatus, emp.employmentStatus === 'ACTIVE' ? 'active' : 'on-leave')}</div>
+    const skillsList = emp.skills || [];
+    const avgScore = skillsList.length
+        ? (skillsList.reduce((acc, s) => acc + s.proficiencyLevel, 0) / skillsList.length).toFixed(1)
+        : '0.0';
+
+    openModal(`${emp.name} &bull; Skill Profile`, `
+    <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border-color)">
+        <div class="candidate-avatar" style="width:60px;height:60px;font-size:22px;border-radius:12px">${emp.name.charAt(0)}</div>
+        <div style="flex:1">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-size:18px;font-weight:700;color:var(--text-primary)">${emp.name}</span>
+                <button class="btn btn-primary btn-sm" onclick="closeModal();showAddSkillModal(${emp.id}, '${emp.name}')">${IC.plus} Add Skill</button>
+            </div>
+            <div style="color:var(--text-secondary);font-size:12.5px;margin-top:2px">
+                ${emp.employeeCode} &bull; ${emp.department || 'Engineering'} &bull; ${IC.loc} ${emp.location || 'N/A'}
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+                ${badgeHtml(emp.employmentStatus, emp.employmentStatus === 'ACTIVE' ? 'active' : 'on-leave')}
+                <span class="badge" style="background:rgba(99,102,241,0.12);color:var(--text-accent);border:1px solid rgba(99,102,241,0.25)">
+                    ${skillsList.length} Skills &bull; Avg ${avgScore}/5
+                </span>
+            </div>
         </div>
     </div>
-    <div class="card-title" style="margin-bottom:12px">Skills</div>
-    ${!(emp.skills||[]).length ? '<div style="color:var(--text-muted)">No skills recorded</div>' :
-    emp.skills.map(s => `
-        <div style="margin-bottom:12px;padding:12px;background:var(--bg-secondary);border-radius:8px">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-                <span style="font-weight:600">${s.skillName}</span>
-                <span class="skill-tag">${s.category}</span>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <span class="card-title" style="font-size:14px">Competency &amp; Verified Proficiency</span>
+        <span style="font-size:11.5px;color:var(--text-muted)">Scale: 1 (Beginner) to 5 (Master)</span>
+    </div>
+
+    ${!skillsList.length ? '<div style="color:var(--text-muted);text-align:center;padding:24px 0">No skills currently recorded for this employee.</div>' :
+    skillsList.map(s => {
+        const isTarget = highlightSkillName && s.skillName.toLowerCase() === highlightSkillName.toLowerCase();
+        const pct = Math.min(100, Math.max(0, (s.proficiencyLevel / 5) * 100));
+        const colorCls = getProfColorClass(s.proficiencyLevel);
+        return `
+        <div class="skill-bar-card ${isTarget ? 'highlighted' : ''}">
+            <div class="skill-bar-top">
+                <div class="skill-bar-name">
+                    <span>${s.skillName}</span>
+                    <span class="skill-tag">${s.category}</span>
+                    ${isTarget ? '<span class="badge badge-active" style="font-size:10px">Selected in Matrix</span>' : ''}
+                </div>
+                <div class="skill-bar-score" style="color:var(--text-primary)">
+                    <span style="font-size:14px;font-weight:800">${s.proficiencyLevel}/5</span>
+                    <span style="color:var(--text-secondary);margin-left:4px">(${getProfLabel(s.proficiencyLevel)})</span>
+                </div>
             </div>
-            ${proficiencyDots(s.proficiencyLevel)}
-            <div style="font-size:12px;color:var(--text-muted);margin-top:4px">
-                ${s.lastValidatedAt ? 'Validated: ' + s.lastValidatedAt : 'Not validated'} &bull; ${s.evidence || 'No evidence'}
+            <div class="skill-bar-track">
+                <div class="skill-bar-fill ${colorCls}" style="width:${pct}%"></div>
             </div>
-        </div>`).join('')}`);
+            <div class="skill-bar-meta">
+                <span>${s.lastValidatedAt ? '✓ Validated: ' + s.lastValidatedAt : 'Validation pending'}</span>
+                <span>${s.evidence ? 'Evidence: ' + s.evidence : 'Self-reported'}</span>
+            </div>
+        </div>`;
+    }).join('')}`);
+}
+
+function showCellDetail(empId, skillName) {
+    showEmployeeDetail(empId, skillName);
 }
 
 // ============================================================
-// SKILLS MATRIX
+// SKILLS MATRIX HEATMAP SYSTEM
 // ============================================================
 async function renderSkills() {
     showLoading();
     try {
         const [skills, employees] = await Promise.all([apiFetch('/skills'), apiFetch('/employees')]);
-        setPageContent(`
-        <div class="section-header">
-            <span class="section-title">Skills Matrix</span>
-            <button class="btn btn-primary" onclick="showAddSkillCatalogModal()">${IC.plus} Add Skill</button>
-        </div>
-        <div class="card">
-            <div class="table-container"><table>
-                <thead><tr>
-                    <th>Skill</th><th>Category</th>
-                    ${employees.map(e => `<th style="font-size:11px;max-width:80px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.name.split(' ')[0]}</th>`).join('')}
-                </tr></thead>
-                <tbody>${skills.map(skill => {
-                    const cells = employees.map(emp => {
-                        const es = (emp.skills||[]).find(s => s.skillName === skill.name);
-                        return es
-                            ? `<td style="text-align:center">${proficiencyDots(es.proficiencyLevel)}</td>`
-                            : `<td style="text-align:center;color:var(--text-muted)">-</td>`;
-                    }).join('');
-                    return `<tr><td><strong>${skill.name}</strong></td><td><span class="skill-tag">${skill.category}</span></td>${cells}</tr>`;
-                }).join('')}</tbody>
-            </table></div>
-        </div>`);
+        matrixState.skills = skills || [];
+        matrixState.employees = employees || [];
+        renderSkillsMatrixView();
     } catch (err) { showApiError(err); }
+}
+
+function updateMatrixFilter(key, val) {
+    matrixState[key] = val;
+    renderSkillsMatrixView();
+}
+
+function resetMatrixFilters() {
+    matrixState.search = '';
+    matrixState.category = 'ALL';
+    matrixState.minLevel = 'ALL';
+    matrixState.employeeId = 'ALL';
+    renderSkillsMatrixView();
+}
+
+function renderSkillsMatrixView() {
+    const { skills, employees, search, category, minLevel, employeeId } = matrixState;
+
+    // 1. Calculate dynamic summary statistics
+    const totalEmployees = employees.length;
+    const activeEmployees = employees.filter(e => e.employmentStatus === 'ACTIVE').length;
+    const totalSkills = skills.length;
+
+    let totalRatingsCount = 0;
+    const skillRatingCounts = {};
+    skills.forEach(s => skillRatingCounts[s.name] = 0);
+
+    employees.forEach(emp => {
+        (emp.skills || []).forEach(es => {
+            totalRatingsCount++;
+            if (skillRatingCounts[es.skillName] !== undefined) {
+                skillRatingCounts[es.skillName]++;
+            }
+        });
+    });
+
+    // Skills requiring development: 0 employees rated or only 1 employee rated
+    const devNeededCount = skills.filter(s => (skillRatingCounts[s.name] || 0) <= 1).length;
+
+    // Unique categories for filter dropdown
+    const categories = Array.from(new Set(skills.map(s => s.category))).sort();
+
+    // 2. Filter skills based on search, category, and minimum proficiency
+    let filteredSkills = skills.filter(skill => {
+        // Text search
+        if (search) {
+            const q = search.toLowerCase();
+            const matchName = skill.name.toLowerCase().includes(q);
+            const matchCat = skill.category.toLowerCase().includes(q);
+            if (!matchName && !matchCat) return false;
+        }
+
+        // Category filter
+        if (category !== 'ALL' && skill.category !== category) {
+            return false;
+        }
+
+        // Proficiency level filter
+        if (minLevel !== 'ALL') {
+            const hasMatchingLevel = employees.some(emp => {
+                const es = (emp.skills || []).find(s => s.skillName === skill.name);
+                if (!es) return minLevel === 'NONE';
+                if (minLevel === 'NONE') return false;
+                return es.proficiencyLevel >= parseInt(minLevel);
+            });
+            if (!hasMatchingLevel) return false;
+        }
+
+        return true;
+    });
+
+    // 3. Filter employees (if specific employee selected in filter)
+    let displayEmployees = employees;
+    if (employeeId !== 'ALL') {
+        displayEmployees = employees.filter(e => e.id == employeeId);
+    }
+
+    setPageContent(`
+    <!-- Page Header -->
+    <div class="section-header" style="margin-bottom:16px">
+        <div>
+            <div class="section-title">Enterprise Skills Matrix</div>
+            <div style="font-size:12.5px;color:var(--text-secondary);margin-top:2px">
+                Color-coded numeric competency heatmap for enterprise workforce planning and skill gap analysis.
+            </div>
+        </div>
+        <button class="btn btn-primary" onclick="showAddSkillCatalogModal()">${IC.plus} Add Skill to Catalog</button>
+    </div>
+
+    <!-- 1. Dynamic Summary Metrics Cards -->
+    <div class="matrix-metrics">
+        <div class="metric-card">
+            <div class="metric-icon-box blue">${IC.employees}</div>
+            <div class="metric-info">
+                <span class="metric-value">${activeEmployees} <span style="font-size:13px;font-weight:500;color:var(--text-secondary)">/ ${totalEmployees}</span></span>
+                <span class="metric-label">Active Workforce</span>
+                <span class="metric-meta">Assigned across departments</span>
+            </div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-icon-box purple">${IC.skills}</div>
+            <div class="metric-info">
+                <span class="metric-value">${totalSkills}</span>
+                <span class="metric-label">Competency Catalog</span>
+                <span class="metric-meta">${categories.length} skill domains tracked</span>
+            </div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-icon-box green">${IC.check}</div>
+            <div class="metric-info">
+                <span class="metric-value">${totalRatingsCount}</span>
+                <span class="metric-label">Verified Ratings</span>
+                <span class="metric-meta">Across employee profiles</span>
+            </div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-icon-box amber">${IC.warn}</div>
+            <div class="metric-info">
+                <span class="metric-value">${devNeededCount}</span>
+                <span class="metric-label">Coverage Gap Skills</span>
+                <span class="metric-meta">0-1 rated specialists</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Search & Filters Toolbar -->
+    <div class="matrix-toolbar">
+        <div class="matrix-filters-group">
+            <input type="text" class="matrix-search-input" placeholder="Search skill or category..." 
+                   value="${escapeHtml(search)}" oninput="updateMatrixFilter('search', this.value)">
+
+            <select class="matrix-select" onchange="updateMatrixFilter('category', this.value)">
+                <option value="ALL" ${category === 'ALL' ? 'selected' : ''}>All Categories (${categories.length})</option>
+                ${categories.map(c => `<option value="${c}" ${category === c ? 'selected' : ''}>${c}</option>`).join('')}
+            </select>
+
+            <select class="matrix-select" onchange="updateMatrixFilter('minLevel', this.value)">
+                <option value="ALL" ${minLevel === 'ALL' ? 'selected' : ''}>All Proficiency Levels</option>
+                <option value="5" ${minLevel === '5' ? 'selected' : ''}>Level 5: Master Only</option>
+                <option value="4" ${minLevel === '4' ? 'selected' : ''}>Level 4+: Expert or Master</option>
+                <option value="3" ${minLevel === '3' ? 'selected' : ''}>Level 3+: Advanced and above</option>
+                <option value="1" ${minLevel === '1' ? 'selected' : ''}>Has Any Rating (1-5)</option>
+                <option value="NONE" ${minLevel === 'NONE' ? 'selected' : ''}>Unrated / Coverage Gaps</option>
+            </select>
+
+            <select class="matrix-select" onchange="updateMatrixFilter('employeeId', this.value)">
+                <option value="ALL" ${employeeId === 'ALL' ? 'selected' : ''}>All Employees (${employees.length})</option>
+                ${employees.map(e => `<option value="${e.id}" ${employeeId == e.id ? 'selected' : ''}>${e.name}</option>`).join('')}
+            </select>
+
+            ${(search || category !== 'ALL' || minLevel !== 'ALL' || employeeId !== 'ALL') ? `
+                <button class="matrix-reset-btn" onclick="resetMatrixFilters()">Reset Filters</button>
+            ` : ''}
+        </div>
+        <div style="font-size:12px;color:var(--text-secondary);font-weight:500">
+            Showing <strong>${filteredSkills.length}</strong> of ${skills.length} skills
+        </div>
+    </div>
+
+    <!-- 3. Heatmap Proficiency Legend -->
+    <div class="matrix-legend">
+        <span class="legend-title">Proficiency Scale:</span>
+        <span class="legend-item"><span class="heatmap-badge lvl-5" style="width:24px;height:20px;font-size:11px">5</span> Master</span>
+        <span class="legend-item"><span class="heatmap-badge lvl-4" style="width:24px;height:20px;font-size:11px">4</span> Expert</span>
+        <span class="legend-item"><span class="heatmap-badge lvl-3" style="width:24px;height:20px;font-size:11px">3</span> Advanced</span>
+        <span class="legend-item"><span class="heatmap-badge lvl-2" style="width:24px;height:20px;font-size:11px">2</span> Intermediate</span>
+        <span class="legend-item"><span class="heatmap-badge lvl-1" style="width:24px;height:20px;font-size:11px">1</span> Beginner</span>
+        <span class="legend-item"><span class="heatmap-badge lvl-none" style="width:24px;height:20px;font-size:11px">&mdash;</span> Not Rated</span>
+        <span style="margin-left:auto;font-size:11px;color:var(--text-muted)">Tip: Click any cell or employee name for deep-dive profile</span>
+    </div>
+
+    <!-- 4. Heatmap Matrix Table -->
+    <div class="card" style="padding:0;overflow:hidden">
+        <div class="table-container" style="max-height:680px;overflow:auto">
+            <table class="matrix-table" style="margin:0">
+                <thead style="position:sticky;top:0;background:var(--bg-card);z-index:5;box-shadow:0 2px 8px rgba(0,0,0,0.3)">
+                    <tr>
+                        <th style="min-width:180px;text-align:left">Skill</th>
+                        <th style="min-width:130px;text-align:left">Category</th>
+                        ${displayEmployees.map(e => `
+                            <th class="emp-col-header" onclick="showEmployeeDetail(${e.id})" title="Click to view ${escapeHtml(e.name)}'s complete profile">
+                                <div class="emp-col-avatar">${e.name.charAt(0)}</div>
+                                <div class="emp-col-name">${escapeHtml(e.name.split(' ')[0])}</div>
+                            </th>
+                        `).join('')}
+                    </tr>
+                </thead>
+                <tbody>
+                    ${!filteredSkills.length ? `
+                        <tr><td colspan="${displayEmployees.length + 2}" style="text-align:center;padding:36px;color:var(--text-muted)">
+                            No skills found matching your search and filter criteria.
+                        </td></tr>
+                    ` :
+                    filteredSkills.map(skill => {
+                        const cells = displayEmployees.map(emp => {
+                            const es = (emp.skills || []).find(s => s.skillName === skill.name);
+                            if (es) {
+                                const lvl = es.proficiencyLevel;
+                                const lbl = getProfLabel(lvl);
+                                const cls = getProfColorClass(lvl);
+                                const titleTxt = `${emp.name}: Level ${lvl} (${lbl}) - ${skill.name}`;
+                                return `
+                                <td class="heatmap-cell">
+                                    <div class="heatmap-badge ${cls}" title="${escapeHtml(titleTxt)}" 
+                                         onclick="showCellDetail(${emp.id}, '${escapeHtml(skill.name)}')">
+                                        ${lvl}
+                                    </div>
+                                </td>`;
+                            } else {
+                                const titleTxt = `${emp.name} is not rated for ${skill.name}. Click to add.`;
+                                return `
+                                <td class="heatmap-cell">
+                                    <div class="heatmap-badge lvl-none" title="${escapeHtml(titleTxt)}" 
+                                         onclick="showAddSkillModal(${emp.id}, '${escapeHtml(emp.name)}')">
+                                        &mdash;
+                                    </div>
+                                </td>`;
+                            }
+                        }).join('');
+
+                        return `
+                        <tr>
+                            <td>
+                                <strong style="color:var(--text-primary);font-size:13.5px">${escapeHtml(skill.name)}</strong>
+                                ${skill.description ? `<br><small style="color:var(--text-muted);font-size:11px">${escapeHtml(skill.description)}</small>` : ''}
+                            </td>
+                            <td><span class="skill-tag">${escapeHtml(skill.category)}</span></td>
+                            ${cells}
+                        </tr>`;
+                    }).join('')}
+                </tbody>
+            </table>
+        </div>
+    </div>`);
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
 function showAddSkillCatalogModal() {
