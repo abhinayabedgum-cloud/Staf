@@ -86,18 +86,21 @@ const authState = {
 
         if (this.isManager()) {
             container.innerHTML = `
-                <div style="display:flex;align-items:center;gap:10px">
-                    <button type="button" onclick="router.navigate('portal'); switchPortalTab('employee');" style="display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:6px 14px;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.35);color:#c7d2fe;border-radius:20px;cursor:pointer;font-weight:600">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                        Employee Portal
-                    </button>
+                <div style="display:flex;align-items:center;gap:12px">
+                    <div style="position:relative;display:inline-flex;align-items:center">
+                        <select id="portalViewDropdown" onchange="handleViewSwitch(this.value)" style="appearance:none;-webkit-appearance:none;background:rgba(99,102,241,0.18);border:1.5px solid rgba(99,102,241,0.45);color:#ffffff;padding:7px 32px 7px 14px;border-radius:20px;font-size:12.5px;font-weight:700;cursor:pointer;outline:none">
+                            <option value="manager" ${router.currentPage !== 'portal' ? 'selected' : ''} style="background:#0f172a;color:#ffffff">Manager View</option>
+                            <option value="employee" ${router.currentPage === 'portal' && portalActiveTab === 'employee' ? 'selected' : ''} style="background:#0f172a;color:#ffffff">Employee View</option>
+                        </select>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="position:absolute;right:12px;pointer-events:none;color:#a5b4fc"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
                     <div class="user-session-pill">
                         <div class="user-session-avatar" style="background:var(--accent-warning);color:#111827">M</div>
                         <div class="user-session-info">
                             <span class="user-session-name">Manager Cockpit</span>
                             <span class="user-session-role">ROLE_MANAGER</span>
                         </div>
-                        <button class="btn-logout" onclick="logout()" title="Switch Access / Logout">Exit</button>
+                        <button class="btn-logout" onclick="managerExit()" title="Logout / Exit">Exit</button>
                     </div>
                 </div>
             `;
@@ -2529,6 +2532,32 @@ function switchPortalTab(tab) {
     renderPortal();
 }
 
+function handleViewSwitch(val) {
+    if (val === 'employee') {
+        portalActiveTab = 'employee';
+        router.navigate('portal');
+    } else {
+        portalActiveTab = 'manager';
+        if (authState.isManager()) {
+            router.navigate('dashboard');
+        } else {
+            router.navigate('portal');
+        }
+    }
+}
+
+function managerExit() {
+    authState.clearSession();
+    portalActiveTab = 'manager';
+    router.navigate('portal');
+    showToast('Signed out. Please enter credentials to access Manager Portal.', 'info');
+}
+
+function exitToManagerLogin() {
+    portalActiveTab = 'manager';
+    renderPortal();
+}
+
 async function doManagerLogin() {
     const userEl = document.getElementById('mgrLoginEmail');
     const passEl = document.getElementById('mgrLoginPassword');
@@ -2714,10 +2743,16 @@ function renderPortalEmployeeView() {
     return `
     <div class="portal-white-card">
         <!-- HEADER -->
-        <div class="pwc-header">
-            <span class="pwc-badge">Employee Workforce Portal</span>
-            <h1 class="pwc-title">Workforce Profile &amp; Project Allocation</h1>
-            <p class="pwc-subtitle">Update your personal details, current project allocation, skills, and availability for profile and resource staffing analysis.</p>
+        <div class="pwc-header" style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div>
+                <span class="pwc-badge">Employee Workforce Portal</span>
+                <h1 class="pwc-title">Workforce Profile &amp; Project Allocation</h1>
+                <p class="pwc-subtitle">Update your personal details, current project allocation, skills, and availability for profile and resource staffing analysis.</p>
+            </div>
+            <button type="button" onclick="exitToManagerLogin()" style="display:inline-flex;align-items:center;gap:6px;background:#f8fafc;border:1.5px solid #cbd5e1;color:#334155;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all 0.2s ease" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Exit
+            </button>
         </div>
 
         ${ssState.submitSuccess ? `
@@ -3731,6 +3766,9 @@ async function ssSubmitProfile() {
 
 // Global window bindings for inline HTML handlers
 window.switchPortalTab = switchPortalTab;
+window.handleViewSwitch = handleViewSwitch;
+window.managerExit = managerExit;
+window.exitToManagerLogin = exitToManagerLogin;
 window.doManagerLogin = doManagerLogin;
 window.onPortalEmployeeChange = onPortalEmployeeChange;
 window.ssSubmitProfileDirect = ssSubmitProfileDirect;
@@ -4205,14 +4243,17 @@ document.addEventListener('DOMContentLoaded', () => {
     authState.updateSessionUI();
     authState.updateNavPermissions();
 
+    // Ensure manager session by default for the demo call
+    if (!authState.isManager()) {
+        authState.setSession('mgr-active-token', 'ROLE_MANAGER', { username: 'manager', role: 'ROLE_MANAGER', name: 'Resource Manager' });
+    }
+
     const initialHash = window.location.hash.replace('#', '');
-    let initialPage = 'portal';
-    if (authState.isManager()) {
-        initialPage = (pageTitles[initialHash] && initialHash !== 'portal' && initialHash !== 'self-service') ? initialHash : 'dashboard';
-    } else if (authState.isEmployee()) {
-        initialPage = 'self-service';
-    } else {
+    let initialPage = 'dashboard';
+    if (initialHash === 'portal' && portalActiveTab === 'employee') {
         initialPage = 'portal';
+    } else if (pageTitles[initialHash] && initialHash !== 'portal' && initialHash !== 'self-service') {
+        initialPage = initialHash;
     }
     router.navigate(initialPage);
 });
