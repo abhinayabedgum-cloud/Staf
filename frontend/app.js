@@ -27,6 +27,7 @@ const IC = {
     logo:      `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
     bell:      `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`,
     menu:      `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>`,
+    send:      `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`,
 };
 
 // ============================================================
@@ -1601,74 +1602,320 @@ async function cancelAllocation(id) {
 // ============================================================
 // AI ASSISTANT
 // ============================================================
+
+function formatAgentText(text) {
+    if (!text) return '';
+    return escapeHtml(text)
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>');
+}
+
+function generateTargetedAgentAnswer(question, candidates, demandText) {
+    const q = (question || '').toLowerCase().trim();
+    
+    // Check if asking about best candidate or top match
+    if (q.includes('best') || q.includes('top') || q.includes('who is') || q.includes('recommend') || q.includes('winner')) {
+        if (candidates.length > 0) {
+            const top = candidates[0];
+            const matchingSkills = (top.matchedSkills || []).map(s => `<strong>${escapeHtml(s.skillName)}</strong> (${s.proficiencyLabel || 'Level ' + s.proficiencyLevel})`).join(', ');
+            return `Based on verified skills, availability, and location compatibility for <strong>${escapeHtml(demandText)}</strong>, the top recommended candidate is <strong>${escapeHtml(top.employeeName)}</strong> (${escapeHtml(top.department)}) with an overall score of <strong>${top.totalScore}/100</strong>.<br><br>
+            &bull; <strong>Matching Skills:</strong> ${matchingSkills || 'General profile fit'}<br>
+            &bull; <strong>Capacity:</strong> ${top.availablePercent}% available for the project window<br>
+            &bull; <strong>Location:</strong> Based in ${escapeHtml(top.location || 'N/A')}<br>
+            ${top.missingSkills && top.missingSkills.length ? `&bull; <em>Note: Missing ${top.missingSkills.map(m => m.skillName).join(', ')}</em>` : '&bull; <strong>Full skill requirements satisfied.</strong>'}`;
+        }
+    }
+    
+    // Check if asking about missing skills or gaps or training
+    if (q.includes('missing') || q.includes('gap') || q.includes('training') || q.includes('course') || q.includes('learn')) {
+        const withGaps = candidates.filter(c => c.missingSkills && c.missingSkills.length > 0);
+        if (withGaps.length === 0) {
+            return `All evaluated candidates satisfy the required skill set for <strong>${escapeHtml(demandText)}</strong> with no critical skill gaps identified.`;
+        }
+        let gapList = withGaps.slice(0, 4).map(c => {
+            const skills = c.missingSkills.map(m => `<code>${escapeHtml(m.skillName)}</code>`).join(', ');
+            const rec = c.missingSkills[0]?.trainingRecommendation || 'Enroll in relevant certification course';
+            return `&bull; <strong>${escapeHtml(c.employeeName)}</strong>: Missing ${skills} &mdash; <em>${escapeHtml(rec)}</em>`;
+        }).join('<br>');
+        return `Here is the skill gap analysis for <strong>${escapeHtml(demandText)}</strong>:<br><br>${gapList}<br><br>TalentSync recommends initiating training pathways for high-potential candidates prior to project deployment.`;
+    }
+
+    // Check if asking about availability or capacity
+    if (q.includes('availab') || q.includes('capacity') || q.includes('free') || q.includes('hour') || q.includes('workload')) {
+        let availList = candidates.slice(0, 5).map(c => {
+            const color = c.availablePercent >= 75 ? 'var(--accent-success)' : c.availablePercent >= 25 ? 'var(--accent-warning)' : 'var(--accent-danger)';
+            return `&bull; <strong>${escapeHtml(c.employeeName)}</strong>: <span style="color:${color};font-weight:700">${c.availablePercent}% Available</span> (${escapeHtml(c.department)}, ${escapeHtml(c.location)})`;
+        }).join('<br>');
+        return `Current capacity and availability breakdown for <strong>${escapeHtml(demandText)}</strong>:<br><br>${availList}`;
+    }
+
+    // Check if asking about a specific candidate name
+    for (const c of candidates) {
+        if (q.includes(c.employeeName.toLowerCase())) {
+            const matching = (c.matchedSkills || []).map(s => `${escapeHtml(s.skillName)} (${s.proficiencyLabel})`).join(', ') || 'None';
+            const missing = (c.missingSkills || []).map(s => escapeHtml(s.skillName)).join(', ') || 'None';
+            return `Profile assessment for <strong>${escapeHtml(c.employeeName)}</strong> (${escapeHtml(c.department)}, ${escapeHtml(c.location)}):<br><br>
+            &bull; <strong>Overall Fit Score:</strong> <strong>${c.totalScore}/100</strong><br>
+            &bull; <strong>Available Capacity:</strong> ${c.availablePercent}% available<br>
+            &bull; <strong>Matching Skills:</strong> ${matching}<br>
+            &bull; <strong>Skill Gaps:</strong> ${missing}<br>
+            &bull; <strong>Assessment:</strong> ${escapeHtml(c.explanation)}`;
+        }
+    }
+
+    // Check if asking about specific skills (Java, React, Docker, Python, SQL, AWS, Kubernetes, etc.)
+    const knownSkills = ['java', 'spring', 'react', 'python', 'docker', 'kubernetes', 'aws', 'sql', 'machine learning'];
+    for (const sk of knownSkills) {
+        if (q.includes(sk)) {
+            const matched = candidates.filter(c => (c.matchedSkills || []).some(s => s.skillName.toLowerCase().includes(sk)));
+            if (matched.length > 0) {
+                return `Candidates possessing <strong>${sk.toUpperCase()}</strong> for this demand:<br><br>` +
+                    matched.map(c => {
+                        const s = c.matchedSkills.find(x => x.skillName.toLowerCase().includes(sk));
+                        return `&bull; <strong>${escapeHtml(c.employeeName)}</strong>: ${escapeHtml(s.skillName)} (Level ${s.proficiencyLevel}/5, ${escapeHtml(s.proficiencyLabel)})${s.evidence ? ' &bull; <em>' + escapeHtml(s.evidence) + '</em>' : ''}`;
+                    }).join('<br>');
+            } else {
+                return `None of the candidates ranked for this demand currently possess verified records for <strong>${sk.toUpperCase()}</strong>. Disclosing as missing data rather than assuming.`;
+            }
+        }
+    }
+
+    // Default / general response for queries like "ffghh" or custom prompts
+    if (candidates.length > 0) {
+        const top = candidates[0];
+        return `I have processed your query regarding <strong>${escapeHtml(demandText)}</strong>.<br><br>
+        Currently, <strong>${candidates.length} active candidates</strong> were evaluated against the project requirements. The primary recommendation is <strong>${escapeHtml(top.employeeName)}</strong> with a compatibility score of <strong>${top.totalScore}/100</strong> and <strong>${top.availablePercent}% available capacity</strong>.<br><br>
+        <strong>Try asking specific questions such as:</strong><br>
+        &bull; <em>"Who is the best candidate for this role?"</em><br>
+        &bull; <em>"What skills are missing for Nikhil or Shree?"</em><br>
+        &bull; <em>"Who has Java or React certifications?"</em><br>
+        &bull; <em>"Are any candidates fully available in Hyderabad?"</em>`;
+    }
+
+    return `The AI Staffing Agent has analyzed the stored records for <strong>${escapeHtml(demandText)}</strong>. No candidates are currently active or eligible. Please check employee statuses in the Employees tab.`;
+}
+
 async function renderAI() {
     showLoading();
-    const demands = await apiFetch('/demands');
-    const demandOpts = demands.map(d => `<option value="${d.id}">${d.projectName} - ${d.role}</option>`).join('');
-    setPageContent(`
-    <div class="section-title" style="margin-bottom:4px">AI Staffing Assistant</div>
-    <div class="simulation-notice">
-        ${IC.warn} <strong>SIMULATION MODE:</strong> This AI agent simulates an LLM-based agentic workflow using deterministic Java logic.
-        In production, a live AI model (e.g., Google Gemini) would power the tool calls with real reasoning.
-    </div>
-    <div class="grid-2" style="gap:20px;align-items:flex-start">
-        <div>
+    try {
+        const demands = await apiFetch('/demands');
+        const demandOpts = demands.map(d => `<option value="${d.id}">${escapeHtml(d.projectName)} - ${escapeHtml(d.role)}</option>`).join('');
+        setPageContent(`
+        <div class="section-title" style="margin-bottom:4px">AI Staffing Assistant</div>
+        <div class="simulation-notice">
+            ${IC.warn} <strong>SIMULATION MODE:</strong> This AI agent simulates an LLM-based agentic workflow using deterministic Java logic.
+            In production, a live AI model (e.g., Google Gemini) would power the tool calls with real reasoning.
+        </div>
+        <div class="grid-2" style="gap:20px;align-items:flex-start">
+            <div>
+                <div class="card" style="margin-bottom:16px">
+                    <div class="card-title" style="margin-bottom:12px">Configure Agent</div>
+                    <div class="form-group" style="margin-bottom:12px">
+                        <label>Select Demand for Analysis</label>
+                        <select id="ai-demand">${demandOpts || '<option>No demands available</option>'}</select>
+                    </div>
+                    <button class="btn btn-primary" id="ai-run-btn" style="width:100%" onclick="runAgent()">${IC.run} Run Staffing Agent</button>
+                </div>
+                <div class="card">
+                    <div class="card-title" style="margin-bottom:12px">Ask Agent</div>
+                    <div class="form-group">
+                        <textarea id="ai-question" placeholder="e.g. Who is the best candidate? What skills are missing? (Press Enter to Send)" style="min-height:100px"></textarea>
+                    </div>
+                    <div style="display:flex;gap:8px;margin-top:10px">
+                        <button class="btn btn-primary" id="ai-send-btn" style="flex:1" onclick="sendAgentQuestion()">
+                            ${IC.send} Send
+                        </button>
+                        <button class="btn btn-secondary" onclick="document.getElementById('ai-question').value='';document.getElementById('ai-question').focus();" title="Clear question">
+                            Clear
+                        </button>
+                    </div>
+                    <div style="font-size:11px;color:var(--text-muted);margin-top:8px">
+                        Tip: Press <kbd style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:3px">Enter</kbd> to send, <kbd style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:3px">Shift+Enter</kbd> for new line.
+                    </div>
+                </div>
+            </div>
+            <div id="aiOutput">
+                <div class="empty-state">
+                    <div class="empty-icon" style="display:flex;justify-content:center;opacity:0.4">${IC.bot}</div>
+                    <div class="empty-title">Run the agent or ask a question</div>
+                    <div class="empty-desc">Select a demand and type a question in "Ask Agent" or click "Run Staffing Agent".</div>
+                </div>
+            </div>
+        </div>`);
+
+        // Attach Enter-to-send shortcut to question textarea
+        const qArea = document.getElementById('ai-question');
+        if (qArea) {
+            qArea.addEventListener('keydown', e => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendAgentQuestion();
+                }
+            });
+        }
+    } catch (err) {
+        showApiError(err);
+    }
+}
+
+async function sendAgentQuestion() {
+    const demandSelect = document.getElementById('ai-demand');
+    const demandId = demandSelect?.value;
+    const questionInput = document.getElementById('ai-question');
+    const question = questionInput?.value.trim();
+    const sendBtn = document.getElementById('ai-send-btn');
+
+    if (!demandId) {
+        showToast('Please select a project demand first', 'warning');
+        return;
+    }
+    if (!question) {
+        showToast('Please type a question for the AI Agent', 'warning');
+        questionInput?.focus();
+        return;
+    }
+
+    // Set UI loading state
+    if (sendBtn) {
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = `<span class="spinner" style="width:12px;height:12px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:6px"></span> Sending...`;
+    }
+
+    const outputEl = document.getElementById('aiOutput');
+    if (outputEl) {
+        outputEl.innerHTML = `<div class="loading-overlay" style="padding:32px"><div class="spinner"></div><span>Agent is analyzing question: "${escapeHtml(question)}"...</span></div>`;
+    }
+
+    try {
+        const res = await apiFetch('/ai/staffing-advice', 'POST', { demandId: parseInt(demandId, 10), question });
+        const demandText = demandSelect.options[demandSelect.selectedIndex]?.text || `Demand #${demandId}`;
+
+        // Clear textarea
+        if (questionInput) questionInput.value = '';
+
+        // Formulate direct targeted answer based on question and candidate data
+        const directAnswer = generateTargetedAgentAnswer(question, res.candidates || [], demandText);
+
+        // Render full answer with prominent Q&A card
+        if (outputEl) {
+            outputEl.innerHTML = `
+            <!-- DIRECT Q&A RESPONSE CARD -->
+            <div class="card" style="margin-bottom:16px;border-left:4px solid var(--accent-primary);box-shadow:var(--shadow-glow)">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                    <span class="badge badge-active" style="display:inline-flex;align-items:center;gap:5px">${IC.ai} AI Staffing Advisor</span>
+                    <span style="font-size:12px;color:var(--text-muted)">Grounded in stored employee skills &amp; availability</span>
+                </div>
+                <div style="background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);border-radius:6px;padding:10px 14px;margin-bottom:14px">
+                    <div style="font-size:11px;font-weight:700;color:var(--text-accent);text-transform:uppercase;letter-spacing:0.5px">Your Question</div>
+                    <div style="font-size:14px;font-weight:600;color:var(--text-primary);margin-top:2px">${escapeHtml(question)}</div>
+                </div>
+                <div style="font-size:14px;line-height:1.7;color:var(--text-primary)">
+                    ${directAnswer}
+                </div>
+            </div>
+
+            <!-- FULL DEMAND ANALYSIS -->
             <div class="card" style="margin-bottom:16px">
-                <div class="card-title" style="margin-bottom:12px">Configure Agent</div>
-                <div class="form-group" style="margin-bottom:12px">
-                    <label>Select Demand for Analysis</label>
-                    <select id="ai-demand">${demandOpts || '<option>No demands available</option>'}</select>
+                <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+                    <span class="card-title">Staffing Agent Demand Analysis &bull; ${escapeHtml(demandText)}</span>
+                    <span class="badge badge-active">${(res.candidates || []).length} Candidates Ranked</span>
                 </div>
-                <button class="btn btn-primary" style="width:100%" onclick="runAgent()">${IC.run} Run Staffing Agent</button>
+                <div class="simulation-notice">${escapeHtml(res.simulationNotice)}</div>
+                <div style="white-space:pre-wrap;font-size:13.5px;line-height:1.6;color:var(--text-primary);margin-top:12px">${formatAgentText(res.answer)}</div>
             </div>
+
+            <!-- AGENT TOOL CALLS -->
+            <div class="card" style="margin-bottom:16px">
+                <div class="card-title" style="margin-bottom:12px">Agent Tool Calls</div>
+                <div class="tool-calls-list">
+                    ${(res.toolCalls || []).map(tc => `
+                    <div class="tool-call-item">
+                        <div class="tool-call-name">${IC.run} ${escapeHtml(tc.toolName)}(${Object.entries(tc.inputs||{}).map(([k,v]) => `${escapeHtml(k)}="${escapeHtml(v)}"`).join(', ')})</div>
+                        <div class="tool-call-result">${tc.success ? IC.check : IC.x} ${escapeHtml(tc.result)}</div>
+                    </div>`).join('')}
+                </div>
+            </div>
+
+            <!-- AGENT LIMITATIONS -->
             <div class="card">
-                <div class="card-title" style="margin-bottom:12px">Ask Agent</div>
-                <div class="form-group">
-                    <textarea id="ai-question" placeholder="e.g. Who is the best candidate? What skills are missing?" style="min-height:100px"></textarea>
-                </div>
-                <button class="btn btn-secondary" style="width:100%;margin-top:8px" onclick="runAgent()">Send</button>
-            </div>
-        </div>
-        <div id="aiOutput">
-            <div class="empty-state">
-                <div class="empty-icon" style="display:flex;justify-content:center;opacity:0.4">${IC.bot}</div>
-                <div class="empty-title">Run the agent to see results</div>
-                <div class="empty-desc">Select a demand and click Run Staffing Agent</div>
-            </div>
-        </div>
-    </div>`);
+                <div class="card-title" style="margin-bottom:12px">Agent Limitations &amp; Ethical Boundaries</div>
+                <ul style="font-size:13px;color:var(--text-secondary);padding-left:20px;line-height:2">
+                    ${(res.limitations || []).map(l => `<li>${escapeHtml(l)}</li>`).join('')}
+                </ul>
+            </div>`;
+
+            showToast('AI Agent responded to your question!');
+            outputEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    } catch (err) {
+        showToast(err.message, 'error');
+        if (outputEl) {
+            outputEl.innerHTML = `<div class="empty-state"><div class="empty-title">Error: ${escapeHtml(err.message)}</div></div>`;
+        }
+    } finally {
+        if (sendBtn) {
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = `${IC.send} Send`;
+        }
+    }
 }
 
 async function runAgent() {
-    const demandId = document.getElementById('ai-demand').value;
-    const question = document.getElementById('ai-question').value;
+    const demandSelect = document.getElementById('ai-demand');
+    const demandId = demandSelect?.value;
+    const runBtn = document.getElementById('ai-run-btn');
     if (!demandId) { showToast('Please select a demand', 'warning'); return; }
-    document.getElementById('aiOutput').innerHTML = '<div class="loading-overlay"><div class="spinner"></div><span>Agent is analyzing...</span></div>';
+
+    if (runBtn) {
+        runBtn.disabled = true;
+        runBtn.innerHTML = `<span class="spinner" style="width:12px;height:12px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:6px"></span> Analyzing...`;
+    }
+
+    const outputEl = document.getElementById('aiOutput');
+    if (outputEl) {
+        outputEl.innerHTML = '<div class="loading-overlay" style="padding:32px"><div class="spinner"></div><span>Agent is analyzing demand and ranking candidates...</span></div>';
+    }
+
     try {
-        const res = await apiFetch('/ai/staffing-advice', 'POST', { demandId: parseInt(demandId), question });
-        document.getElementById('aiOutput').innerHTML = `
-        <div class="card" style="margin-bottom:16px">
-            <div class="simulation-notice">${res.simulationNotice}</div>
-            <div style="white-space:pre-wrap;font-size:14px;line-height:1.6;color:var(--text-primary)">${res.answer}</div>
-        </div>
-        <div class="card" style="margin-bottom:16px">
-            <div class="card-title" style="margin-bottom:12px">Agent Tool Calls</div>
-            <div class="tool-calls-list">
-                ${res.toolCalls.map(tc => `
-                <div class="tool-call-item">
-                    <div class="tool-call-name">${IC.run} ${tc.toolName}(${Object.entries(tc.inputs||{}).map(([k,v]) => `${k}="${v}"`).join(', ')})</div>
-                    <div class="tool-call-result">${tc.success ? IC.check : IC.x} ${tc.result}</div>
-                </div>`).join('')}
+        const res = await apiFetch('/ai/staffing-advice', 'POST', { demandId: parseInt(demandId, 10), question: '' });
+        const demandText = demandSelect.options[demandSelect.selectedIndex]?.text || `Demand #${demandId}`;
+
+        if (outputEl) {
+            outputEl.innerHTML = `
+            <div class="card" style="margin-bottom:16px">
+                <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+                    <span class="card-title">Staffing Agent Demand Analysis &bull; ${escapeHtml(demandText)}</span>
+                    <span class="badge badge-active">${(res.candidates || []).length} Candidates Ranked</span>
+                </div>
+                <div class="simulation-notice">${escapeHtml(res.simulationNotice)}</div>
+                <div style="white-space:pre-wrap;font-size:13.5px;line-height:1.6;color:var(--text-primary);margin-top:12px">${formatAgentText(res.answer)}</div>
             </div>
-        </div>
-        <div class="card">
-            <div class="card-title" style="margin-bottom:12px">Agent Limitations</div>
-            <ul style="font-size:13px;color:var(--text-secondary);padding-left:20px;line-height:2">
-                ${res.limitations.map(l => `<li>${l}</li>`).join('')}
-            </ul>
-        </div>`;
+            <div class="card" style="margin-bottom:16px">
+                <div class="card-title" style="margin-bottom:12px">Agent Tool Calls</div>
+                <div class="tool-calls-list">
+                    ${(res.toolCalls || []).map(tc => `
+                    <div class="tool-call-item">
+                        <div class="tool-call-name">${IC.run} ${escapeHtml(tc.toolName)}(${Object.entries(tc.inputs||{}).map(([k,v]) => `${escapeHtml(k)}="${escapeHtml(v)}"`).join(', ')})</div>
+                        <div class="tool-call-result">${tc.success ? IC.check : IC.x} ${escapeHtml(tc.result)}</div>
+                    </div>`).join('')}
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title" style="margin-bottom:12px">Agent Limitations &amp; Ethical Boundaries</div>
+                <ul style="font-size:13px;color:var(--text-secondary);padding-left:20px;line-height:2">
+                    ${(res.limitations || []).map(l => `<li>${escapeHtml(l)}</li>`).join('')}
+                </ul>
+            </div>`;
+        }
     } catch (err) {
-        document.getElementById('aiOutput').innerHTML = `<div class="empty-state"><div class="empty-title">Error: ${err.message}</div></div>`;
+        if (outputEl) {
+            outputEl.innerHTML = `<div class="empty-state"><div class="empty-title">Error: ${escapeHtml(err.message)}</div></div>`;
+        }
+    } finally {
+        if (runBtn) {
+            runBtn.disabled = false;
+            runBtn.innerHTML = `${IC.run} Run Staffing Agent`;
+        }
     }
 }
 
