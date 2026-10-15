@@ -2259,13 +2259,405 @@ function renderPage(page) {
 async function checkApiStatus() {
     try {
         await fetch('http://localhost:8080/api/employees');
-        document.getElementById('statusDot').className = 'status-dot online';
-        document.getElementById('statusText').textContent = 'API Online';
+        const dot = document.getElementById('statusDot');
+        const txt = document.getElementById('statusText');
+        if (dot) dot.className = 'status-dot online';
+        if (txt) txt.textContent = 'API Online';
     } catch {
-        document.getElementById('statusDot').className = 'status-dot offline';
-        document.getElementById('statusText').textContent = 'API Offline';
+        const dot = document.getElementById('statusDot');
+        const txt = document.getElementById('statusText');
+        if (dot) dot.className = 'status-dot offline';
+        if (txt) txt.textContent = 'API Offline';
     }
 }
+
+// ============================================================
+// TOPBAR & SIDEBAR INTERACTIONS
+// ============================================================
+
+function initSidebarToggle() {
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebar = document.getElementById('sidebar');
+    if (!sidebarToggle || !sidebar) return;
+
+    // Restore user collapsed preference
+    const saved = localStorage.getItem('talentsync_sidebar_collapsed');
+    if (saved === 'true') {
+        sidebar.classList.add('collapsed');
+    }
+
+    sidebarToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        sidebar.classList.toggle('collapsed');
+        const isCollapsed = sidebar.classList.contains('collapsed');
+        localStorage.setItem('talentsync_sidebar_collapsed', isCollapsed ? 'true' : 'false');
+    });
+}
+
+let appNotifications = [
+    {
+        id: 'notif-1',
+        title: 'Priority Staffing Demand: Project Phoenix',
+        desc: 'Senior Java Developer position is open with 80% allocation required in Hyderabad.',
+        time: 'Just now',
+        type: 'demand',
+        unread: true,
+        actionType: 'demand',
+        targetId: 1
+    },
+    {
+        id: 'notif-2',
+        title: 'Top Recommended Candidate: Ram',
+        desc: 'Evaluated with 92% Match score for Project Phoenix. Ready for immediate allocation.',
+        time: '15m ago',
+        type: 'candidate',
+        unread: true,
+        actionType: 'employee',
+        targetId: 1
+    },
+    {
+        id: 'notif-3',
+        title: 'Resource Capacity Available',
+        desc: 'Nikhil and Shree are currently 100% available for upcoming project assignments.',
+        time: '1h ago',
+        type: 'availability',
+        unread: true,
+        actionType: 'search',
+        targetId: null
+    },
+    {
+        id: 'notif-4',
+        title: 'Enterprise API Health Online',
+        desc: 'Local Spring Boot service verified active and responding on port 8080.',
+        time: '2h ago',
+        type: 'system',
+        unread: false,
+        actionType: 'system',
+        targetId: null
+    }
+];
+
+function updateNotificationBadge() {
+    const badge = document.getElementById('notifBadge');
+    if (!badge) return;
+    const unreadCount = appNotifications.filter(n => n.unread).length;
+    if (unreadCount > 0) {
+        badge.style.display = 'block';
+    } else {
+        badge.style.display = 'none';
+    }
+}
+
+function renderNotificationsDropdown() {
+    const dropdown = document.getElementById('notificationsDropdown');
+    if (!dropdown) return;
+    const unreadCount = appNotifications.filter(n => n.unread).length;
+
+    const typeIcons = {
+        demand: `<div class="notif-icon-box" style="background:rgba(245,158,11,0.15);color:var(--accent-warning)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>`,
+        candidate: `<div class="notif-icon-box" style="background:rgba(99,102,241,0.15);color:var(--accent-primary)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg></div>`,
+        availability: `<div class="notif-icon-box" style="background:rgba(16,185,129,0.15);color:var(--accent-success)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>`,
+        system: `<div class="notif-icon-box" style="background:rgba(59,130,246,0.15);color:var(--accent-info)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg></div>`
+    };
+
+    dropdown.innerHTML = `
+    <div class="notif-header">
+        <div class="notif-header-title">
+            <span>Notifications</span>
+            ${unreadCount > 0 ? `<span class="badge badge-active" style="font-size:10.5px;padding:2px 7px">${unreadCount} New</span>` : ''}
+        </div>
+        ${unreadCount > 0 ? `<button type="button" class="btn btn-secondary btn-sm" style="font-size:11px;padding:3px 8px" onclick="markAllNotificationsRead(event)">Mark all read</button>` : ''}
+    </div>
+    <div class="notif-list">
+        ${appNotifications.length === 0 ? `<div style="padding:28px;text-align:center;color:var(--text-muted);font-size:13px">No notifications</div>` :
+        appNotifications.map(n => `
+        <div class="notif-item ${n.unread ? 'unread' : ''}" onclick="handleNotificationClick('${n.id}')">
+            ${typeIcons[n.type] || typeIcons.system}
+            <div class="notif-content">
+                <div class="notif-title" style="${n.unread ? 'font-weight:700' : 'font-weight:500;color:var(--text-secondary)'}">${escapeHtml(n.title)}</div>
+                <div class="notif-desc">${escapeHtml(n.desc)}</div>
+                <div class="notif-time">${escapeHtml(n.time)}</div>
+            </div>
+            ${n.unread ? `<span style="width:7px;height:7px;border-radius:50%;background:var(--accent-primary);margin-top:6px;flex-shrink:0"></span>` : ''}
+        </div>`).join('')}
+    </div>
+    <div class="notif-footer">
+        <button type="button" class="btn btn-secondary btn-sm" style="width:100%;font-size:12px" onclick="closeNotifications();router.navigate('ai');">Open AI Staffing Assistant</button>
+    </div>`;
+}
+
+function handleNotificationClick(id) {
+    const notif = appNotifications.find(n => n.id === id);
+    if (notif) {
+        notif.unread = false;
+        updateNotificationBadge();
+    }
+    closeNotifications();
+
+    if (!notif) return;
+    if (notif.actionType === 'demand') {
+        router.navigate('ai');
+    } else if (notif.actionType === 'employee') {
+        showEmployeeDetail(notif.targetId || 1);
+    } else if (notif.actionType === 'search') {
+        router.navigate('search');
+    } else if (notif.actionType === 'system') {
+        showToast('System is operating nominally.');
+    }
+}
+
+function markAllNotificationsRead(e) {
+    if (e) e.stopPropagation();
+    appNotifications.forEach(n => n.unread = false);
+    updateNotificationBadge();
+    renderNotificationsDropdown();
+    showToast('All notifications marked as read.');
+}
+
+function toggleNotifications(e) {
+    if (e) e.stopPropagation();
+    const dropdown = document.getElementById('notificationsDropdown');
+    const searchDropdown = document.getElementById('searchResultsDropdown');
+    if (searchDropdown) searchDropdown.style.display = 'none';
+
+    if (!dropdown) return;
+    if (dropdown.style.display === 'none' || !dropdown.style.display) {
+        renderNotificationsDropdown();
+        dropdown.style.display = 'flex';
+    } else {
+        dropdown.style.display = 'none';
+    }
+}
+
+function closeNotifications() {
+    const dropdown = document.getElementById('notificationsDropdown');
+    if (dropdown) dropdown.style.display = 'none';
+}
+
+function initNotifications() {
+    const bell = document.getElementById('notificationBell');
+    if (bell) {
+        bell.addEventListener('click', toggleNotifications);
+    }
+    updateNotificationBadge();
+}
+
+// Global Quick Search
+let searchCache = { emps: null, demands: null, skills: null, lastFetch: 0 };
+
+async function fetchSearchData() {
+    const now = Date.now();
+    if (searchCache.emps && (now - searchCache.lastFetch < 30000)) {
+        return searchCache;
+    }
+    try {
+        const [emps, demands, skills] = await Promise.all([
+            apiFetch('/employees'),
+            apiFetch('/demands'),
+            apiFetch('/skills')
+        ]);
+        searchCache = { emps: emps || [], demands: demands || [], skills: skills || [], lastFetch: now };
+    } catch (e) {
+        console.warn('Failed to pre-fetch search index:', e);
+    }
+    return searchCache;
+}
+
+function initGlobalSearch() {
+    const input = document.getElementById('globalSearch');
+    const dropdown = document.getElementById('searchResultsDropdown');
+    const clearBtn = document.getElementById('searchClearBtn');
+    if (!input || !dropdown) return;
+
+    let debounceTimer = null;
+
+    input.addEventListener('input', () => {
+        const query = input.value.trim().toLowerCase();
+        if (clearBtn) clearBtn.style.display = query ? 'inline-block' : 'none';
+
+        if (!query) {
+            dropdown.style.display = 'none';
+            return;
+        }
+
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(async () => {
+            const data = await fetchSearchData();
+            const q = input.value.trim().toLowerCase();
+            if (!q) { dropdown.style.display = 'none'; return; }
+
+            const matchedEmps = (data.emps || []).filter(e => 
+                (e.name && e.name.toLowerCase().includes(q)) ||
+                (e.employeeCode && e.employeeCode.toLowerCase().includes(q)) ||
+                (e.department && e.department.toLowerCase().includes(q)) ||
+                (e.location && e.location.toLowerCase().includes(q)) ||
+                (e.skills && e.skills.some(s => s.skillName && s.skillName.toLowerCase().includes(q)))
+            ).slice(0, 4);
+
+            const matchedDemands = (data.demands || []).filter(d =>
+                (d.projectName && d.projectName.toLowerCase().includes(q)) ||
+                (d.role && d.role.toLowerCase().includes(q)) ||
+                (d.location && d.location.toLowerCase().includes(q)) ||
+                (d.priority && d.priority.toLowerCase().includes(q)) ||
+                (d.requiredSkills && d.requiredSkills.some(s => (s.name || s.skillName || '').toLowerCase().includes(q)))
+            ).slice(0, 4);
+
+            const matchedSkills = (data.skills || []).filter(s =>
+                s.name && s.name.toLowerCase().includes(q)
+            ).slice(0, 4);
+
+            if (matchedEmps.length === 0 && matchedDemands.length === 0 && matchedSkills.length === 0) {
+                dropdown.innerHTML = `<div style="padding:22px 16px;text-align:center;color:var(--text-muted);font-size:13px">No matches found for "<strong>${escapeHtml(q)}</strong>"</div>`;
+                dropdown.style.display = 'block';
+                return;
+            }
+
+            let html = '';
+
+            if (matchedEmps.length > 0) {
+                html += `<div class="search-section-title">Employees (${matchedEmps.length})</div>`;
+                matchedEmps.forEach(e => {
+                    const skillsStr = (e.skills || []).slice(0, 3).map(s => s.skillName).join(', ');
+                    html += `
+                    <div class="search-result-item" onclick="onSearchSelectEmployee(${e.id})">
+                        <div class="search-item-main">
+                            <span class="search-item-title">${escapeHtml(e.name)}</span>
+                            <span class="search-item-sub">${escapeHtml(e.employeeCode)} &bull; ${escapeHtml(e.department || 'Engineering')} &bull; ${escapeHtml(e.location || 'N/A')}${skillsStr ? ' &bull; ' + escapeHtml(skillsStr) : ''}</span>
+                        </div>
+                        <span class="search-item-badge" style="background:rgba(99,102,241,0.15);color:#a5b4fc">View Profile</span>
+                    </div>`;
+                });
+            }
+
+            if (matchedDemands.length > 0) {
+                html += `<div class="search-section-title">Project Demands (${matchedDemands.length})</div>`;
+                matchedDemands.forEach(d => {
+                    html += `
+                    <div class="search-result-item" onclick="onSearchSelectDemand(${d.id})">
+                        <div class="search-item-main">
+                            <span class="search-item-title">${escapeHtml(d.projectName)}</span>
+                            <span class="search-item-sub">${escapeHtml(d.role)} &bull; ${escapeHtml(d.location || 'Remote')} &bull; ${d.allocationPercent || 80}% needed</span>
+                        </div>
+                        <span class="search-item-badge" style="background:rgba(245,158,11,0.15);color:#fbbf24">${escapeHtml(d.priority || 'Open')}</span>
+                    </div>`;
+                });
+            }
+
+            if (matchedSkills.length > 0) {
+                html += `<div class="search-section-title">Skills (${matchedSkills.length})</div>`;
+                matchedSkills.forEach(s => {
+                    html += `
+                    <div class="search-result-item" onclick="onSearchSelectSkill('${escapeHtml(s.name)}')">
+                        <div class="search-item-main">
+                            <span class="search-item-title">${escapeHtml(s.name)}</span>
+                            <span class="search-item-sub">Category: ${escapeHtml(s.category || 'Technical')}</span>
+                        </div>
+                        <span class="search-item-badge" style="background:rgba(16,185,129,0.15);color:#34d399">Find People</span>
+                    </div>`;
+                });
+            }
+
+            dropdown.innerHTML = html;
+            dropdown.style.display = 'block';
+        }, 150);
+    });
+
+    if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+            input.value = '';
+            clearBtn.style.display = 'none';
+            dropdown.style.display = 'none';
+            input.focus();
+        });
+    }
+
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            dropdown.style.display = 'none';
+        } else if (e.key === 'Enter') {
+            const firstItem = dropdown.querySelector('.search-result-item');
+            if (firstItem && dropdown.style.display !== 'none') {
+                firstItem.click();
+            } else if (input.value.trim()) {
+                const q = input.value.trim();
+                dropdown.style.display = 'none';
+                router.navigate('search');
+                setTimeout(() => {
+                    const rsInput = document.getElementById('rsQuery');
+                    if (rsInput) {
+                        rsInput.value = q;
+                        doResourceSearch();
+                    }
+                }, 100);
+            }
+        }
+    });
+
+    input.addEventListener('focus', () => {
+        if (input.value.trim() && dropdown.innerHTML) {
+            dropdown.style.display = 'block';
+        }
+    });
+}
+
+function onSearchSelectEmployee(id) {
+    const dropdown = document.getElementById('searchResultsDropdown');
+    if (dropdown) dropdown.style.display = 'none';
+    const input = document.getElementById('globalSearch');
+    if (input) input.value = '';
+    const clearBtn = document.getElementById('searchClearBtn');
+    if (clearBtn) clearBtn.style.display = 'none';
+    showEmployeeDetail(id);
+}
+
+function onSearchSelectDemand(id) {
+    const dropdown = document.getElementById('searchResultsDropdown');
+    if (dropdown) dropdown.style.display = 'none';
+    const input = document.getElementById('globalSearch');
+    if (input) input.value = '';
+    const clearBtn = document.getElementById('searchClearBtn');
+    if (clearBtn) clearBtn.style.display = 'none';
+    router.navigate('ai');
+    setTimeout(() => {
+        const select = document.getElementById('ai-demand');
+        if (select) {
+            select.value = id;
+            runAgent();
+        }
+    }, 150);
+}
+
+function onSearchSelectSkill(skillName) {
+    const dropdown = document.getElementById('searchResultsDropdown');
+    if (dropdown) dropdown.style.display = 'none';
+    const input = document.getElementById('globalSearch');
+    if (input) input.value = '';
+    const clearBtn = document.getElementById('searchClearBtn');
+    if (clearBtn) clearBtn.style.display = 'none';
+    router.navigate('search');
+    setTimeout(() => {
+        const rsInput = document.getElementById('rsQuery');
+        if (rsInput) {
+            rsInput.value = skillName;
+            doResourceSearch();
+        }
+    }, 150);
+}
+
+// Global click outside to close dropdowns
+document.addEventListener('click', (e) => {
+    const notifContainer = document.getElementById('notificationContainer');
+    const notifDropdown = document.getElementById('notificationsDropdown');
+    if (notifContainer && !notifContainer.contains(e.target) && notifDropdown) {
+        notifDropdown.style.display = 'none';
+    }
+
+    const searchBar = document.getElementById('globalSearchBar');
+    const searchDropdown = document.getElementById('searchResultsDropdown');
+    if (searchBar && !searchBar.contains(e.target) && searchDropdown) {
+        searchDropdown.style.display = 'none';
+    }
+});
 
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.nav-link').forEach(link => {
@@ -2281,6 +2673,12 @@ document.addEventListener('DOMContentLoaded', () => {
             router.navigate(hash);
         }
     });
+
+    // Initialize sidebar toggle, notifications, and quick search
+    initSidebarToggle();
+    initNotifications();
+    initGlobalSearch();
+
     checkApiStatus();
     setInterval(checkApiStatus, 10000);
 
@@ -2288,4 +2686,5 @@ document.addEventListener('DOMContentLoaded', () => {
     const initialPage = pageTitles[initialHash] ? initialHash : 'dashboard';
     router.navigate(initialPage);
 });
+
 
