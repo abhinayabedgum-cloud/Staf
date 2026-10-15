@@ -810,67 +810,713 @@ function showAddSkillCatalogModal() {
 }
 
 // ============================================================
-// RESOURCE SEARCH
+// RESOURCE SEARCH & CAPACITY PLANNING SYSTEM (EIGHTFOLD / RUNN / CMAP INSPIRED)
 // ============================================================
-async function renderSearch() {
-    showLoading();
-    const skills = await apiFetch('/skills');
+
+let rsState = {
+    viewMode: 'cards', // 'cards' | 'table'
+    showAdvanced: false,
+    lastResults: null,
+    lastWeeks: [],
+    lastAllocations: [],
+    lastSkillId: null,
+    lastSkillName: null
+};
+
+function toggleResourceAdvFilters() {
+    rsState.showAdvanced = !rsState.showAdvanced;
+    const sec = document.getElementById('rs-adv-section');
+    const btn = document.getElementById('rs-adv-toggle-text');
+    if (sec) sec.style.display = rsState.showAdvanced ? 'grid' : 'none';
+    if (btn) btn.textContent = rsState.showAdvanced ? 'Hide Advanced Filters ▲' : 'Show Advanced Filters ▼';
+}
+
+function setRsViewMode(mode) {
+    rsState.viewMode = mode;
+    document.querySelectorAll('.rs-view-tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.mode === mode);
+    });
+    if (rsState.lastResults) {
+        renderResourceResults();
+    }
+}
+
+function askAiAboutResource(empName, department) {
+    router.navigate('ai');
+    setTimeout(() => {
+        const input = document.getElementById('ai-question');
+        if (input) {
+            input.value = `Can you provide a staffing assessment and suitability analysis for ${empName} (${department || 'Engineering'})?`;
+            input.focus();
+        }
+    }, 150);
+}
+
+function resetResourceFilters() {
     const today = new Date().toISOString().split('T')[0];
-    const nextMonth = new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0];
-    setPageContent(`
-    <div class="section-title" style="margin-bottom:20px">Resource Search &amp; Availability</div>
-    <div class="card" style="margin-bottom:20px">
-        <div class="form-grid">
-            <div class="form-group"><label>Start Date *</label><input type="date" id="rs-start" value="${today}"></div>
-            <div class="form-group"><label>End Date *</label><input type="date" id="rs-end" value="${nextMonth}"></div>
-            <div class="form-group"><label>Filter by Skill</label>
-                <select id="rs-skill">
-                    <option value="">All Skills</option>
-                    ${skills.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
-                </select>
-            </div>
-            <div class="form-group" style="align-self:flex-end">
-                <button class="btn btn-primary" onclick="searchResources()">${IC.search} Search</button>
-            </div>
-        </div>
-    </div>
-    <div id="searchResults"></div>`);
+    const nextMonth = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const startEl = document.getElementById('rs-start');
+    const endEl = document.getElementById('rs-end');
+    const skillEl = document.getElementById('rs-skill');
+    const locEl = document.getElementById('rs-loc');
+    const deptEl = document.getElementById('rs-dept');
+    const minAvailEl = document.getElementById('rs-min-avail');
+    const minProfEl = document.getElementById('rs-min-prof');
+    if (startEl) startEl.value = today;
+    if (endEl) endEl.value = nextMonth;
+    if (skillEl) skillEl.value = '';
+    if (locEl) locEl.value = '';
+    if (deptEl) deptEl.value = '';
+    if (minAvailEl) minAvailEl.value = '0';
+    if (minProfEl) minProfEl.value = '0';
     searchResources();
 }
 
-async function searchResources() {
-    const start = document.getElementById('rs-start').value;
-    const end = document.getElementById('rs-end').value;
-    const skillId = document.getElementById('rs-skill').value;
-    if (!start || !end) { showToast('Please select both dates', 'warning'); return; }
-    document.getElementById('searchResults').innerHTML = '<div class="loading-overlay"><div class="spinner"></div></div>';
-    try {
-        let url = `/resources/available?startDate=${start}&endDate=${end}`;
-        if (skillId) url += `&skillId=${skillId}`;
-        const resources = await apiFetch(url);
-        document.getElementById('searchResults').innerHTML = `
-        <div class="card">
-            <div class="card-header"><span class="card-title">Available Resources (${resources.length})</span></div>
-            ${!resources.length
-                ? `<div class="empty-state"><div class="empty-icon">${IC.search}</div><div class="empty-title">No available resources</div><div class="empty-desc">All employees may be fully allocated in this period.</div></div>`
-                : `<div class="table-container"><table>
-                    <thead><tr><th>Name</th><th>Location</th><th>Department</th><th>Allocated %</th><th>Available %</th></tr></thead>
-                    <tbody>${resources.map(r => `<tr>
-                        <td><strong>${r.name}</strong></td>
-                        <td>${IC.loc} ${r.location || 'N/A'}</td>
-                        <td>${r.department || 'N/A'}</td>
-                        <td>
-                            <div class="progress-bar" style="width:120px;display:inline-block;vertical-align:middle;margin-right:8px">
-                                <div class="progress-fill" style="width:${r.allocatedPercent}%;background:linear-gradient(90deg,#f59e0b,#ef4444)"></div>
-                            </div>${r.allocatedPercent}%
-                        </td>
-                        <td style="color:var(--accent-success);font-weight:600">${r.availablePercent}%</td>
-                    </tr>`).join('')}</tbody>
-                </table></div>`}
-        </div>`;
-    } catch (err) {
-        document.getElementById('searchResults').innerHTML = `<div class="empty-state"><div class="empty-title">${err.message}</div></div>`;
+function getMatchBadgeClass(score) {
+    if (score >= 80) return 'high';
+    if (score >= 60) return 'medium';
+    if (score >= 40) return 'low';
+    return 'none';
+}
+
+function getAvailColorClass(availPercent) {
+    if (availPercent >= 75) return 'green';
+    if (availPercent >= 25) return 'amber';
+    return 'red';
+}
+
+function calculateResourceMatchScore(emp, requiredSkillId, requiredSkillName, locationFilter) {
+    let skillScore = 0;
+    let availScore = 0;
+    let locScore = 0;
+    let valScore = 0;
+    const reasons = [];
+
+    const skills = emp.skills || [];
+    const matchedSkill = requiredSkillId 
+        ? skills.find(s => s.id == requiredSkillId || (requiredSkillName && s.skillName && s.skillName.toLowerCase() === requiredSkillName.toLowerCase()))
+        : null;
+
+    // 1. Skill Score (0 to 50 pts)
+    if (requiredSkillId && requiredSkillName) {
+        if (matchedSkill) {
+            const level = matchedSkill.proficiencyLevel || 1;
+            skillScore = (level / 5) * 50;
+            reasons.push({ text: `✓ ${matchedSkill.proficiencyLabel || getProfLabel(level)} (${level}/5) in ${matchedSkill.skillName}`, positive: true });
+        } else {
+            skillScore = 0;
+            reasons.push({ text: `✕ Lacks required skill: ${requiredSkillName}`, positive: false });
+        }
+    } else {
+        if (skills.length > 0) {
+            const avgLevel = skills.reduce((acc, s) => acc + s.proficiencyLevel, 0) / skills.length;
+            skillScore = Math.min(50, Math.round((avgLevel / 5) * 40 + Math.min(10, skills.length * 2)));
+            reasons.push({ text: `✓ ${skills.length} skills recorded (Avg ${avgLevel.toFixed(1)}/5)`, positive: true });
+        } else {
+            skillScore = 10;
+            reasons.push({ text: `⚠ No verified skills on profile`, positive: false });
+        }
     }
+
+    // 2. Availability Score (0 to 30 pts)
+    const availPercent = emp.availablePercent !== undefined ? emp.availablePercent : 100;
+    availScore = (availPercent / 100) * 30;
+    if (availPercent >= 75) {
+        reasons.push({ text: `✓ ${availPercent}% available capacity`, positive: true });
+    } else if (availPercent > 0) {
+        reasons.push({ text: `✓ ${availPercent}% partial availability`, positive: true });
+    } else {
+        reasons.push({ text: `✕ 0% availability (fully booked)`, positive: false });
+    }
+
+    // 3. Location Score (0 to 10 pts)
+    if (locationFilter) {
+        if (emp.location && emp.location.toLowerCase() === locationFilter.toLowerCase()) {
+            locScore = 10;
+            reasons.push({ text: `✓ Location match: ${emp.location}`, positive: true });
+        } else {
+            locScore = 0;
+            reasons.push({ text: `✕ Location: ${emp.location || 'Unknown'} (Filter: ${locationFilter})`, positive: false });
+        }
+    } else {
+        locScore = 10;
+        if (emp.location) {
+            reasons.push({ text: `✓ Based in ${emp.location}`, positive: true });
+        }
+    }
+
+    // 4. Evidence / Validation Score (0 to 10 pts)
+    const hasEvidence = matchedSkill ? (matchedSkill.evidence || matchedSkill.lastValidatedAt) : skills.some(s => s.evidence || s.lastValidatedAt);
+    if (hasEvidence) {
+        valScore = 10;
+        if (matchedSkill && matchedSkill.evidence) {
+            reasons.push({ text: `✓ Validated: ${matchedSkill.evidence}`, positive: true });
+        } else {
+            reasons.push({ text: `✓ Skill verification record on file`, positive: true });
+        }
+    } else {
+        valScore = 5;
+    }
+
+    const totalScore = Math.min(100, Math.max(0, Math.round(skillScore + availScore + locScore + valScore)));
+    return {
+        totalScore,
+        matchedSkill,
+        reasons,
+        breakdown: { skillScore: Math.round(skillScore), availScore: Math.round(availScore), locScore, valScore }
+    };
+}
+
+function calculateWeeksInRange(startDateStr, endDateStr) {
+    const start = new Date(startDateStr);
+    const end = new Date(endDateStr);
+    const weeks = [];
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) return weeks;
+    let curr = new Date(start);
+    let index = 1;
+    while (curr <= end && weeks.length < 10) {
+        const wStart = new Date(curr);
+        const wEnd = new Date(curr);
+        wEnd.setDate(wEnd.getDate() + 6);
+        if (wEnd > end) wEnd.setTime(end.getTime());
+        const label = `${wStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${wEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+        weeks.push({
+            index: index++,
+            start: wStart.toISOString().split('T')[0],
+            end: wEnd.toISOString().split('T')[0],
+            label
+        });
+        curr.setDate(curr.getDate() + 7);
+    }
+    return weeks;
+}
+
+function getEmpWeeklyAllocation(empId, weekStart, weekEnd, allocations) {
+    const overlapping = (allocations || []).filter(a =>
+        a.employeeId === empId &&
+        a.status !== 'CANCELLED' &&
+        a.startDate <= weekEnd &&
+        a.endDate >= weekStart
+    );
+    const totalAlloc = overlapping.reduce((sum, a) => sum + (a.allocationPercent || 0), 0);
+    return Math.min(100, totalAlloc);
+}
+
+function updateSummaryCards(resources, requiredSkillId, requiredSkillName) {
+    const totalCount = resources.length;
+    const bestScore = totalCount ? Math.max(...resources.map(r => r.matchData.totalScore)) : null;
+    const avgCapacity = totalCount ? Math.round(resources.reduce((sum, r) => sum + r.availablePercent, 0) / totalCount) : null;
+    
+    let coverageText = 'N/A';
+    let coverageSub = 'No resources matched';
+    if (totalCount > 0) {
+        if (requiredSkillId && requiredSkillName) {
+            const withSkill = resources.filter(r => r.matchData.matchedSkill).length;
+            const pct = Math.round((withSkill / totalCount) * 100);
+            coverageText = `${pct}%`;
+            coverageSub = `${withSkill} of ${totalCount} have ${requiredSkillName}`;
+        } else {
+            const withSkills = resources.filter(r => r.skills && r.skills.length > 0).length;
+            const pct = Math.round((withSkills / totalCount) * 100);
+            coverageText = `${pct}%`;
+            coverageSub = `${withSkills} of ${totalCount} with skills`;
+        }
+    }
+
+    const mCountEl = document.getElementById('rs-metric-count');
+    const mBestEl = document.getElementById('rs-metric-best');
+    const mCapEl = document.getElementById('rs-metric-capacity');
+    const mCovEl = document.getElementById('rs-metric-coverage');
+    const mCovSubEl = document.getElementById('rs-metric-coverage-sub');
+
+    if (mCountEl) mCountEl.textContent = totalCount;
+    if (mBestEl) mBestEl.textContent = bestScore !== null ? `${bestScore}%` : 'N/A';
+    if (mCapEl) mCapEl.textContent = avgCapacity !== null ? `${avgCapacity}%` : 'N/A';
+    if (mCovEl) mCovEl.textContent = coverageText;
+    if (mCovSubEl) mCovSubEl.textContent = coverageSub;
+}
+
+async function renderSearch() {
+    showLoading();
+    try {
+        const [skills, employees] = await Promise.all([
+            apiFetch('/skills'),
+            apiFetch('/employees')
+        ]);
+
+        const today = new Date().toISOString().split('T')[0];
+        const nextMonth = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+        // Extract unique locations and departments from real employee data
+        const locations = Array.from(new Set(employees.map(e => e.location).filter(Boolean))).sort();
+        const departments = Array.from(new Set(employees.map(e => e.department).filter(Boolean))).sort();
+
+        setPageContent(`
+        <!-- PAGE HEADER -->
+        <div style="margin-bottom:20px">
+            <div class="section-title" style="margin-bottom:4px">Resource Search</div>
+            <div style="color:var(--text-secondary);font-size:13.5px">Find the right people for your project based on skills, availability, and experience.</div>
+        </div>
+
+        <!-- 4 SUMMARY CARDS -->
+        <div class="rs-metrics-grid">
+            <div class="rs-metric-card">
+                <div class="stat-icon indigo">${IC.employees}</div>
+                <div>
+                    <div class="stat-value" id="rs-metric-count">0</div>
+                    <div class="stat-label">Matching Resources</div>
+                </div>
+            </div>
+            <div class="rs-metric-card">
+                <div class="stat-icon emerald">${IC.check}</div>
+                <div>
+                    <div class="stat-value" id="rs-metric-best">--</div>
+                    <div class="stat-label">Best Match Score</div>
+                </div>
+            </div>
+            <div class="rs-metric-card">
+                <div class="stat-icon cyan">${IC.alloc}</div>
+                <div>
+                    <div class="stat-value" id="rs-metric-capacity">--</div>
+                    <div class="stat-label">Avg Available Capacity</div>
+                </div>
+            </div>
+            <div class="rs-metric-card">
+                <div class="stat-icon amber">${IC.skills}</div>
+                <div>
+                    <div class="stat-value" id="rs-metric-coverage">--</div>
+                    <div class="stat-label" id="rs-metric-coverage-sub">Skill Coverage</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SEARCH FILTERS PANEL -->
+        <div class="rs-filter-panel">
+            <div class="rs-primary-filters">
+                <div class="form-group">
+                    <label>Start Date *</label>
+                    <input type="date" id="rs-start" value="${today}">
+                </div>
+                <div class="form-group">
+                    <label>End Date *</label>
+                    <input type="date" id="rs-end" value="${nextMonth}">
+                </div>
+                <div class="form-group">
+                    <label>Required Skill</label>
+                    <select id="rs-skill">
+                        <option value="">All Skills</option>
+                        ${skills.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="form-group" style="display:flex;gap:8px">
+                    <button class="btn btn-primary" onclick="searchResources()">${IC.search} Search Resources</button>
+                    <button class="btn btn-secondary" onclick="resetResourceFilters()" title="Reset all filters">Reset</button>
+                </div>
+            </div>
+            <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+                <button class="rs-toggle-adv-btn" id="rs-adv-toggle" onclick="toggleResourceAdvFilters()">
+                    ${IC.menu} <span id="rs-adv-toggle-text">${rsState.showAdvanced ? 'Hide Advanced Filters ▲' : 'Show Advanced Filters ▼'}</span>
+                </button>
+                <small style="color:var(--text-muted);font-size:12px">Filters preserve active employee &amp; allocation constraints</small>
+            </div>
+            <div class="rs-advanced-section" id="rs-adv-section" style="display:${rsState.showAdvanced ? 'grid' : 'none'}">
+                <div class="form-group">
+                    <label>Location</label>
+                    <select id="rs-loc">
+                        <option value="">All Locations</option>
+                        ${locations.map(loc => `<option value="${escapeHtml(loc)}">${escapeHtml(loc)}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Department</label>
+                    <select id="rs-dept">
+                        <option value="">All Departments</option>
+                        ${departments.map(dept => `<option value="${escapeHtml(dept)}">${escapeHtml(dept)}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Minimum Availability</label>
+                    <select id="rs-min-avail">
+                        <option value="0">Any Availability (0%+)</option>
+                        <option value="25">At least 25% Available</option>
+                        <option value="50">At least 50% Available</option>
+                        <option value="75">At least 75% Available</option>
+                        <option value="100">100% Available Only</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Minimum Skill Proficiency</label>
+                    <select id="rs-min-prof">
+                        <option value="0">Any Proficiency</option>
+                        <option value="2">Level 2+ (Intermediate)</option>
+                        <option value="3">Level 3+ (Advanced)</option>
+                        <option value="4">Level 4+ (Expert)</option>
+                        <option value="5">Level 5 (Master)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- SEARCH RESULTS CONTAINER -->
+        <div id="searchResults"></div>`);
+
+        searchResources();
+    } catch (err) {
+        showApiError(err);
+    }
+}
+
+async function searchResources() {
+    const start = document.getElementById('rs-start')?.value;
+    const end = document.getElementById('rs-end')?.value;
+    const skillSelect = document.getElementById('rs-skill');
+    const skillId = skillSelect?.value || '';
+    const skillName = skillSelect?.options[skillSelect.selectedIndex]?.text !== 'All Skills' ? skillSelect.options[skillSelect.selectedIndex].text : '';
+    const locFilter = document.getElementById('rs-loc')?.value || '';
+    const deptFilter = document.getElementById('rs-dept')?.value || '';
+    const minAvail = parseInt(document.getElementById('rs-min-avail')?.value || '0', 10);
+    const minProf = parseInt(document.getElementById('rs-min-prof')?.value || '0', 10);
+
+    if (!start || !end) {
+        showToast('Please select both Start Date and End Date', 'warning');
+        return;
+    }
+
+    const resultsEl = document.getElementById('searchResults');
+    if (resultsEl) resultsEl.innerHTML = '<div class="loading-overlay"><div class="spinner"></div><span>Searching matching resources...</span></div>';
+
+    try {
+        const [availableResources, allEmployees, allocations] = await Promise.all([
+            apiFetch(`/resources/available?startDate=${start}&endDate=${end}`),
+            apiFetch('/employees'),
+            apiFetch('/allocations')
+        ]);
+
+        const empMap = new Map();
+        allEmployees.forEach(e => empMap.set(e.id, e));
+
+        // Enrich available resources with full employee profile (skills, code, etc.)
+        const enriched = availableResources.map(r => {
+            const fullProfile = empMap.get(r.employeeId) || {};
+            return {
+                ...r,
+                employeeCode: fullProfile.employeeCode || `EMP${String(r.employeeId).padStart(3, '0')}`,
+                skills: fullProfile.skills || [],
+                employmentStatus: fullProfile.employmentStatus || 'ACTIVE'
+            };
+        });
+
+        // Apply filters
+        let filtered = enriched.filter(r => {
+            // Location filter
+            if (locFilter && (!r.location || r.location.toLowerCase() !== locFilter.toLowerCase())) {
+                return false;
+            }
+            // Department filter
+            if (deptFilter && (!r.department || r.department.toLowerCase() !== deptFilter.toLowerCase())) {
+                return false;
+            }
+            // Minimum availability filter
+            if (r.availablePercent < minAvail) {
+                return false;
+            }
+            // Skill proficiency filter if skill specified
+            if (skillId) {
+                const targetSkill = (r.skills || []).find(s => s.id == skillId || (skillName && s.skillName && s.skillName.toLowerCase() === skillName.toLowerCase()));
+                if (!targetSkill) return false;
+                if (minProf > 0 && targetSkill.proficiencyLevel < minProf) return false;
+            } else if (minProf > 0) {
+                const hasProf = (r.skills || []).some(s => s.proficiencyLevel >= minProf);
+                if (!hasProf) return false;
+            }
+            return true;
+        });
+
+        // Calculate match scores
+        filtered.forEach(r => {
+            r.matchData = calculateResourceMatchScore(r, skillId, skillName, locFilter);
+        });
+
+        // Sort by match score descending, then by available capacity
+        filtered.sort((a, b) => {
+            if (b.matchData.totalScore !== a.matchData.totalScore) {
+                return b.matchData.totalScore - a.matchData.totalScore;
+            }
+            return b.availablePercent - a.availablePercent;
+        });
+
+        // Update Summary Cards
+        updateSummaryCards(filtered, skillId, skillName);
+
+        // Calculate timeline weeks
+        const weeks = calculateWeeksInRange(start, end);
+
+        // Store state for view switcher
+        rsState.lastResults = filtered;
+        rsState.lastWeeks = weeks;
+        rsState.lastAllocations = allocations;
+        rsState.lastSkillId = skillId;
+        rsState.lastSkillName = skillName;
+
+        renderResourceResults();
+    } catch (err) {
+        if (resultsEl) resultsEl.innerHTML = `<div class="empty-state"><div class="empty-title">Error loading resources: ${escapeHtml(err.message)}</div></div>`;
+    }
+}
+
+function renderResourceResults() {
+    const resultsEl = document.getElementById('searchResults');
+    if (!resultsEl) return;
+
+    const resources = rsState.lastResults || [];
+    const weeks = rsState.lastWeeks || [];
+    const allocations = rsState.lastAllocations || [];
+    const skillId = rsState.lastSkillId;
+
+    let html = `
+    <!-- VIEW SWITCHER & TOOLBAR -->
+    <div class="rs-view-bar">
+        <div style="font-size:14px;font-weight:600;color:var(--text-secondary)">
+            Showing <span style="color:var(--text-primary);font-weight:700">${resources.length}</span> Matching Resources
+        </div>
+        <div class="rs-view-tabs">
+            <button class="rs-view-tab ${rsState.viewMode === 'cards' ? 'active' : ''}" data-mode="cards" onclick="setRsViewMode('cards')">
+                ${IC.dashboard} Cards View
+            </button>
+            <button class="rs-view-tab ${rsState.viewMode === 'table' ? 'active' : ''}" data-mode="table" onclick="setRsViewMode('table')">
+                ${IC.demands} Table View
+            </button>
+        </div>
+    </div>`;
+
+    if (!resources.length) {
+        html += `
+        <div class="card" style="margin-bottom:24px">
+            <div class="empty-state">
+                <div class="empty-icon">${IC.search}</div>
+                <div class="empty-title">No Matching Resources Found</div>
+                <div class="empty-desc">
+                    No active employees meet the selected criteria for this date range. Try widening the date window or adjusting the filters.
+                </div>
+                <button class="btn btn-secondary btn-sm" style="margin-top:14px" onclick="resetResourceFilters()">
+                    Reset Filters
+                </button>
+            </div>
+        </div>`;
+    } else if (rsState.viewMode === 'cards') {
+        html += `<div class="rs-cards-grid">`;
+        resources.forEach(r => {
+            const badgeCls = getMatchBadgeClass(r.matchData.totalScore);
+            const availCls = getAvailColorClass(r.availablePercent);
+            const initial = (r.name || 'E').charAt(0).toUpperCase();
+            const skills = r.skills || [];
+
+            html += `
+            <div class="rs-card">
+                <div>
+                    <div class="rs-card-header">
+                        <div class="rs-card-user">
+                            <div class="rs-avatar">${initial}</div>
+                            <div class="rs-name-group">
+                                <span class="rs-card-name">${escapeHtml(r.name)}</span>
+                                <span class="rs-card-sub">
+                                    ${escapeHtml(r.employeeCode || '')} &bull; ${escapeHtml(r.department || 'Engineering')} &bull; ${IC.loc} ${escapeHtml(r.location || 'N/A')}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="rs-match-badge ${badgeCls}" title="Deterministic Match Score based on Skill, Capacity, Location, and Verification">
+                            ${r.matchData.totalScore}% Match
+                        </div>
+                    </div>
+
+                    <div class="rs-avail-section">
+                        <div class="rs-avail-header">
+                            <span style="font-weight:600;color:var(--text-secondary)">Availability for Selected Period</span>
+                            <span style="font-weight:700;color:${r.availablePercent >= 75 ? 'var(--accent-success)' : r.availablePercent >= 25 ? 'var(--accent-warning)' : 'var(--accent-danger)'}">
+                                ${r.availablePercent}% Available (${r.allocatedPercent}% Allocated)
+                            </span>
+                        </div>
+                        <div class="rs-avail-track">
+                            <div class="rs-avail-bar ${availCls}" style="width:${Math.max(4, r.availablePercent)}%"></div>
+                        </div>
+                    </div>
+
+                    <div class="rs-skills-section">
+                        <div class="rs-skills-label">Employee Skills &amp; Proficiency</div>
+                        <div class="rs-skills-list">
+                            ${skills.length ? skills.map(s => {
+                                const isTarget = skillId && (s.id == skillId || (r.matchData.matchedSkill && r.matchData.matchedSkill.id === s.id));
+                                return `
+                                <span class="rs-skill-pill ${isTarget ? 'target-matched' : ''}" title="${escapeHtml(s.skillName)} - ${s.proficiencyLabel || getProfLabel(s.proficiencyLevel)} (Level ${s.proficiencyLevel}/5)${s.evidence ? ' | ' + escapeHtml(s.evidence) : ''}">
+                                    ${escapeHtml(s.skillName)}
+                                    <span class="rs-skill-lvl-badge">L${s.proficiencyLevel}</span>
+                                </span>`;
+                            }).join('') : '<span style="font-size:12px;color:var(--text-muted)">No skills listed</span>'}
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:8px">
+                        <div class="rs-skills-label">Match Breakdown &amp; Evidence</div>
+                        <div class="rs-reasons-list">
+                            ${r.matchData.reasons.map(res => `
+                                <span class="rs-reason-tag ${res.positive ? 'positive' : ''}">${escapeHtml(res.text)}</span>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="rs-card-actions">
+                    <button class="btn btn-secondary btn-sm" onclick="showEmployeeDetail(${r.employeeId})" title="View full profile and verified skills">
+                        View Profile
+                    </button>
+                    <button class="btn btn-primary btn-sm" onclick="showAllocateModal(${r.employeeId}, null, '${escapeHtml(r.name)}')" title="Allocate this resource to an active demand">
+                        ${IC.plus} Allocate
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="askAiAboutResource('${escapeHtml(r.name)}', '${escapeHtml(r.department || '')}')" title="Ask AI staffing advisor about this resource">
+                        ${IC.ai} Ask AI
+                    </button>
+                </div>
+            </div>`;
+        });
+        html += `</div>`;
+    } else {
+        html += `
+        <div class="card" style="margin-bottom:24px">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Resource</th>
+                            <th>Department</th>
+                            <th>Location</th>
+                            <th>Target / Top Skills</th>
+                            <th>Allocated / Available</th>
+                            <th>Match Score</th>
+                            <th style="text-align:right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${resources.map(r => {
+                            const badgeCls = getMatchBadgeClass(r.matchData.totalScore);
+                            const availCls = getAvailColorClass(r.availablePercent);
+                            const skills = r.skills || [];
+                            return `
+                            <tr>
+                                <td>
+                                    <strong style="color:var(--text-primary);cursor:pointer" onclick="showEmployeeDetail(${r.employeeId})">${escapeHtml(r.name)}</strong>
+                                    <br><small style="color:var(--text-muted)">${escapeHtml(r.employeeCode || '')}</small>
+                                </td>
+                                <td>${escapeHtml(r.department || 'Engineering')}</td>
+                                <td>${IC.loc} ${escapeHtml(r.location || 'N/A')}</td>
+                                <td>
+                                    <div style="display:flex;flex-wrap:wrap;gap:4px">
+                                        ${skills.slice(0, 3).map(s => {
+                                            const isTarget = skillId && (s.id == skillId || (r.matchData.matchedSkill && r.matchData.matchedSkill.id === s.id));
+                                            return `<span class="rs-skill-pill ${isTarget ? 'target-matched' : ''}" style="font-size:10.5px;padding:2px 6px">
+                                                ${escapeHtml(s.skillName)} <span class="rs-skill-lvl-badge">L${s.proficiencyLevel}</span>
+                                            </span>`;
+                                        }).join('')}
+                                        ${skills.length > 3 ? `<span style="font-size:11px;color:var(--text-muted)">+${skills.length - 3}</span>` : ''}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div style="display:flex;align-items:center;gap:8px">
+                                        <div class="rs-avail-track" style="width:90px">
+                                            <div class="rs-avail-bar ${availCls}" style="width:${Math.max(4, r.availablePercent)}%"></div>
+                                        </div>
+                                        <span style="font-size:12px;font-weight:600;color:${r.availablePercent >= 75 ? 'var(--accent-success)' : r.availablePercent >= 25 ? 'var(--accent-warning)' : 'var(--accent-danger)'}">
+                                            ${r.availablePercent}% Avail
+                                        </span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="rs-match-badge ${badgeCls}" style="font-size:11px;padding:4px 8px">
+                                        ${r.matchData.totalScore}%
+                                    </span>
+                                </td>
+                                <td style="text-align:right">
+                                    <div style="display:inline-flex;gap:6px">
+                                        <button class="btn btn-secondary btn-sm" onclick="showEmployeeDetail(${r.employeeId})">Profile</button>
+                                        <button class="btn btn-primary btn-sm" onclick="showAllocateModal(${r.employeeId}, null, '${escapeHtml(r.name)}')">Allocate</button>
+                                        <button class="btn btn-secondary btn-sm" onclick="askAiAboutResource('${escapeHtml(r.name)}', '${escapeHtml(r.department || '')}')">${IC.ai}</button>
+                                    </div>
+                                </td>
+                            </tr>`;
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>
+        </div>`;
+    }
+
+    // Availability Timeline (Runn / CMap style)
+    if (weeks.length > 0) {
+        html += `
+        <div class="rs-timeline-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px">
+                <div>
+                    <div style="font-size:15px;font-weight:700;color:var(--text-primary)">Availability Timeline (Weekly Capacity Heatmap)</div>
+                    <div style="font-size:12px;color:var(--text-secondary)">Calculated from confirmed allocations within the selected search window</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:14px;font-size:12px">
+                    <span style="display:inline-flex;align-items:center;gap:6px">
+                        <span style="width:12px;height:12px;border-radius:3px;background:rgba(16,185,129,0.25);border:1px solid #10b981"></span>
+                        <span style="color:var(--text-secondary)">100% Free</span>
+                    </span>
+                    <span style="display:inline-flex;align-items:center;gap:6px">
+                        <span style="width:12px;height:12px;border-radius:3px;background:rgba(245,158,11,0.25);border:1px solid #f59e0b"></span>
+                        <span style="color:var(--text-secondary)">Partial (&lt;100%)</span>
+                    </span>
+                    <span style="display:inline-flex;align-items:center;gap:6px">
+                        <span style="width:12px;height:12px;border-radius:3px;background:rgba(239,68,68,0.25);border:1px solid #ef4444"></span>
+                        <span style="color:var(--text-secondary)">Fully Booked</span>
+                    </span>
+                </div>
+            </div>
+            ${!resources.length ? `
+                <div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px">
+                    No resources to display in timeline.
+                </div>
+            ` : `
+                <div class="table-container">
+                    <table class="rs-timeline-table">
+                        <thead>
+                            <tr>
+                                <th>Resource</th>
+                                ${weeks.map(w => `<th>${escapeHtml(w.label)}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${resources.map(r => `
+                                <tr>
+                                    <td>
+                                        <div style="font-weight:600;color:var(--text-primary);cursor:pointer" onclick="showEmployeeDetail(${r.employeeId})">
+                                            ${escapeHtml(r.name)}
+                                        </div>
+                                        <div style="font-size:11px;color:var(--text-muted)">
+                                            ${escapeHtml(r.department || 'Engineering')} &bull; ${IC.loc} ${escapeHtml(r.location || '')}
+                                        </div>
+                                    </td>
+                                    ${weeks.map(w => {
+                                        const alloc = getEmpWeeklyAllocation(r.employeeId, w.start, w.end, allocations);
+                                        if (alloc === 0) {
+                                            return `<td><div class="rs-timeline-block free" title="${escapeHtml(r.name)} | Week ${w.index}: 100% Free">100% Free</div></td>`;
+                                        } else if (alloc < 100) {
+                                            return `<td><div class="rs-timeline-block partial" title="${escapeHtml(r.name)} | Week ${w.index}: ${100 - alloc}% Available (${alloc}% Allocated)">${100 - alloc}% Avail</div></td>`;
+                                        } else {
+                                            return `<td><div class="rs-timeline-block booked" title="${escapeHtml(r.name)} | Week ${w.index}: Fully Booked (${alloc}% Allocated)">Booked</div></td>`;
+                                        }
+                                    }).join('')}
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `}
+        </div>`;
+    }
+
+    resultsEl.innerHTML = html;
 }
 
 // ============================================================
