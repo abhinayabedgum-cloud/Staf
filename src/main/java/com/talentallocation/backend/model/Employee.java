@@ -4,11 +4,12 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
  * Represents an employee in the system.
- * Stores personal details and employment status.
+ * Stores personal details, workforce profile, employment status, skills, and certifications.
  */
 @Entity
 @Table(name = "employees",
@@ -46,13 +47,52 @@ public class Employee {
     @Column(length = 100)
     private String email;
 
-    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Column(name = "job_role", length = 100)
+    private String currentRole;
+
+    @Column
+    private Integer yearsOfExperience;
+
+    // Current Project details (Section 4)
+    @Column(length = 150)
+    private String currentProject;
+
+    @Column(length = 100)
+    private String projectRole;
+
+    @Column
+    private LocalDate projectStartDate;
+
+    @Column
+    private LocalDate projectEndDate;
+
+    @Column
+    private Integer projectCompletionPercent;
+
+    // Availability details (Section 5)
+    @Column(length = 50)
+    @Enumerated(EnumType.STRING)
+    private AvailabilityStatus availabilityStatus;
+
+    @Column
+    private LocalDate expectedAvailabilityDate;
+
+    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<EmployeeSkill> skills;
+
+    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<Certification> certifications;
 
     @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Allocation> allocations;
 
     public enum EmploymentStatus {
         ACTIVE, INACTIVE, ON_LEAVE, TERMINATED
+    }
+
+    public enum AvailabilityStatus {
+        FULLY_ALLOCATED,
+        PARTIALLY_AVAILABLE,
+        AVAILABLE_FOR_NEW_PROJECT
     }
 }

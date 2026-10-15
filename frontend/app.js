@@ -31,25 +31,131 @@ const IC = {
 };
 
 // ============================================================
-// ROUTER
+// AUTHENTICATION & SESSION STATE
 // ============================================================
-const router = {
-    currentPage: 'dashboard',
-    navigate(page) {
-        if (!pageTitles[page]) page = 'dashboard';
-        this.currentPage = page;
-        if (window.location.hash !== '#' + page) {
-            window.location.hash = page;
+const authState = {
+    token: sessionStorage.getItem('ts_auth_token') || null,
+    role: sessionStorage.getItem('ts_auth_role') || null,
+    user: JSON.parse(sessionStorage.getItem('ts_auth_user') || 'null'),
+
+    setSession(token, role, user) {
+        this.token = token;
+        this.role = role;
+        this.user = user;
+        sessionStorage.setItem('ts_auth_token', token);
+        sessionStorage.setItem('ts_auth_role', role);
+        sessionStorage.setItem('ts_auth_user', JSON.stringify(user));
+        this.updateSessionUI();
+        this.updateNavPermissions();
+    },
+
+    clearSession() {
+        this.token = null;
+        this.role = null;
+        this.user = null;
+        sessionStorage.removeItem('ts_auth_token');
+        sessionStorage.removeItem('ts_auth_role');
+        sessionStorage.removeItem('ts_auth_user');
+        this.updateSessionUI();
+        this.updateNavPermissions();
+    },
+
+    isManager() {
+        return this.role === 'ROLE_MANAGER';
+    },
+
+    isEmployee() {
+        return this.role === 'ROLE_EMPLOYEE';
+    },
+
+    isAuthenticated() {
+        return !!this.token;
+    },
+
+    updateSessionUI() {
+        const container = document.getElementById('userSessionContainer');
+        if (!container) return;
+        if (!this.isAuthenticated()) {
+            container.innerHTML = `
+                <button class="portal-quick-btn" onclick="router.navigate('portal')">
+                    ${IC.logo} Sign In / Access Portal
+                </button>
+            `;
+            return;
         }
-        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-        const navEl = document.getElementById(`nav-${page}`);
-        if (navEl) navEl.classList.add('active');
-        document.getElementById('pageTitle').textContent = pageTitles[page] || page;
-        renderPage(page);
+
+        if (this.isManager()) {
+            container.innerHTML = `
+                <div class="user-session-pill">
+                    <div class="user-session-avatar" style="background:var(--accent-warning);color:#111827">M</div>
+                    <div class="user-session-info">
+                        <span class="user-session-name">Manager Cockpit</span>
+                        <span class="user-session-role">ROLE_MANAGER</span>
+                    </div>
+                    <button class="btn-logout" onclick="logout()" title="Switch Access / Logout">Exit</button>
+                </div>
+            `;
+        } else if (this.isEmployee() && this.user) {
+            const initial = (this.user.name || 'E').charAt(0).toUpperCase();
+            container.innerHTML = `
+                <div class="user-session-pill">
+                    <div class="user-session-avatar">${initial}</div>
+                    <div class="user-session-info">
+                        <span class="user-session-name">${escapeHtml(this.user.name)} (${this.user.employeeCode})</span>
+                        <span class="user-session-role">EMPLOYEE SELF-SERVICE</span>
+                    </div>
+                    <button class="btn-logout" onclick="logout()" title="Switch Access / Logout">Exit</button>
+                </div>
+            `;
+        }
+    },
+
+    updateNavPermissions() {
+        const managerNavIds = [
+            'nav-item-dashboard', 'nav-item-demands', 'nav-item-employees',
+            'nav-item-skills', 'nav-item-search', 'nav-item-allocations', 'nav-item-ai'
+        ];
+        const selfServiceNav = document.getElementById('nav-item-self-service');
+        const portalNav = document.getElementById('nav-item-portal');
+
+        if (this.isManager()) {
+            managerNavIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'block';
+            });
+            if (selfServiceNav) selfServiceNav.style.display = 'none';
+            if (portalNav) portalNav.style.display = 'block';
+        } else if (this.isEmployee()) {
+            managerNavIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+            });
+            if (selfServiceNav) selfServiceNav.style.display = 'block';
+            if (portalNav) portalNav.style.display = 'block';
+        } else {
+            // Unauthenticated state
+            managerNavIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+            });
+            if (selfServiceNav) selfServiceNav.style.display = 'none';
+            if (portalNav) portalNav.style.display = 'block';
+        }
     }
 };
 
+function logout() {
+    authState.clearSession();
+    showToast('Signed out successfully. Switched to TalentSync Entry Portal.', 'success');
+    router.navigate('portal');
+}
+
+// ============================================================
+// ROUTER
+// ============================================================
 const pageTitles = {
+    portal: 'TalentSync Entry Portal',
+    'self-service': 'Employee Self-Service',
     dashboard: 'Dashboard',
     demands: 'Project Demands',
     employees: 'Employees',
@@ -59,13 +165,76 @@ const pageTitles = {
     ai: 'AI Staffing Assistant'
 };
 
+const router = {
+    currentPage: 'portal',
+    navigate(page) {
+        if (!pageTitles[page]) page = 'portal';
+
+        // Manager routes access control
+        const managerRoutes = ['dashboard', 'demands', 'employees', 'skills', 'search', 'allocations', 'ai'];
+        if (managerRoutes.includes(page)) {
+            if (!authState.isManager()) {
+                if (authState.isEmployee()) {
+                    showToast('Manager functionality is restricted. Returned to your Self-Service portal.', 'warning');
+                    this.navigate('self-service');
+                    return;
+                } else {
+                    showToast('Please sign in as Manager to access management features.', 'warning');
+                    this.navigate('portal');
+                    return;
+                }
+            }
+        }
+
+        // Employee Self-Service route access control
+        if (page === 'self-service') {
+            if (!authState.isAuthenticated()) {
+                showToast('Please identify yourself or sign in via Employee Self-Service.', 'warning');
+                this.navigate('portal');
+                return;
+            }
+        }
+
+        this.currentPage = page;
+        if (window.location.hash !== '#' + page) {
+            window.location.hash = page;
+        }
+
+        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+        const navEl = document.getElementById(`nav-${page}`);
+        if (navEl) navEl.classList.add('active');
+
+        const pageTitleEl = document.getElementById('pageTitle');
+        if (pageTitleEl) pageTitleEl.textContent = pageTitles[page] || page;
+
+        authState.updateNavPermissions();
+        authState.updateSessionUI();
+        renderPage(page);
+    }
+};
+
 // ============================================================
 // API HELPERS
 // ============================================================
 async function apiFetch(path, method = 'GET', body = null) {
     const opts = { method, headers: { 'Content-Type': 'application/json' } };
+    if (authState.token) {
+        opts.headers['Authorization'] = `Bearer ${authState.token}`;
+    }
     if (body) opts.body = JSON.stringify(body);
+
     const res = await fetch(API_BASE + path, opts);
+
+    if (res.status === 401) {
+        authState.clearSession();
+        router.navigate('portal');
+        throw new Error('Authentication required or session expired. Please sign in again.');
+    }
+
+    if (res.status === 403) {
+        throw new Error('Access forbidden: You do not have permissions for this resource.');
+    }
+
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || `HTTP ${res.status}`);
     return data;
@@ -480,32 +649,103 @@ function getProfColorClass(level) {
 async function showEmployeeDetail(id, highlightSkillName = null) {
     const emp = await apiFetch(`/employees/${id}`);
     const skillsList = emp.skills || [];
+    const certsList = emp.certifications || [];
     const avgScore = skillsList.length
         ? (skillsList.reduce((acc, s) => acc + s.proficiencyLevel, 0) / skillsList.length).toFixed(1)
         : '0.0';
 
-    openModal(`${escapeHtml(emp.name)} &bull; Skill Profile`, `
+    const completion = emp.projectCompletionPercent !== undefined && emp.projectCompletionPercent !== null ? emp.projectCompletionPercent : 0;
+    const availStatus = emp.availabilityStatus || 'AVAILABLE_FOR_NEW_PROJECT';
+    const availLabel = availStatus.replace(/_/g, ' ');
+
+    openModal(`${escapeHtml(emp.name)} &bull; Workforce Staffing Profile`, `
     <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border-color)">
         <div class="candidate-avatar" style="width:60px;height:60px;font-size:22px;border-radius:12px">${emp.name.charAt(0)}</div>
         <div style="flex:1">
             <div style="display:flex;justify-content:space-between;align-items:center">
-                <span style="font-size:18px;font-weight:700;color:var(--text-primary)">${emp.name}</span>
+                <div>
+                    <span style="font-size:18px;font-weight:700;color:var(--text-primary)">${escapeHtml(emp.name)}</span>
+                    <span style="font-size:13px;color:var(--accent-primary);font-weight:600;margin-left:8px">${escapeHtml(emp.currentRole || 'Software Engineer')}</span>
+                </div>
                 <button class="btn btn-primary btn-sm" onclick="closeModal();showAddSkillModal(${emp.id}, '${emp.name}')">${IC.plus} Add Skill</button>
             </div>
             <div style="color:var(--text-secondary);font-size:12.5px;margin-top:2px">
-                ${emp.employeeCode} &bull; ${emp.department || 'Engineering'} &bull; ${IC.loc} ${emp.location || 'N/A'}
+                ${emp.employeeCode} &bull; ${escapeHtml(emp.department || 'Engineering')} &bull; ${IC.loc} ${escapeHtml(emp.location || 'N/A')} &bull; 
+                <strong style="color:var(--text-primary)">${emp.yearsOfExperience !== null && emp.yearsOfExperience !== undefined ? emp.yearsOfExperience + ' Yrs Experience' : 'Experience not specified'}</strong>
             </div>
             <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
                 ${badgeHtml(emp.employmentStatus, emp.employmentStatus === 'ACTIVE' ? 'active' : 'on-leave')}
                 <span class="badge" style="background:rgba(99,102,241,0.12);color:var(--text-accent);border:1px solid rgba(99,102,241,0.25)">
                     ${skillsList.length} Skills &bull; Avg ${avgScore}/5
                 </span>
+                <span class="badge" style="background:rgba(16,185,129,0.12);color:#34d399;border:1px solid rgba(16,185,129,0.25)">
+                    ${certsList.length} Certifications
+                </span>
             </div>
         </div>
     </div>
 
+    <!-- PROJECT & AVAILABILITY OVERVIEW (From Self-Service Sync) -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+        <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-xs);padding:14px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                <span style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-muted);letter-spacing:0.5px">Active Project</span>
+                <span style="font-size:12px;font-weight:800;color:var(--accent-primary)">${completion}% Complete</span>
+            </div>
+            <div style="font-size:14px;font-weight:700;color:var(--text-primary)">${escapeHtml(emp.currentProject || 'Unallocated / On Bench')}</div>
+            <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">
+                Role: <strong>${escapeHtml(emp.projectRole || 'N/A')}</strong>
+            </div>
+            <div style="height:6px;background:rgba(255,255,255,0.08);border-radius:3px;margin:8px 0 4px;overflow:hidden">
+                <div style="height:100%;width:${completion}%;background:var(--grad-primary);border-radius:3px"></div>
+            </div>
+            <div style="font-size:11px;color:var(--text-muted)">
+                ${emp.projectStartDate ? emp.projectStartDate + ' &rarr; ' + (emp.projectEndDate || 'Present') : 'Timeline not scheduled'}
+            </div>
+        </div>
+
+        <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-xs);padding:14px">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-muted);letter-spacing:0.5px;margin-bottom:6px">Staffing Availability</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                <span class="badge ${availStatus === 'AVAILABLE_FOR_NEW_PROJECT' ? 'badge-active' : availStatus === 'PARTIALLY_AVAILABLE' ? 'badge-on-leave' : 'badge-cancelled'}" style="font-size:11px">
+                    ${availLabel}
+                </span>
+            </div>
+            <div style="font-size:12px;color:var(--text-secondary)">
+                Available for New Assignment:
+                <strong style="color:var(--text-primary);display:block;margin-top:2px">
+                    ${emp.expectedAvailabilityDate ? emp.expectedAvailabilityDate : 'Immediate Deployment'}
+                </strong>
+            </div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:8px">
+                Source: Employee Self-Service Data
+            </div>
+        </div>
+    </div>
+
+    <!-- CERTIFICATIONS LIST -->
+    <div style="margin-bottom:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span class="card-title" style="font-size:13px">Professional Certifications (${certsList.length})</span>
+            <span style="font-size:11px;color:var(--text-muted)">Self-Service Verified</span>
+        </div>
+        ${certsList.length === 0 ? '<div style="font-size:12px;color:var(--text-muted);padding:8px 0">No certifications recorded.</div>' : `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            ${certsList.map(c => `
+                <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-xs);padding:10px 12px">
+                    <div style="font-size:12.5px;font-weight:700;color:var(--text-primary)">${escapeHtml(c.name)}</div>
+                    <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">${escapeHtml(c.issuingOrganization || 'Certification Authority')}</div>
+                    <div style="font-size:10.5px;color:var(--text-muted);margin-top:4px">
+                        Issued: ${c.issueDate || 'N/A'}${c.expiryDate ? ' &bull; Exp: ' + c.expiryDate : ''}
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+        `}
+    </div>
+
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <span class="card-title" style="font-size:14px">Competency &amp; Verified Proficiency</span>
+        <span class="card-title" style="font-size:13px">Competency &amp; Verified Skills</span>
         <span style="font-size:11.5px;color:var(--text-muted)">Scale: 1 (Beginner) to 5 (Master)</span>
     </div>
 
@@ -519,7 +759,7 @@ async function showEmployeeDetail(id, highlightSkillName = null) {
             <div class="skill-bar-top">
                 <div class="skill-bar-name">
                     <span>${s.skillName}</span>
-                    <span class="skill-tag">${s.category}</span>
+                    <span class="skill-tag">${s.category || 'General'}</span>
                     ${isTarget ? '<span class="badge badge-active" style="font-size:10px">Selected in Matrix</span>' : ''}
                 </div>
                 <div class="skill-bar-score" style="color:var(--text-primary)">
@@ -2246,6 +2486,937 @@ async function runAgent() {
 }
 
 // ============================================================
+// TALENTSYNC ACCESS PORTAL & AUTHENTICATION
+// ============================================================
+
+function quickFillEmp(code, email) {
+    const cEl = document.getElementById('pe-code');
+    const eEl = document.getElementById('pe-email');
+    if (cEl) cEl.value = code;
+    if (eEl) eEl.value = email;
+}
+
+function quickFillManager(user, pass) {
+    const uEl = document.getElementById('pm-user');
+    const pEl = document.getElementById('pm-pass');
+    if (uEl) uEl.value = user;
+    if (pEl) pEl.value = pass;
+}
+
+async function handleEmployeeLoginSubmit(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const btn = document.getElementById('btnEmployeeLogin');
+    const code = document.getElementById('pe-code').value.trim();
+    const email = document.getElementById('pe-email').value.trim();
+
+    if (!code || !email) {
+        showToast('Please provide your Employee Code and Email.', 'warning');
+        return;
+    }
+
+    try {
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = `<div class="spinner" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:6px"></div> Authenticating...`;
+        }
+
+        const res = await apiFetch('/auth/employee-login', 'POST', { employeeCode: code, email });
+        authState.setSession(res.token, res.role, res.user);
+        showToast(`Welcome, ${res.user.name}! Self-Service profile unlocked.`, 'success');
+        router.navigate('self-service');
+    } catch (err) {
+        showToast(err.message || 'Authentication failed. Please verify credentials.', 'error');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `Enter Employee Self-Service &rarr;`;
+        }
+    }
+}
+
+async function handleManagerLoginSubmit(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const btn = document.getElementById('btnManagerLogin');
+    const username = document.getElementById('pm-user').value.trim();
+    const password = document.getElementById('pm-pass').value;
+
+    if (!username || !password) {
+        showToast('Please enter manager username and password.', 'warning');
+        return;
+    }
+
+    try {
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = `<div class="spinner" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:6px"></div> Authenticating...`;
+        }
+
+        const res = await apiFetch('/auth/manager-login', 'POST', { username, password });
+        authState.setSession(res.token, res.role, res.user);
+        showToast('Manager credentials verified. Welcome to TalentSync Cockpit.', 'success');
+        router.navigate('dashboard');
+    } catch (err) {
+        showToast(err.message || 'Manager login failed. Check username and password.', 'error');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `Sign In as Manager &rarr;`;
+        }
+    }
+}
+
+function renderPortal() {
+    setPageContent(`
+    <div class="portal-container">
+        <div class="portal-hero">
+            <div class="portal-badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                TalentSync Enterprise Portal
+            </div>
+            <h1 class="portal-title">AI-Driven Resource Staffing Marketplace</h1>
+            <p class="portal-subtitle">
+                Eliminating manual spreadsheets: Direct employee self-service maintains verified workforce skills, 
+                certifications, project progress, and availability directly with the AI staffing allocation engine.
+            </p>
+
+            <div class="process-comparison">
+                <div class="process-box old">
+                    <div class="process-box-title">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                        Previous Workflow (Manual Friction)
+                    </div>
+                    <div>Employee &rarr; Spreadsheets &rarr; HR Admin &rarr; Manual Re-entry &rarr; Stale Staffing Data</div>
+                </div>
+                <div class="process-box new">
+                    <div class="process-box-title">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        TalentSync Workflow (Direct Sync)
+                    </div>
+                    <div>Employee &rarr; TalentSync Self-Service &rarr; Spring Boot &amp; DB &rarr; AI Allocation Engine</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="portal-grid">
+            <!-- EMPLOYEE SELF-SERVICE CARD -->
+            <div class="portal-card employee">
+                <div class="portal-card-header">
+                    <div class="portal-card-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    </div>
+                    <div>
+                        <span class="portal-card-badge">Talent Self-Service</span>
+                        <h2 class="portal-card-title">Employee Self-Service</h2>
+                    </div>
+                </div>
+                <p class="portal-card-desc">
+                    Maintain your professional workforce profile, level 1–5 skills, active certifications, current project completion %, and real-time availability.
+                </p>
+                <ul class="portal-feature-list">
+                    <li class="portal-feature-item">${IC.check} Direct profile synchronization with AI staffing engine</li>
+                    <li class="portal-feature-item">${IC.check} Multi-skill proficiency management (1=Beginner to 5=Expert)</li>
+                    <li class="portal-feature-item">${IC.check} Active certifications &amp; issuing credentials</li>
+                    <li class="portal-feature-item">${IC.check} Project progress tracking (0–100%) &amp; allocation status</li>
+                </ul>
+
+                <form id="portalEmployeeForm" class="portal-auth-form" onsubmit="handleEmployeeLoginSubmit(event)">
+                    <div class="form-group">
+                        <label>Employee Code *</label>
+                        <input type="text" id="pe-code" placeholder="e.g. EMP001" required value="EMP001">
+                    </div>
+                    <div class="form-group">
+                        <label>Corporate Email *</label>
+                        <input type="email" id="pe-email" placeholder="e.g. ram@example.com" required value="ram@example.com">
+                    </div>
+                    <button type="button" class="btn btn-primary" id="btnEmployeeLogin" onclick="handleEmployeeLoginSubmit(event)" style="width:100%;justify-content:center;padding:12px">
+                        Enter Employee Self-Service &rarr;
+                    </button>
+                    <div>
+                        <span style="font-size:11px;color:var(--text-muted)">Quick Demo Selection:</span>
+                        <div class="portal-quick-users">
+                            <button type="button" class="portal-quick-btn" onclick="quickFillEmp('EMP001','ram@example.com')">Ram (EMP001 &bull; Lead Java)</button>
+                            <button type="button" class="portal-quick-btn" onclick="quickFillEmp('EMP002','priya@example.com')">Priya (EMP002 &bull; React Lead)</button>
+                            <button type="button" class="portal-quick-btn" onclick="quickFillEmp('EMP003','vikram@example.com')">Vikram (EMP003 &bull; Data Eng)</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- MANAGER LOGIN CARD -->
+            <div class="portal-card manager">
+                <div class="portal-card-header">
+                    <div class="portal-card-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    </div>
+                    <div>
+                        <span class="portal-card-badge">Staffing Cockpit</span>
+                        <h2 class="portal-card-title">Manager Login</h2>
+                    </div>
+                </div>
+                <p class="portal-card-desc">
+                    Access executive resource planning, open project demands, real-time allocations, and run the AI Staffing Assistant recommendations engine.
+                </p>
+                <ul class="portal-feature-list">
+                    <li class="portal-feature-item">${IC.check} Real-time view of self-service updated profiles &amp; certs</li>
+                    <li class="portal-feature-item">${IC.check} Full-team Skills Heatmap &amp; Resource Availability Timeline</li>
+                    <li class="portal-feature-item">${IC.check} Project demand creation &amp; fulfillment matching</li>
+                    <li class="portal-feature-item">${IC.check} AI Copilot with interactive candidate explanations</li>
+                </ul>
+
+                <form id="portalManagerForm" class="portal-auth-form" onsubmit="handleManagerLoginSubmit(event)">
+                    <div class="form-group">
+                        <label>Manager Username *</label>
+                        <input type="text" id="pm-user" placeholder="e.g. manager" required value="manager">
+                    </div>
+                    <div class="form-group">
+                        <label>Password *</label>
+                        <input type="password" id="pm-pass" placeholder="••••••••" required value="admin123">
+                    </div>
+                    <button type="button" class="btn btn-primary" id="btnManagerLogin" onclick="handleManagerLoginSubmit(event)" style="width:100%;justify-content:center;padding:12px;background:linear-gradient(135deg, #f59e0b, #d97706);border-color:#f59e0b">
+                        Sign In as Manager &rarr;
+                    </button>
+                    <div>
+                        <span style="font-size:11px;color:var(--text-muted)">Default Demo Credentials:</span>
+                        <div class="portal-quick-users">
+                            <button type="button" class="portal-quick-btn" onclick="quickFillManager('manager','admin123')">Fill Demo (manager / admin123)</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    `);
+}
+
+// ============================================================
+// EMPLOYEE SELF-SERVICE WORKFLOW
+// ============================================================
+let ssState = {
+    currentStep: 1,
+    masterSkills: [],
+    profile: null,
+    isSaving: false,
+    submitSuccess: false,
+    errorMessage: null
+};
+
+const PROFICIENCY_SCALE = [
+    { level: 1, label: 'Beginner', desc: 'Fundamental conceptual awareness' },
+    { level: 2, label: 'Basic', desc: 'Practical basic knowledge; routine tasks' },
+    { level: 3, label: 'Intermediate', desc: 'Independent production deliverables' },
+    { level: 4, label: 'Advanced', desc: 'Deep technical proficiency; guides best practices' },
+    { level: 5, label: 'Expert', desc: 'Mastery / Architectural authority; mentors team' }
+];
+
+async function renderSelfService() {
+    if (!authState.isAuthenticated()) {
+        router.navigate('portal');
+        return;
+    }
+
+    showLoading();
+    try {
+        const [profile, skills] = await Promise.all([
+            apiFetch('/self-service/profile'),
+            apiFetch('/skills')
+        ]);
+
+        ssState.masterSkills = skills || [];
+        ssState.profile = {
+            id: profile.id,
+            employeeCode: profile.employeeCode || '',
+            name: profile.name || '',
+            email: profile.email || '',
+            department: profile.department || '',
+            currentRole: profile.currentRole || '',
+            yearsOfExperience: profile.yearsOfExperience !== null && profile.yearsOfExperience !== undefined ? profile.yearsOfExperience : 0,
+            skills: (profile.skills || []).map(s => ({
+                skillId: s.skillId,
+                skillName: s.skillName,
+                category: s.category || '',
+                proficiencyLevel: s.proficiencyLevel || 3,
+                evidence: s.evidence || '',
+                lastValidatedAt: s.lastValidatedAt || ''
+            })),
+            certifications: (profile.certifications || []).map(c => ({
+                name: c.name || '',
+                issuingOrganization: c.issuingOrganization || '',
+                issueDate: c.issueDate || '',
+                expiryDate: c.expiryDate || ''
+            })),
+            currentProject: profile.currentProject || '',
+            projectRole: profile.projectRole || '',
+            projectStartDate: profile.projectStartDate || '',
+            projectEndDate: profile.projectEndDate || '',
+            projectCompletionPercent: profile.projectCompletionPercent !== null && profile.projectCompletionPercent !== undefined ? profile.projectCompletionPercent : 50,
+            availabilityStatus: profile.availabilityStatus || 'PARTIALLY_AVAILABLE',
+            expectedAvailabilityDate: profile.expectedAvailabilityDate || ''
+        };
+        ssState.currentStep = 1;
+        ssState.submitSuccess = false;
+        ssState.isSaving = false;
+        ssState.errorMessage = null;
+
+        renderSelfServiceContainer();
+    } catch (err) {
+        showApiError(err);
+    }
+}
+
+function renderSelfServiceContainer() {
+    const steps = [
+        { num: 1, label: 'Profile' },
+        { num: 2, label: 'Skills' },
+        { num: 3, label: 'Certifications' },
+        { num: 4, label: 'Project' },
+        { num: 5, label: 'Availability' },
+        { num: 6, label: 'Review & Submit' }
+    ];
+
+    setPageContent(`
+    <div class="self-service-wrapper">
+        <!-- HEADER -->
+        <div class="ss-header">
+            <div class="ss-header-left">
+                <h1 class="ss-title">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    Update Your Workforce Profile
+                </h1>
+                <p class="ss-subtitle">
+                    Keep your skills, certifications, project experience and availability up to date so TalentSync can make better staffing decisions.
+                </p>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center">
+                <span class="badge" style="background:rgba(99,102,241,0.15);color:var(--text-accent);border:1px solid rgba(99,102,241,0.3)">
+                    ID: ${escapeHtml(ssState.profile.employeeCode)}
+                </span>
+                <button class="btn btn-secondary btn-sm" onclick="router.navigate('portal')">Switch Portal</button>
+            </div>
+        </div>
+
+        <!-- STEPPER NAV -->
+        <div class="ss-stepper">
+            ${steps.map(s => {
+                const isActive = ssState.currentStep === s.num;
+                const isCompleted = ssState.currentStep > s.num;
+                return `
+                <button type="button" class="ss-step-btn ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}" onclick="ssGoToStep(${s.num})">
+                    <div class="ss-step-num">${isCompleted ? '✓' : s.num}</div>
+                    <span class="ss-step-label">${s.label}</span>
+                </button>`;
+            }).join('')}
+        </div>
+
+        <!-- STEP CARD -->
+        <div class="ss-card" id="ssCardContainer">
+            ${renderActiveStepContent()}
+        </div>
+    </div>
+    `);
+}
+
+function renderActiveStepContent() {
+    const p = ssState.profile;
+
+    if (ssState.submitSuccess) {
+        return `
+        <div class="ss-success-banner">
+            <div class="ss-success-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div>
+                <h2 class="ss-success-title">Profile updated successfully.</h2>
+                <p class="ss-success-desc">
+                    Your updated information is now available for TalentSync staffing and resource allocation decisions.
+                </p>
+            </div>
+        </div>
+
+        <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-sm);padding:20px;display:flex;flex-direction:column;gap:12px">
+            <div style="font-size:14px;font-weight:700;color:var(--text-primary)">Verified Submission Summary</div>
+            <div style="font-size:13px;color:var(--text-secondary);display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div>&bull; Employee: <strong>${escapeHtml(p.name)} (${p.employeeCode})</strong></div>
+                <div>&bull; Role: <strong>${escapeHtml(p.currentRole)}</strong> (${p.yearsOfExperience} yrs exp)</div>
+                <div>&bull; Active Skills: <strong>${p.skills.length} skills recorded</strong></div>
+                <div>&bull; Certifications: <strong>${p.certifications.length} verified</strong></div>
+                <div>&bull; Project: <strong>${escapeHtml(p.currentProject || 'Unallocated')} (${p.projectCompletionPercent}% Complete)</strong></div>
+                <div>&bull; Availability: <strong>${p.availabilityStatus.replace(/_/g,' ')}</strong></div>
+            </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:12px">
+            <button class="btn btn-secondary" onclick="ssResetForEdit()">Edit Profile Again</button>
+            <button class="btn btn-primary" onclick="testViewInManager()">Sign In as Manager to Verify &rarr;</button>
+        </div>
+        `;
+    }
+
+    switch (ssState.currentStep) {
+        case 1:
+            return `
+            <div class="ss-card-header">
+                <h2 class="ss-card-title">Section 1 — Employee Information</h2>
+                <p class="ss-card-subtitle">Verify your primary corporate identity, job role, and aggregate industry experience.</p>
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Employee ID *</label>
+                    <input type="text" value="${escapeHtml(p.employeeCode)}" readonly disabled style="opacity:0.65;background:rgba(255,255,255,0.02)">
+                </div>
+                <div class="form-group">
+                    <label>Full Name *</label>
+                    <input type="text" id="ss-name" value="${escapeHtml(p.name)}" placeholder="e.g. Ram" required oninput="ssState.profile.name = this.value">
+                </div>
+                <div class="form-group">
+                    <label>Corporate Email *</label>
+                    <input type="email" id="ss-email" value="${escapeHtml(p.email)}" placeholder="e.g. ram@talentsync.io" required oninput="ssState.profile.email = this.value">
+                </div>
+                <div class="form-group">
+                    <label>Department *</label>
+                    <input type="text" id="ss-dept" value="${escapeHtml(p.department)}" placeholder="e.g. Cloud & Platform Engineering" required oninput="ssState.profile.department = this.value">
+                </div>
+                <div class="form-group">
+                    <label>Current Role *</label>
+                    <input type="text" id="ss-role" value="${escapeHtml(p.currentRole)}" placeholder="e.g. Senior Java Developer" required oninput="ssState.profile.currentRole = this.value">
+                </div>
+                <div class="form-group">
+                    <label>Years of Experience *</label>
+                    <input type="number" id="ss-years" min="0" max="50" value="${p.yearsOfExperience}" required oninput="ssState.profile.yearsOfExperience = parseInt(this.value)||0">
+                </div>
+            </div>
+            <div class="ss-actions">
+                <div></div>
+                <button class="btn btn-primary" onclick="ssNextStep()">Continue to Skills &rarr;</button>
+            </div>`;
+
+        case 2:
+            return `
+            <div class="ss-card-header">
+                <h2 class="ss-card-title">Section 2 — Skills &amp; Proficiency</h2>
+                <p class="ss-card-subtitle">
+                    Select your competencies. Use the standardized scale: 
+                    <strong>1 — Beginner | 2 — Basic | 3 — Intermediate | 4 — Advanced | 5 — Expert</strong>
+                </p>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:12px">
+                <div style="font-size:13px;font-weight:700;color:var(--text-primary)">
+                    Your Recorded Skills (${p.skills.length})
+                </div>
+
+                ${p.skills.length === 0 ? `
+                    <div style="text-align:center;padding:24px;border:1px dashed var(--border-color);border-radius:var(--radius-sm);color:var(--text-muted)">
+                        No skills listed yet. Add your technical competencies below.
+                    </div>
+                ` : `
+                    <div style="display:flex;flex-direction:column;gap:8px">
+                        ${p.skills.map((s, idx) => `
+                            <div class="ss-item-row">
+                                <div class="ss-item-info">
+                                    <div class="ss-item-title">${escapeHtml(s.skillName)}</div>
+                                    <div class="ss-item-sub">${escapeHtml(s.category || 'General')} ${s.evidence ? '&bull; ' + escapeHtml(s.evidence) : ''}</div>
+                                </div>
+                                <div style="display:flex;align-items:center;gap:12px">
+                                    <select onchange="ssUpdateSkillProficiency(${idx}, this.value)" style="padding:6px 10px;font-size:12px;background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border-color);border-radius:var(--radius-xs)">
+                                        ${PROFICIENCY_SCALE.map(scale => `
+                                            <option value="${scale.level}" ${scale.level === s.proficiencyLevel ? 'selected' : ''}>
+                                                ${scale.level} — ${scale.label}
+                                            </option>
+                                        `).join('')}
+                                    </select>
+                                    <button class="btn-logout" onclick="ssRemoveSkill(${idx})" title="Remove skill">&times; Remove</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `}
+
+                <!-- ADD NEW SKILL INLINE -->
+                <div style="margin-top:12px;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-sm);padding:16px">
+                    <div style="font-size:12.5px;font-weight:700;color:var(--text-accent);margin-bottom:10px">+ Add New Skill</div>
+                    <div style="display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1.5fr) auto;gap:12px;align-items:flex-end">
+                        <div class="form-group" style="margin:0">
+                            <label style="font-size:11px">Select Master Skill *</label>
+                            <select id="ss-new-skill-id" style="font-size:12.5px">
+                                ${ssState.masterSkills.map(ms => `
+                                    <option value="${ms.id}">${escapeHtml(ms.name)} (${escapeHtml(ms.category)})</option>
+                                `).join('')}
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin:0">
+                            <label style="font-size:11px">Proficiency Level *</label>
+                            <select id="ss-new-skill-level" style="font-size:12.5px">
+                                ${PROFICIENCY_SCALE.map(sc => `
+                                    <option value="${sc.level}" ${sc.level === 3 ? 'selected' : ''}>
+                                        ${sc.level} — ${sc.label} (${sc.desc})
+                                    </option>
+                                `).join('')}
+                            </select>
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="ssHandleAddSkill()" style="padding:8px 16px;white-space:nowrap">
+                            ${IC.plus} Add Skill
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ss-actions">
+                <button class="btn btn-secondary" onclick="ssPrevStep()">&larr; Back to Profile</button>
+                <button class="btn btn-primary" onclick="ssNextStep()">Continue to Certifications &rarr;</button>
+            </div>`;
+
+        case 3:
+            return `
+            <div class="ss-card-header">
+                <h2 class="ss-card-title">Section 3 — Certifications</h2>
+                <p class="ss-card-subtitle">Add verified certifications to substantiate your competency for project staffing requirements.</p>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:14px">
+                <div style="font-size:13px;font-weight:700;color:var(--text-primary)">
+                    Recorded Certifications (${p.certifications.length})
+                </div>
+
+                ${p.certifications.length === 0 ? `
+                    <div style="text-align:center;padding:24px;border:1px dashed var(--border-color);border-radius:var(--radius-sm);color:var(--text-muted)">
+                        No certifications recorded yet. Add your credentials below.
+                    </div>
+                ` : `
+                    <div style="display:flex;flex-direction:column;gap:8px">
+                        ${p.certifications.map((c, idx) => `
+                            <div class="ss-item-row">
+                                <div class="ss-item-info">
+                                    <div class="ss-item-title">${escapeHtml(c.name)}</div>
+                                    <div class="ss-item-sub">
+                                        ${escapeHtml(c.issuingOrganization || 'Certification Authority')} 
+                                        &bull; Obtained: ${c.issueDate || 'N/A'} ${c.expiryDate ? '&bull; Exp: ' + c.expiryDate : ''}
+                                    </div>
+                                </div>
+                                <button class="btn-logout" onclick="ssRemoveCertification(${idx})">&times; Remove</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                `}
+
+                <!-- ADD CERTIFICATION FORM -->
+                <div style="margin-top:12px;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-sm);padding:18px">
+                    <div style="font-size:12.5px;font-weight:700;color:var(--text-accent);margin-bottom:12px">+ Add Certification</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Certification Name *</label>
+                            <input type="text" id="ss-cert-name" placeholder="e.g. AWS Certified Solutions Architect">
+                        </div>
+                        <div class="form-group">
+                            <label>Issuing Organization *</label>
+                            <input type="text" id="ss-cert-org" placeholder="e.g. Amazon Web Services / Oracle">
+                        </div>
+                        <div class="form-group">
+                            <label>Date Obtained</label>
+                            <input type="date" id="ss-cert-issue">
+                        </div>
+                        <div class="form-group">
+                            <label>Expiry Date (if applicable)</label>
+                            <input type="date" id="ss-cert-expiry">
+                        </div>
+                    </div>
+                    <div style="display:flex;justify-content:flex-end;margin-top:10px">
+                        <button type="button" class="btn btn-primary btn-sm" onclick="ssHandleAddCert()">
+                            ${IC.plus} Add Certification
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ss-actions">
+                <button class="btn btn-secondary" onclick="ssPrevStep()">&larr; Back to Skills</button>
+                <button class="btn btn-primary" onclick="ssNextStep()">Continue to Current Project &rarr;</button>
+            </div>`;
+
+        case 4:
+            return `
+            <div class="ss-card-header">
+                <h2 class="ss-card-title">Section 4 — Current Project</h2>
+                <p class="ss-card-subtitle">Maintain your current assignment details, delivery role, and projected completion percentage.</p>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Current Project Name</label>
+                    <input type="text" id="ss-proj-name" value="${escapeHtml(p.currentProject)}" placeholder="e.g. Project Phoenix" oninput="ssState.profile.currentProject = this.value">
+                </div>
+                <div class="form-group">
+                    <label>Project Role</label>
+                    <input type="text" id="ss-proj-role" value="${escapeHtml(p.projectRole)}" placeholder="e.g. Technical Lead" oninput="ssState.profile.projectRole = this.value">
+                </div>
+                <div class="form-group">
+                    <label>Start Date</label>
+                    <input type="date" id="ss-proj-start" value="${p.projectStartDate || ''}" onchange="ssState.profile.projectStartDate = this.value">
+                </div>
+                <div class="form-group">
+                    <label>Expected Completion Date</label>
+                    <input type="date" id="ss-proj-end" value="${p.projectEndDate || ''}" onchange="ssState.profile.projectEndDate = this.value">
+                </div>
+            </div>
+
+            <!-- COMPLETION PERCENTAGE SLIDER -->
+            <div class="completion-slider-box">
+                <div class="completion-slider-header">
+                    <div>
+                        <div style="font-size:14px;font-weight:700;color:var(--text-primary)">Completion Percentage</div>
+                        <div style="font-size:12px;color:var(--text-secondary)">Drag slider to update delivery progress (0% to 100%)</div>
+                    </div>
+                    <div class="completion-slider-val" id="ssCompletionVal">${p.projectCompletionPercent}%</div>
+                </div>
+                <input type="range" class="completion-slider-input" min="0" max="100" value="${p.projectCompletionPercent}" oninput="ssUpdateCompletionSlider(this.value)">
+                <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted)">
+                    <span>0% (Just Started)</span>
+                    <span>50% (Mid-Delivery)</span>
+                    <span>100% (Completed / Wrapping Up)</span>
+                </div>
+            </div>
+
+            <div class="ss-actions">
+                <button class="btn btn-secondary" onclick="ssPrevStep()">&larr; Back to Certifications</button>
+                <button class="btn btn-primary" onclick="ssNextStep()">Continue to Availability &rarr;</button>
+            </div>`;
+
+        case 5:
+            return `
+            <div class="ss-card-header">
+                <h2 class="ss-card-title">Section 5 — Availability</h2>
+                <p class="ss-card-subtitle">Signal your readiness for new project demands to the TalentSync allocation engine.</p>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:18px">
+                <div class="avail-grid">
+                    <div class="avail-card ${p.availabilityStatus === 'FULLY_ALLOCATED' ? 'selected' : ''}" onclick="ssSelectAvailability('FULLY_ALLOCATED')">
+                        <div class="avail-card-header">
+                            <span class="avail-card-title">Fully Allocated</span>
+                            <div class="avail-card-radio"></div>
+                        </div>
+                        <p class="avail-card-desc">100% committed to current engagement; unavailable for secondary demands.</p>
+                    </div>
+
+                    <div class="avail-card ${p.availabilityStatus === 'PARTIALLY_AVAILABLE' ? 'selected' : ''}" onclick="ssSelectAvailability('PARTIALLY_AVAILABLE')">
+                        <div class="avail-card-header">
+                            <span class="avail-card-title">Partially Available</span>
+                            <div class="avail-card-radio"></div>
+                        </div>
+                        <p class="avail-card-desc">Open for part-time advisory, architecture reviews, or partial allocation.</p>
+                    </div>
+
+                    <div class="avail-card ${p.availabilityStatus === 'AVAILABLE_FOR_NEW_PROJECT' ? 'selected' : ''}" onclick="ssSelectAvailability('AVAILABLE_FOR_NEW_PROJECT')">
+                        <div class="avail-card-header">
+                            <span class="avail-card-title">Available for New Project</span>
+                            <div class="avail-card-radio"></div>
+                        </div>
+                        <p class="avail-card-desc">Ready for immediate placement and matching by the AI Staffing Assistant.</p>
+                    </div>
+                </div>
+
+                <div class="form-group" style="max-width:360px">
+                    <label>Expected Availability Date *</label>
+                    <input type="date" id="ss-avail-date" value="${p.expectedAvailabilityDate || ''}" onchange="ssState.profile.expectedAvailabilityDate = this.value">
+                    <span style="font-size:11px;color:var(--text-muted);margin-top:4px;display:block">
+                        Leave blank if immediately available, or specify project handover date.
+                    </span>
+                </div>
+            </div>
+
+            <div class="ss-actions">
+                <button class="btn btn-secondary" onclick="ssPrevStep()">&larr; Back to Current Project</button>
+                <button class="btn btn-primary" onclick="ssNextStep()">Review Profile &rarr;</button>
+            </div>`;
+
+        case 6:
+            return `
+            <div class="ss-card-header">
+                <h2 class="ss-card-title">Section 6 — Review &amp; Submit</h2>
+                <p class="ss-card-subtitle">Review your updated workforce profile summary before submitting to the staffing engine.</p>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:16px">
+                <!-- PROFILE & ROLE -->
+                <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-sm);padding:18px">
+                    <div style="font-size:13px;font-weight:700;color:var(--text-accent);margin-bottom:8px">1. Employee Details</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px">
+                        <div>ID: <strong>${escapeHtml(p.employeeCode)}</strong></div>
+                        <div>Name: <strong>${escapeHtml(p.name)}</strong></div>
+                        <div>Email: <strong>${escapeHtml(p.email)}</strong></div>
+                        <div>Department: <strong>${escapeHtml(p.department)}</strong></div>
+                        <div>Current Role: <strong>${escapeHtml(p.currentRole)}</strong></div>
+                        <div>Experience: <strong>${p.yearsOfExperience} Years</strong></div>
+                    </div>
+                </div>
+
+                <!-- SKILLS -->
+                <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-sm);padding:18px">
+                    <div style="font-size:13px;font-weight:700;color:var(--text-accent);margin-bottom:8px">2. Verified Skills (${p.skills.length})</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px">
+                        ${p.skills.map(s => `
+                            <span class="badge" style="background:rgba(99,102,241,0.12);color:var(--text-primary);border:1px solid rgba(99,102,241,0.3);padding:6px 10px">
+                                ${escapeHtml(s.skillName)}: <strong>${s.proficiencyLevel}/5 (${getProfLabel(s.proficiencyLevel)})</strong>
+                            </span>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <!-- CERTS -->
+                <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-sm);padding:18px">
+                    <div style="font-size:13px;font-weight:700;color:var(--text-accent);margin-bottom:8px">3. Certifications (${p.certifications.length})</div>
+                    ${p.certifications.length === 0 ? '<div style="font-size:12px;color:var(--text-muted)">None listed</div>' : `
+                        <div style="display:flex;flex-direction:column;gap:6px">
+                            ${p.certifications.map(c => `
+                                <div style="font-size:12.5px;color:var(--text-secondary)">
+                                    &bull; <strong>${escapeHtml(c.name)}</strong> (${escapeHtml(c.issuingOrganization || 'N/A')}) &mdash; Issued: ${c.issueDate || 'N/A'}
+                                </div>
+                            `).join('')}
+                        </div>
+                    `}
+                </div>
+
+                <!-- PROJECT & AVAILABILITY -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                    <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-sm);padding:18px">
+                        <div style="font-size:13px;font-weight:700;color:var(--text-accent);margin-bottom:8px">4. Current Project</div>
+                        <div style="font-size:13px">Project: <strong>${escapeHtml(p.currentProject || 'None / Bench')}</strong></div>
+                        <div style="font-size:12.5px;color:var(--text-secondary);margin-top:2px">Role: ${escapeHtml(p.projectRole || 'N/A')}</div>
+                        <div style="font-size:12.5px;color:var(--accent-primary);font-weight:700;margin-top:4px">Completion: ${p.projectCompletionPercent}%</div>
+                    </div>
+                    <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-sm);padding:18px">
+                        <div style="font-size:13px;font-weight:700;color:var(--text-accent);margin-bottom:8px">5. Staffing Availability</div>
+                        <div style="font-size:13px">Status: <strong>${p.availabilityStatus.replace(/_/g,' ')}</strong></div>
+                        <div style="font-size:12.5px;color:var(--text-secondary);margin-top:4px">Available From: <strong>${p.expectedAvailabilityDate || 'Immediate'}</strong></div>
+                    </div>
+                </div>
+
+                ${ssState.errorMessage ? `
+                    <div style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);padding:12px 16px;border-radius:var(--radius-xs);color:#fca5a5;font-size:13px">
+                        ${escapeHtml(ssState.errorMessage)}
+                    </div>
+                ` : ''}
+            </div>
+
+            <div class="ss-actions">
+                <button class="btn btn-secondary" onclick="ssPrevStep()" ${ssState.isSaving ? 'disabled' : ''}>&larr; Back to Availability</button>
+                <button class="btn btn-primary" id="btnSubmitProfile" onclick="ssSubmitProfile()" ${ssState.isSaving ? 'disabled' : ''} style="background:linear-gradient(135deg, #10b981, #059669);border-color:#10b981;font-weight:700">
+                    ${ssState.isSaving ? '<div class="spinner" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:6px"></div> Saving profile...' : `${IC.check} Save / Submit Profile`}
+                </button>
+            </div>`;
+
+        default:
+            return '';
+    }
+}
+
+function ssGoToStep(step) {
+    if (ssState.isSaving) return;
+    if (step > ssState.currentStep && !ssValidateStep(ssState.currentStep)) return;
+    ssState.currentStep = step;
+    renderSelfServiceContainer();
+}
+
+function ssNextStep() {
+    if (!ssValidateStep(ssState.currentStep)) return;
+    if (ssState.currentStep < 6) {
+        ssState.currentStep++;
+        renderSelfServiceContainer();
+    }
+}
+
+function ssPrevStep() {
+    if (ssState.currentStep > 1) {
+        ssState.currentStep--;
+        renderSelfServiceContainer();
+    }
+}
+
+function ssValidateStep(step) {
+    const p = ssState.profile;
+    if (step === 1) {
+        if (!p.name || !p.name.trim()) { showToast('Full Name is required.', 'error'); return false; }
+        if (!p.email || !p.email.includes('@')) { showToast('A valid corporate email is required.', 'error'); return false; }
+        if (!p.department || !p.department.trim()) { showToast('Department is required.', 'error'); return false; }
+        if (!p.currentRole || !p.currentRole.trim()) { showToast('Current Role is required.', 'error'); return false; }
+        if (p.yearsOfExperience < 0 || p.yearsOfExperience > 50) { showToast('Years of Experience must be between 0 and 50.', 'error'); return false; }
+    }
+    if (step === 4) {
+        if (p.projectCompletionPercent < 0 || p.projectCompletionPercent > 100) {
+            showToast('Completion percentage must be between 0 and 100%.', 'error');
+            return false;
+        }
+        if (p.projectStartDate && p.projectEndDate && p.projectStartDate > p.projectEndDate) {
+            showToast('Start Date cannot be after Expected Completion Date.', 'error');
+            return false;
+        }
+    }
+    if (step === 5) {
+        if (!p.availabilityStatus) {
+            showToast('Please select your availability status.', 'error');
+            return false;
+        }
+    }
+    return true;
+}
+
+function ssHandleAddSkill() {
+    const skillSelect = document.getElementById('ss-new-skill-id');
+    const levelSelect = document.getElementById('ss-new-skill-level');
+    if (!skillSelect || !levelSelect) return;
+
+    const skillId = parseInt(skillSelect.value);
+    const level = parseInt(levelSelect.value);
+    const masterSkill = ssState.masterSkills.find(s => s.id === skillId);
+    if (!masterSkill) return;
+
+    // Check if already in list
+    const existing = ssState.profile.skills.find(s => s.skillId === skillId);
+    if (existing) {
+        existing.proficiencyLevel = level;
+        showToast(`Updated proficiency for ${masterSkill.name} to level ${level}.`, 'success');
+    } else {
+        ssState.profile.skills.push({
+            skillId: masterSkill.id,
+            skillName: masterSkill.name,
+            category: masterSkill.category,
+            proficiencyLevel: level,
+            evidence: 'Self-reported proficiency',
+            lastValidatedAt: new Date().toISOString().split('T')[0]
+        });
+        showToast(`Added ${masterSkill.name} (Level ${level})`, 'success');
+    }
+    renderSelfServiceContainer();
+}
+
+function ssRemoveSkill(index) {
+    ssState.profile.skills.splice(index, 1);
+    renderSelfServiceContainer();
+}
+
+function ssUpdateSkillProficiency(index, newLevel) {
+    if (ssState.profile.skills[index]) {
+        ssState.profile.skills[index].proficiencyLevel = parseInt(newLevel);
+    }
+}
+
+function ssHandleAddCert() {
+    const nameEl = document.getElementById('ss-cert-name');
+    const orgEl = document.getElementById('ss-cert-org');
+    const issueEl = document.getElementById('ss-cert-issue');
+    const expEl = document.getElementById('ss-cert-expiry');
+
+    if (!nameEl || !nameEl.value.trim()) {
+        showToast('Certification Name is required.', 'error');
+        return;
+    }
+
+    ssState.profile.certifications.push({
+        name: nameEl.value.trim(),
+        issuingOrganization: orgEl ? orgEl.value.trim() : '',
+        issueDate: issueEl ? issueEl.value : null,
+        expiryDate: expEl ? expEl.value : null
+    });
+    showToast(`Added certification: ${nameEl.value.trim()}`, 'success');
+    renderSelfServiceContainer();
+}
+
+function ssRemoveCertification(index) {
+    ssState.profile.certifications.splice(index, 1);
+    renderSelfServiceContainer();
+}
+
+function ssSelectAvailability(status) {
+    ssState.profile.availabilityStatus = status;
+    renderSelfServiceContainer();
+}
+
+function ssUpdateCompletionSlider(val) {
+    const num = Math.min(100, Math.max(0, parseInt(val) || 0));
+    ssState.profile.projectCompletionPercent = num;
+    const valEl = document.getElementById('ssCompletionVal');
+    if (valEl) valEl.textContent = `${num}%`;
+}
+
+function ssResetForEdit() {
+    ssState.submitSuccess = false;
+    ssState.currentStep = 1;
+    renderSelfServiceContainer();
+}
+
+function testViewInManager() {
+    quickFillManager('manager', 'admin123');
+    router.navigate('portal');
+}
+
+async function ssSubmitProfile() {
+    if (!ssValidateStep(1) || !ssValidateStep(4) || !ssValidateStep(5)) return;
+
+    ssState.isSaving = true;
+    ssState.errorMessage = null;
+    renderSelfServiceContainer();
+
+    try {
+        const payload = {
+            name: ssState.profile.name,
+            email: ssState.profile.email,
+            department: ssState.profile.department,
+            currentRole: ssState.profile.currentRole,
+            yearsOfExperience: ssState.profile.yearsOfExperience,
+            skills: ssState.profile.skills.map(s => ({
+                skillId: s.skillId,
+                skillName: s.skillName,
+                proficiencyLevel: s.proficiencyLevel,
+                evidence: s.evidence,
+                lastValidatedAt: s.lastValidatedAt
+            })),
+            certifications: ssState.profile.certifications.map(c => ({
+                name: c.name,
+                issuingOrganization: c.issuingOrganization,
+                issueDate: c.issueDate,
+                expiryDate: c.expiryDate
+            })),
+            currentProject: ssState.profile.currentProject,
+            projectRole: ssState.profile.projectRole,
+            projectStartDate: ssState.profile.projectStartDate,
+            projectEndDate: ssState.profile.projectEndDate,
+            projectCompletionPercent: ssState.profile.projectCompletionPercent,
+            availabilityStatus: ssState.profile.availabilityStatus,
+            expectedAvailabilityDate: ssState.profile.expectedAvailabilityDate
+        };
+
+        const updated = await apiFetch('/self-service/profile', 'PUT', payload);
+        ssState.isSaving = false;
+        ssState.submitSuccess = true;
+        showToast('Profile updated successfully.', 'success');
+        renderSelfServiceContainer();
+    } catch (err) {
+        ssState.isSaving = false;
+        ssState.errorMessage = 'Unable to update your profile. Please try again.';
+        showToast(ssState.errorMessage, 'error');
+        renderSelfServiceContainer();
+    }
+}
+
+// Global window bindings for inline HTML handlers
+window.quickFillEmp = quickFillEmp;
+window.quickFillManager = quickFillManager;
+window.handleEmployeeLoginSubmit = handleEmployeeLoginSubmit;
+window.handleManagerLoginSubmit = handleManagerLoginSubmit;
+window.ssGoToStep = ssGoToStep;
+window.ssNextStep = ssNextStep;
+window.ssPrevStep = ssPrevStep;
+window.ssHandleAddSkill = ssHandleAddSkill;
+window.ssRemoveSkill = ssRemoveSkill;
+window.ssUpdateSkillProficiency = ssUpdateSkillProficiency;
+window.ssHandleAddCert = ssHandleAddCert;
+window.ssRemoveCertification = ssRemoveCertification;
+window.ssSelectAvailability = ssSelectAvailability;
+window.ssUpdateCompletionSlider = ssUpdateCompletionSlider;
+window.ssResetForEdit = ssResetForEdit;
+window.testViewInManager = testViewInManager;
+window.ssSubmitProfile = ssSubmitProfile;
+
+// ============================================================
 // HELPERS
 // ============================================================
 function showApiError(err) {
@@ -2259,8 +3430,17 @@ function showApiError(err) {
 }
 
 function renderPage(page) {
-    const pages = { dashboard: renderDashboard, demands: renderDemands, employees: renderEmployees,
-        skills: renderSkills, search: renderSearch, allocations: renderAllocations, ai: renderAI };
+    const pages = {
+        portal: renderPortal,
+        'self-service': renderSelfService,
+        dashboard: renderDashboard,
+        demands: renderDemands,
+        employees: renderEmployees,
+        skills: renderSkills,
+        search: renderSearch,
+        allocations: renderAllocations,
+        ai: renderAI
+    };
     if (pages[page]) pages[page]();
 }
 
@@ -2690,8 +3870,18 @@ document.addEventListener('DOMContentLoaded', () => {
     checkApiStatus();
     setInterval(checkApiStatus, 10000);
 
+    authState.updateSessionUI();
+    authState.updateNavPermissions();
+
     const initialHash = window.location.hash.replace('#', '');
-    const initialPage = pageTitles[initialHash] ? initialHash : 'dashboard';
+    let initialPage = 'portal';
+    if (authState.isManager()) {
+        initialPage = (pageTitles[initialHash] && initialHash !== 'portal' && initialHash !== 'self-service') ? initialHash : 'dashboard';
+    } else if (authState.isEmployee()) {
+        initialPage = 'self-service';
+    } else {
+        initialPage = 'portal';
+    }
     router.navigate(initialPage);
 });
 

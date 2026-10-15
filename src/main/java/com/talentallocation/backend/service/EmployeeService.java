@@ -24,6 +24,7 @@ public class EmployeeService {
     private final EmployeeRepository employeeRepository;
     private final SkillRepository skillRepository;
     private final EmployeeSkillRepository employeeSkillRepository;
+    private final CertificationRepository certificationRepository;
 
     @Transactional
     public EmployeeResponse createEmployee(EmployeeRequest request) {
@@ -102,6 +103,28 @@ public class EmployeeService {
         response.setEmploymentStatus(employee.getEmploymentStatus());
         response.setDepartment(employee.getDepartment());
         response.setEmail(employee.getEmail());
+
+        response.setCurrentRole(employee.getCurrentRole() != null ? employee.getCurrentRole() : "Software Professional");
+        response.setYearsOfExperience(employee.getYearsOfExperience() != null ? employee.getYearsOfExperience() : 3);
+        response.setCurrentProject(employee.getCurrentProject());
+        response.setProjectRole(employee.getProjectRole());
+        response.setProjectStartDate(employee.getProjectStartDate());
+        response.setProjectEndDate(employee.getProjectEndDate());
+        response.setProjectCompletionPercent(employee.getProjectCompletionPercent());
+        response.setAvailabilityStatus(employee.getAvailabilityStatus());
+        response.setExpectedAvailabilityDate(employee.getExpectedAvailabilityDate());
+
+        List<Certification> certs = certificationRepository.findByEmployeeId(employee.getId());
+        List<EmployeeResponse.CertificationResponse> certResponses = certs.stream().map(c -> {
+            EmployeeResponse.CertificationResponse cr = new EmployeeResponse.CertificationResponse();
+            cr.setId(c.getId());
+            cr.setName(c.getName());
+            cr.setIssuingOrganization(c.getIssuingOrganization());
+            cr.setIssueDate(c.getIssueDate());
+            cr.setExpiryDate(c.getExpiryDate());
+            return cr;
+        }).collect(Collectors.toList());
+        response.setCertifications(certResponses);
 
         List<EmployeeSkill> skills = employeeSkillRepository.findByEmployeeId(employee.getId());
         List<EmployeeResponse.SkillResponse> skillResponses = skills.stream().map(es -> {
