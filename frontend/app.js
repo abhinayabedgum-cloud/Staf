@@ -229,10 +229,15 @@ async function renderDemands() {
     } catch (err) { showApiError(err); }
 }
 
-function showCreateDemandModal() {
-    apiFetch('/skills').then(skills => {
-        const opts = skills.map(s => `<option value="${s.id}">${s.name} (${s.category})</option>`).join('');
-        openModal('Create New Demand', `
+async function showCreateDemandModal() {
+    let opts = '';
+    try {
+        const skills = await apiFetch('/skills');
+        opts = (skills || []).map(s => `<option value="${s.id}">${s.name} (${s.category})</option>`).join('');
+    } catch (err) {
+        console.warn('Failed to load skills list:', err);
+    }
+    openModal('Create New Demand', `
         <form id="demandForm">
             <div class="form-grid">
                 <div class="form-group"><label>Project Name *</label><input type="text" id="df-project" placeholder="e.g. Project Alpha" required></div>
@@ -277,7 +282,6 @@ function showCreateDemandModal() {
                 closeModal(); showToast('Demand created!'); renderDemands();
             } catch (err) { showToast(err.message, 'error'); }
         });
-    });
 }
 
 async function showRecommendations(demandId) {

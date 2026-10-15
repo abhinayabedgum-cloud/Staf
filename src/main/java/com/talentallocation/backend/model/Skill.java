@@ -35,6 +35,7 @@ public class Skill {
     @Column(length = 500)
     private String description;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @OneToMany(mappedBy = "skill", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<EmployeeSkill> employeeSkills;
 }
