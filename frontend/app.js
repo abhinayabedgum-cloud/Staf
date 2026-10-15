@@ -87,7 +87,7 @@ function showToast(message, type = 'success') {
 // MODAL
 // ============================================================
 function openModal(title, bodyHtml) {
-    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalTitle').innerHTML = title;
     document.getElementById('modalBody').innerHTML = bodyHtml;
     document.getElementById('modalOverlay').classList.add('open');
 }
@@ -474,7 +474,7 @@ async function showEmployeeDetail(id, highlightSkillName = null) {
         ? (skillsList.reduce((acc, s) => acc + s.proficiencyLevel, 0) / skillsList.length).toFixed(1)
         : '0.0';
 
-    openModal(`${emp.name} &bull; Skill Profile`, `
+    openModal(`${escapeHtml(emp.name)} &bull; Skill Profile`, `
     <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border-color)">
         <div class="candidate-avatar" style="width:60px;height:60px;font-size:22px;border-radius:12px">${emp.name.charAt(0)}</div>
         <div style="flex:1">
