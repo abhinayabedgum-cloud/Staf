@@ -176,6 +176,13 @@ const router = {
     navigate(page) {
         if (!pageTitles[page]) page = 'portal';
 
+        // Toggle full-screen isolation mode for portal
+        if (page === 'portal') {
+            document.body.classList.add('portal-mode');
+        } else {
+            document.body.classList.remove('portal-mode');
+        }
+
         // Seamless navigation ensuring manager routes have active session
         const managerRoutes = ['dashboard', 'demands', 'employees', 'skills', 'search', 'allocations', 'ai'];
         if (managerRoutes.includes(page) && !authState.isManager()) {
@@ -2631,6 +2638,17 @@ async function renderPortal() {
 
     setPageContent(`
     <div class="portal-container">
+        <!-- BRAND HEADER -->
+        <div class="portal-brand-header">
+            <div class="portal-brand-logo">
+                <div class="portal-brand-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                <span class="portal-brand-text">TalentSync</span>
+            </div>
+            <p class="portal-brand-sub">Workforce Profile &amp; Project Resource Allocation Portal</p>
+        </div>
+
         <!-- PORTAL TOGGLE SWITCH -->
         <div class="portal-toggle-bar">
             <div class="portal-segmented-control">
@@ -2645,303 +2663,283 @@ async function renderPortal() {
             </div>
         </div>
 
-        ${portalActiveTab === 'employee' ? renderPortalEmployeeView(employeesList) : renderPortalManagerView()}
+        ${portalActiveTab === 'employee' ? renderPortalEmployeeView() : renderPortalManagerView()}
     </div>
     `);
 }
 
 function renderPortalManagerView() {
     return `
-    <div class="manager-auth-card">
-        <div class="manager-auth-header">
-            <div class="manager-auth-icon">
+    <div class="portal-white-card manager-card">
+        <div style="text-align:center;margin-bottom:24px">
+            <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#fef3c7,#fde68a);color:#b45309;display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px;box-shadow:0 4px 12px rgba(245,158,11,0.2)">
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             </div>
-            <h2 class="manager-auth-title">Manager Portal Access</h2>
-            <p class="manager-auth-desc">Sign in with your corporate management credentials to access the resource staffing cockpit.</p>
+            <div>
+                <span class="pwc-badge manager">Executive Staffing Cockpit</span>
+            </div>
+            <h2 style="font-size:22px;font-weight:800;color:#0f172a;margin-top:4px">Manager Portal Access</h2>
+            <p style="font-size:13.5px;color:#64748b;margin-top:4px">Sign in to access executive resource planning, open demands, and AI staffing recommendations.</p>
         </div>
 
         <form id="mgrLoginForm" onsubmit="event.preventDefault(); doManagerLogin();" style="display:flex;flex-direction:column;gap:16px">
-            <div class="form-group">
-                <label>Corporate Email or Username</label>
-                <input type="text" id="mgrLoginEmail" placeholder="Enter corporate email or username" autocomplete="off">
+            <div class="pwc-field">
+                <label class="pwc-label">Corporate Email or Username</label>
+                <input type="text" id="mgrLoginEmail" class="pwc-input" placeholder="Enter corporate email or username" autocomplete="off" value="">
             </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" id="mgrLoginPassword" placeholder="Enter password" autocomplete="off">
+            <div class="pwc-field">
+                <label class="pwc-label">Password</label>
+                <input type="password" id="mgrLoginPassword" class="pwc-input" placeholder="Enter password" autocomplete="off" value="">
             </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--text-secondary)">
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#64748b">
                 <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
-                    <input type="checkbox" checked style="accent-color:var(--accent-warning)"> Remember session
+                    <input type="checkbox" checked style="accent-color:#d97706"> Remember session
                 </label>
-                <span style="color:var(--accent-warning);cursor:pointer">Enterprise SSO</span>
+                <span style="color:#d97706;font-weight:600;cursor:pointer">Enterprise SSO</span>
             </div>
-            <button type="submit" class="btn btn-primary" id="btnManagerLogin" style="width:100%;padding:13px;justify-content:center;background:linear-gradient(135deg, #f59e0b, #d97706);border-color:#f59e0b;font-size:14.5px;font-weight:700">
-                Sign In to Manager Portal &rarr;
+            <button type="button" onclick="doManagerLogin()" style="width:100%;padding:14px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#ffffff;border:none;border-radius:10px;font-size:15px;font-weight:700;box-shadow:0 4px 14px rgba(245,158,11,0.35);cursor:pointer;margin-top:6px;display:inline-flex;align-items:center;justify-content:center;gap:8px">
+                Sign In to Manager Dashboard &rarr;
             </button>
         </form>
     </div>
     `;
 }
 
-function renderPortalEmployeeView(employeesList) {
+function renderPortalEmployeeView() {
     const p = ssState.profile || {};
     const skillsList = p.skills || [];
     const certsList = p.certifications || [];
-    const completion = p.projectCompletionPercent !== undefined && p.projectCompletionPercent !== null ? p.projectCompletionPercent : 50;
+    const completion = p.projectCompletionPercent !== undefined && p.projectCompletionPercent !== null ? p.projectCompletionPercent : 75;
 
     return `
-    <div class="self-service-wrapper" style="max-width:1000px;margin:0 auto">
+    <div class="portal-white-card">
         <!-- HEADER -->
-        <div class="ss-header">
-            <div class="ss-header-left">
-                <h1 class="ss-title">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    Update Your Workforce Profile
-                </h1>
-                <p class="ss-subtitle">
-                    Keep your skills, certifications, project experience and availability up to date so TalentSync can make better staffing decisions.
-                </p>
-            </div>
-            <div style="display:flex;align-items:center;gap:12px">
-                <label style="font-size:12px;font-weight:700;color:var(--text-secondary);white-space:nowrap">Employee Record:</label>
-                <select id="portalEmpSelect" onchange="onPortalEmployeeChange(this.value)" style="padding:7px 12px;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-xs);color:var(--text-primary);font-size:13px;font-weight:600">
-                    ${employeesList.map(e => `
-                        <option value="${e.id}" ${e.id === portalSelectedEmpId ? 'selected' : ''}>
-                            ${escapeHtml(e.name)} (${e.employeeCode}) &bull; ${escapeHtml(e.currentRole || 'Developer')}
-                        </option>
-                    `).join('')}
-                </select>
-            </div>
+        <div class="pwc-header">
+            <span class="pwc-badge">Employee Workforce Portal</span>
+            <h1 class="pwc-title">Workforce Profile &amp; Project Allocation</h1>
+            <p class="pwc-subtitle">Update your personal details, current project allocation, skills, and availability for profile and resource staffing analysis.</p>
         </div>
 
         ${ssState.submitSuccess ? `
-            <div class="ss-success-banner">
-                <div class="ss-success-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <div style="background:#ecfdf5;border:1.5px solid #6ee7b7;border-radius:12px;padding:20px;display:flex;align-items:center;gap:14px;margin-bottom:24px">
+                <div style="width:36px;height:36px;border-radius:50%;background:#d1fae5;color:#059669;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                 </div>
                 <div style="flex:1">
-                    <h2 class="ss-success-title">Profile updated successfully.</h2>
-                    <p class="ss-success-desc">
-                        Your updated information is now available for TalentSync staffing and resource allocation decisions.
-                    </p>
+                    <div style="font-weight:700;font-size:15px;color:#065f46">Profile Saved &amp; Updated Successfully!</div>
+                    <div style="font-size:13px;color:#047857;margin-top:2px">Your project allocation and skills have been synchronized to the platform for profile analysis.</div>
                 </div>
-                <button class="btn btn-primary btn-sm" onclick="switchPortalTab('manager')" style="background:linear-gradient(135deg, #f59e0b, #d97706);border-color:#f59e0b;white-space:nowrap">
+                <button type="button" class="btn btn-sm" onclick="switchPortalTab('manager')" style="background:#059669;color:#ffffff;border:none;padding:8px 16px;border-radius:8px;font-weight:600;cursor:pointer">
                     Go to Manager Portal &rarr;
                 </button>
             </div>
         ` : ''}
 
-        <!-- WORKFORCE FORM CONTAINER -->
-        <div class="ss-card">
-            <!-- SECTION 1: EMPLOYEE INFO -->
-            <div class="ss-card-header">
-                <h2 class="ss-card-title">Section 1 — Employee Information</h2>
-                <p class="ss-card-subtitle">Primary workforce identity and domain experience.</p>
-            </div>
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Employee Code *</label>
-                    <input type="text" value="${escapeHtml(p.employeeCode || '')}" readonly disabled style="opacity:0.7">
+        <form id="employeeProfileForm" onsubmit="event.preventDefault(); ssSubmitProfileDirect();">
+            <!-- SECTION 1: PERSONAL & CORPORATE INFO -->
+            <div class="pwc-section">
+                <div class="pwc-section-header">
+                    <div class="pwc-section-num">1</div>
+                    <span class="pwc-section-title">Personal &amp; Corporate Information</span>
+                    <span class="pwc-section-desc">Primary workforce details</span>
                 </div>
-                <div class="form-group">
-                    <label>Full Name *</label>
-                    <input type="text" id="ss-name" value="${escapeHtml(p.name || '')}" placeholder="Full Name" required oninput="ssState.profile.name = this.value">
+                <div class="pwc-grid-3">
+                    <div class="pwc-field">
+                        <label class="pwc-label">Employee Code</label>
+                        <input type="text" class="pwc-input" value="${escapeHtml(p.employeeCode || 'EMP001')}" readonly>
+                    </div>
+                    <div class="pwc-field">
+                        <label class="pwc-label">Full Name *</label>
+                        <input type="text" class="pwc-input" id="ss-name" value="${escapeHtml(p.name || 'Ram')}" required oninput="ssState.profile.name = this.value">
+                    </div>
+                    <div class="pwc-field">
+                        <label class="pwc-label">Corporate Email *</label>
+                        <input type="email" class="pwc-input" id="ss-email" value="${escapeHtml(p.email || 'ram@example.com')}" required oninput="ssState.profile.email = this.value">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Corporate Email *</label>
-                    <input type="email" id="ss-email" value="${escapeHtml(p.email || '')}" placeholder="corporate@company.com" required oninput="ssState.profile.email = this.value">
+                <div class="pwc-grid-2" style="margin-top:14px">
+                    <div class="pwc-field">
+                        <label class="pwc-label">Department *</label>
+                        <input type="text" class="pwc-input" id="ss-dept" value="${escapeHtml(p.department || 'Core Engineering')}" required oninput="ssState.profile.department = this.value">
+                    </div>
+                    <div class="pwc-field">
+                        <label class="pwc-label">Current Role / Designation *</label>
+                        <input type="text" class="pwc-input" id="ss-role" value="${escapeHtml(p.currentRole || 'Lead Java Architect')}" required oninput="ssState.profile.currentRole = this.value">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Department *</label>
-                    <input type="text" id="ss-dept" value="${escapeHtml(p.department || '')}" placeholder="Engineering" required oninput="ssState.profile.department = this.value">
-                </div>
-                <div class="form-group">
-                    <label>Current Role *</label>
-                    <input type="text" id="ss-role" value="${escapeHtml(p.currentRole || '')}" placeholder="e.g. Lead Java Architect" required oninput="ssState.profile.currentRole = this.value">
-                </div>
-                <div class="form-group">
-                    <label>Years of Experience *</label>
-                    <input type="number" id="ss-years" min="0" max="50" value="${p.yearsOfExperience || 0}" required oninput="ssState.profile.yearsOfExperience = parseInt(this.value)||0">
+                <div class="pwc-field" style="max-width:280px;margin-top:14px">
+                    <label class="pwc-label">Years of Experience</label>
+                    <input type="number" class="pwc-input" id="ss-years" min="0" max="40" value="${p.yearsOfExperience || 9}" required oninput="ssState.profile.yearsOfExperience = parseInt(this.value)||0">
                 </div>
             </div>
 
-            <!-- SECTION 2: SKILLS & PROFICIENCY -->
-            <div class="ss-card-header" style="margin-top:12px">
-                <h2 class="ss-card-title">Section 2 — Skills &amp; Proficiency</h2>
-                <p class="ss-card-subtitle">Proficiency scale: 1 — Beginner | 2 — Basic | 3 — Intermediate | 4 — Advanced | 5 — Expert</p>
+            <!-- SECTION 2: CURRENT PROJECT ALLOCATION -->
+            <div class="pwc-section">
+                <div class="pwc-section-header">
+                    <div class="pwc-section-num">2</div>
+                    <span class="pwc-section-title">Current Project Allocation</span>
+                    <span class="pwc-section-desc">Active engagement and progress</span>
+                </div>
+                <div class="pwc-grid-2">
+                    <div class="pwc-field">
+                        <label class="pwc-label">Current Project Name *</label>
+                        <input type="text" class="pwc-input" id="ss-proj-name" value="${escapeHtml(p.currentProject || 'Project Phoenix')}" placeholder="e.g. Project Phoenix" required oninput="ssState.profile.currentProject = this.value">
+                    </div>
+                    <div class="pwc-field">
+                        <label class="pwc-label">Role in Project *</label>
+                        <input type="text" class="pwc-input" id="ss-proj-role" value="${escapeHtml(p.projectRole || 'Principal Architect')}" placeholder="e.g. Principal Architect" required oninput="ssState.profile.projectRole = this.value">
+                    </div>
+                </div>
+                <div class="pwc-grid-2" style="margin-top:14px">
+                    <div class="pwc-field">
+                        <label class="pwc-label">Project Start Date</label>
+                        <input type="date" class="pwc-input" id="ss-proj-start" value="${p.projectStartDate || '2024-01-01'}" onchange="ssState.profile.projectStartDate = this.value">
+                    </div>
+                    <div class="pwc-field">
+                        <label class="pwc-label">Expected Completion Date</label>
+                        <input type="date" class="pwc-input" id="ss-proj-end" value="${p.projectEndDate || '2024-12-31'}" onchange="ssState.profile.projectEndDate = this.value">
+                    </div>
+                </div>
+
+                <div style="margin-top:16px">
+                    <label class="pwc-label" style="margin-bottom:8px;display:block">Project Completion Progress</label>
+                    <div class="pwc-slider-box">
+                        <div class="pwc-slider-head">
+                            <span style="font-size:13.5px;font-weight:600;color:#334155">Deliverables Completed:</span>
+                            <span class="pwc-slider-val" id="ssCompletionVal">${completion}%</span>
+                        </div>
+                        <input type="range" class="pwc-slider-input" min="0" max="100" value="${completion}" oninput="ssUpdateCompletionSlider(this.value)">
+                        <div style="display:flex;justify-content:space-between;font-size:11.5px;color:#94a3b8;font-weight:600">
+                            <span>0% (Kickoff)</span>
+                            <span>50% (Milestone)</span>
+                            <span>100% (Complete)</span>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div style="display:flex;flex-direction:column;gap:10px">
-                ${skillsList.length === 0 ? '<div style="color:var(--text-muted);font-size:12.5px">No skills recorded yet. Add below.</div>' : `
-                    <div style="display:flex;flex-direction:column;gap:8px">
-                        ${skillsList.map((s, idx) => `
-                            <div class="ss-item-row">
-                                <div class="ss-item-info">
-                                    <div class="ss-item-title">${escapeHtml(s.skillName)}</div>
-                                    <div class="ss-item-sub">${escapeHtml(s.category || 'Competency')}</div>
-                                </div>
-                                <div style="display:flex;align-items:center;gap:12px">
-                                    <select onchange="ssUpdateSkillProficiency(${idx}, this.value)" style="padding:6px 10px;font-size:12px;background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border-color);border-radius:var(--radius-xs)">
-                                        <option value="1" ${s.proficiencyLevel === 1 ? 'selected' : ''}>1 — Beginner</option>
-                                        <option value="2" ${s.proficiencyLevel === 2 ? 'selected' : ''}>2 — Basic</option>
-                                        <option value="3" ${s.proficiencyLevel === 3 ? 'selected' : ''}>3 — Intermediate</option>
-                                        <option value="4" ${s.proficiencyLevel === 4 ? 'selected' : ''}>4 — Advanced</option>
-                                        <option value="5" ${s.proficiencyLevel === 5 ? 'selected' : ''}>5 — Expert</option>
-                                    </select>
-                                    <button type="button" class="btn-logout" onclick="ssRemoveSkill(${idx})">&times; Remove</button>
-                                </div>
+
+            <!-- SECTION 3: STAFFING AVAILABILITY -->
+            <div class="pwc-section">
+                <div class="pwc-section-header">
+                    <div class="pwc-section-num">3</div>
+                    <span class="pwc-section-title">Staffing &amp; Resource Availability</span>
+                    <span class="pwc-section-desc">Availability status for project staffing</span>
+                </div>
+                <div class="pwc-avail-grid">
+                    <div class="pwc-avail-card ${p.availabilityStatus === 'AVAILABLE_FOR_NEW_PROJECT' ? 'selected' : ''}" onclick="ssSelectAvailability('AVAILABLE_FOR_NEW_PROJECT')">
+                        <div class="pwc-avail-card-title">
+                            <span>Available for New Project</span>
+                            <div class="pwc-avail-radio"></div>
+                        </div>
+                        <span class="pwc-avail-card-desc">Ready for immediate assignment on upcoming demands.</span>
+                    </div>
+                    <div class="pwc-avail-card ${p.availabilityStatus === 'PARTIALLY_AVAILABLE' ? 'selected' : ''}" onclick="ssSelectAvailability('PARTIALLY_AVAILABLE')">
+                        <div class="pwc-avail-card-title">
+                            <span>Partially Available</span>
+                            <div class="pwc-avail-radio"></div>
+                        </div>
+                        <span class="pwc-avail-card-desc">Available for fractional or advisory allocation.</span>
+                    </div>
+                    <div class="pwc-avail-card ${p.availabilityStatus === 'FULLY_ALLOCATED' ? 'selected' : ''}" onclick="ssSelectAvailability('FULLY_ALLOCATED')">
+                        <div class="pwc-avail-card-title">
+                            <span>Fully Allocated</span>
+                            <div class="pwc-avail-radio"></div>
+                        </div>
+                        <span class="pwc-avail-card-desc">100% committed to current active engagement.</span>
+                    </div>
+                </div>
+                <div class="pwc-field" style="max-width:320px;margin-top:14px">
+                    <label class="pwc-label">Expected Availability Date</label>
+                    <input type="date" class="pwc-input" id="ss-avail-date" value="${p.expectedAvailabilityDate || ''}" onchange="ssState.profile.expectedAvailabilityDate = this.value">
+                </div>
+            </div>
+
+            <!-- SECTION 4: SKILLS & PROFICIENCY -->
+            <div class="pwc-section">
+                <div class="pwc-section-header">
+                    <div class="pwc-section-num">4</div>
+                    <span class="pwc-section-title">Core Skills &amp; Proficiency</span>
+                    <span class="pwc-section-desc">Rating: 1 (Beginner) to 5 (Expert)</span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                    ${skillsList.map((s, idx) => `
+                        <div class="pwc-skill-row">
+                            <div style="display:flex;flex-direction:column">
+                                <span class="pwc-skill-name">${escapeHtml(s.skillName)}</span>
+                                <span class="pwc-skill-cat">${escapeHtml(s.category || 'Competency')}</span>
                             </div>
-                        `).join('')}
-                    </div>
-                `}
-
-                <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-xs);padding:14px;margin-top:6px">
-                    <div style="font-size:12px;font-weight:700;color:var(--text-accent);margin-bottom:8px">+ Add Skill</div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:flex-end">
-                        <div class="form-group" style="margin:0">
-                            <label style="font-size:11px">Skill Name</label>
-                            <select id="ss-new-skill-id" style="font-size:12px">
-                                ${ssState.masterSkills.map(ms => `
-                                    <option value="${ms.id}">${escapeHtml(ms.name)} (${escapeHtml(ms.category)})</option>
-                                `).join('')}
-                            </select>
-                        </div>
-                        <div class="form-group" style="margin:0">
-                            <label style="font-size:11px">Proficiency Level</label>
-                            <select id="ss-new-skill-level" style="font-size:12px">
-                                <option value="1">1 — Beginner</option>
-                                <option value="2">2 — Basic</option>
-                                <option value="3" selected>3 — Intermediate</option>
-                                <option value="4">4 — Advanced</option>
-                                <option value="5">5 — Expert</option>
-                            </select>
-                        </div>
-                        <button type="button" class="btn btn-primary btn-sm" onclick="ssHandleAddSkill()">${IC.plus} Add Skill</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SECTION 3: CERTIFICATIONS -->
-            <div class="ss-card-header" style="margin-top:12px">
-                <h2 class="ss-card-title">Section 3 — Certifications</h2>
-                <p class="ss-card-subtitle">Verified professional credentials and licenses.</p>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:10px">
-                ${certsList.length === 0 ? '<div style="color:var(--text-muted);font-size:12.5px">No certifications recorded yet.</div>' : `
-                    <div style="display:flex;flex-direction:column;gap:8px">
-                        ${certsList.map((c, idx) => `
-                            <div class="ss-item-row">
-                                <div class="ss-item-info">
-                                    <div class="ss-item-title">${escapeHtml(c.name)}</div>
-                                    <div class="ss-item-sub">${escapeHtml(c.issuingOrganization || 'Authority')} &bull; Issued: ${c.issueDate || 'N/A'}</div>
-                                </div>
-                                <button type="button" class="btn-logout" onclick="ssRemoveCertification(${idx})">&times; Remove</button>
+                            <div style="display:flex;align-items:center;gap:12px">
+                                <select class="pwc-select" onchange="ssUpdateSkillProficiency(${idx}, this.value)">
+                                    <option value="1" ${s.proficiencyLevel === 1 ? 'selected' : ''}>1 — Beginner</option>
+                                    <option value="2" ${s.proficiencyLevel === 2 ? 'selected' : ''}>2 — Basic</option>
+                                    <option value="3" ${s.proficiencyLevel === 3 ? 'selected' : ''}>3 — Intermediate</option>
+                                    <option value="4" ${s.proficiencyLevel === 4 ? 'selected' : ''}>4 — Advanced</option>
+                                    <option value="5" ${s.proficiencyLevel === 5 ? 'selected' : ''}>5 — Expert</option>
+                                </select>
+                                <button type="button" onclick="ssRemoveSkill(${idx})" style="background:none;border:none;color:#ef4444;cursor:pointer;padding:4px" title="Remove Skill">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                </button>
                             </div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div style="display:flex;gap:10px;margin-top:12px;align-items:center">
+                    <select id="ss-new-skill-id" class="pwc-select" style="flex:1;padding:9px 12px">
+                        <option value="">Select a skill to add...</option>
+                        ${(ssState.masterSkills || []).filter(ms => !skillsList.some(s => s.skillId === ms.id || s.skillName === ms.name)).map(ms => `
+                            <option value="${ms.id}">${escapeHtml(ms.name)} (${escapeHtml(ms.category)})</option>
                         `).join('')}
-                    </div>
-                `}
-
-                <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-xs);padding:14px;margin-top:6px">
-                    <div style="font-size:12px;font-weight:700;color:var(--text-accent);margin-bottom:8px">+ Add Certification</div>
-                    <div class="form-grid">
-                        <div class="form-group" style="margin:0">
-                            <label style="font-size:11px">Certification Name</label>
-                            <input type="text" id="ss-cert-name" placeholder="e.g. AWS Certified Architect">
-                        </div>
-                        <div class="form-group" style="margin:0">
-                            <label style="font-size:11px">Issuing Organization</label>
-                            <input type="text" id="ss-cert-org" placeholder="e.g. Amazon Web Services / Oracle">
-                        </div>
-                        <div class="form-group" style="margin:0">
-                            <label style="font-size:11px">Date Obtained</label>
-                            <input type="date" id="ss-cert-issue">
-                        </div>
-                        <div class="form-group" style="margin:0">
-                            <label style="font-size:11px">Expiry Date</label>
-                            <input type="date" id="ss-cert-expiry">
-                        </div>
-                    </div>
-                    <div style="display:flex;justify-content:flex-end;margin-top:10px">
-                        <button type="button" class="btn btn-primary btn-sm" onclick="ssHandleAddCert()">${IC.plus} Add Certification</button>
-                    </div>
+                    </select>
+                    <select id="ss-new-skill-level" class="pwc-select" style="padding:9px 12px">
+                        <option value="1">1 — Beginner</option>
+                        <option value="2">2 — Basic</option>
+                        <option value="3" selected>3 — Intermediate</option>
+                        <option value="4">4 — Advanced</option>
+                        <option value="5">5 — Expert</option>
+                    </select>
+                    <button type="button" onclick="ssHandleAddSkill()" style="background:#f1f5f9;color:#334155;border:1.5px solid #cbd5e1;padding:9px 18px;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer">
+                        + Add Skill
+                    </button>
                 </div>
             </div>
 
-            <!-- SECTION 4: CURRENT PROJECT -->
-            <div class="ss-card-header" style="margin-top:12px">
-                <h2 class="ss-card-title">Section 4 — Current Project</h2>
-                <p class="ss-card-subtitle">Active assignment and delivery milestone completion.</p>
-            </div>
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Current Project Name</label>
-                    <input type="text" id="ss-proj-name" value="${escapeHtml(p.currentProject || '')}" placeholder="e.g. Project Phoenix" oninput="ssState.profile.currentProject = this.value">
+            <!-- SECTION 5: CERTIFICATIONS -->
+            <div class="pwc-section">
+                <div class="pwc-section-header">
+                    <div class="pwc-section-num">5</div>
+                    <span class="pwc-section-title">Certifications &amp; Credentials</span>
+                    <span class="pwc-section-desc">Verified industry credentials</span>
                 </div>
-                <div class="form-group">
-                    <label>Project Role</label>
-                    <input type="text" id="ss-proj-role" value="${escapeHtml(p.projectRole || '')}" placeholder="e.g. Backend Lead" oninput="ssState.profile.projectRole = this.value">
+                <div style="display:flex;flex-direction:column;gap:8px">
+                    ${certsList.map((c, idx) => `
+                        <div class="pwc-skill-row">
+                            <div>
+                                <span class="pwc-skill-name">${escapeHtml(c.name)}</span>
+                                <span class="pwc-skill-cat" style="display:block;margin-top:2px">${escapeHtml(c.issuingOrganization || 'Authority')} ${c.issueDate ? `&bull; Issued: ${c.issueDate}` : ''}</span>
+                            </div>
+                            <button type="button" onclick="ssRemoveCertification(${idx})" style="background:none;border:none;color:#ef4444;cursor:pointer;padding:4px" title="Remove Certificate">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            </button>
+                        </div>
+                    `).join('')}
                 </div>
-                <div class="form-group">
-                    <label>Start Date</label>
-                    <input type="date" id="ss-proj-start" value="${p.projectStartDate || ''}" onchange="ssState.profile.projectStartDate = this.value">
+                <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+                    <input type="text" id="ss-cert-name" class="pwc-input" placeholder="Certification title (e.g. AWS Solutions Architect)" style="flex:2;min-width:220px">
+                    <input type="text" id="ss-cert-org" class="pwc-input" placeholder="Issuer (e.g. AWS)" style="flex:1;min-width:140px">
+                    <input type="date" id="ss-cert-issue" class="pwc-input" style="flex:1;min-width:130px" title="Date Obtained">
+                    <button type="button" onclick="ssHandleAddCert()" style="background:#f1f5f9;color:#334155;border:1.5px solid #cbd5e1;padding:9px 18px;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer">
+                        + Add Certificate
+                    </button>
                 </div>
-                <div class="form-group">
-                    <label>Expected Completion Date</label>
-                    <input type="date" id="ss-proj-end" value="${p.projectEndDate || ''}" onchange="ssState.profile.projectEndDate = this.value">
-                </div>
-            </div>
-
-            <div class="completion-slider-box">
-                <div class="completion-slider-header">
-                    <div>
-                        <div style="font-size:14px;font-weight:700;color:var(--text-primary)">Completion Percentage (0–100%)</div>
-                        <div style="font-size:12px;color:var(--text-secondary)">Drag to update progress</div>
-                    </div>
-                    <div class="completion-slider-val" id="ssCompletionVal">${completion}%</div>
-                </div>
-                <input type="range" class="completion-slider-input" min="0" max="100" value="${completion}" oninput="ssUpdateCompletionSlider(this.value)">
-            </div>
-
-            <!-- SECTION 5: AVAILABILITY -->
-            <div class="ss-card-header" style="margin-top:12px">
-                <h2 class="ss-card-title">Section 5 — Staffing Availability</h2>
-                <p class="ss-card-subtitle">Availability status for project staffing and resource allocation.</p>
-            </div>
-            <div class="avail-grid">
-                <div class="avail-card ${p.availabilityStatus === 'FULLY_ALLOCATED' ? 'selected' : ''}" onclick="ssSelectAvailability('FULLY_ALLOCATED')">
-                    <div class="avail-card-header">
-                        <span class="avail-card-title">Fully Allocated</span>
-                        <div class="avail-card-radio"></div>
-                    </div>
-                    <p class="avail-card-desc">100% committed to current engagement.</p>
-                </div>
-                <div class="avail-card ${p.availabilityStatus === 'PARTIALLY_AVAILABLE' ? 'selected' : ''}" onclick="ssSelectAvailability('PARTIALLY_AVAILABLE')">
-                    <div class="avail-card-header">
-                        <span class="avail-card-title">Partially Available</span>
-                        <div class="avail-card-radio"></div>
-                    </div>
-                    <p class="avail-card-desc">Open for secondary or advisory assignments.</p>
-                </div>
-                <div class="avail-card ${p.availabilityStatus === 'AVAILABLE_FOR_NEW_PROJECT' ? 'selected' : ''}" onclick="ssSelectAvailability('AVAILABLE_FOR_NEW_PROJECT')">
-                    <div class="avail-card-header">
-                        <span class="avail-card-title">Available for New Project</span>
-                        <div class="avail-card-radio"></div>
-                    </div>
-                    <p class="avail-card-desc">Ready for immediate project allocation.</p>
-                </div>
-            </div>
-            <div class="form-group" style="max-width:320px;margin-top:10px">
-                <label>Expected Availability Date</label>
-                <input type="date" id="ss-avail-date" value="${p.expectedAvailabilityDate || ''}" onchange="ssState.profile.expectedAvailabilityDate = this.value">
             </div>
 
             <!-- SUBMIT BUTTON -->
-            <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border-color)">
-                <button type="button" class="btn btn-primary" id="btnSubmitProfile" onclick="ssSubmitProfileDirect()" style="padding:12px 28px;background:linear-gradient(135deg, #10b981, #059669);border-color:#10b981;font-size:14.5px;font-weight:700">
-                    ${ssState.isSaving ? '<div class="spinner" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:6px"></div> Saving profile...' : `${IC.check} Save &amp; Update Profile`}
+            <div style="display:flex;justify-content:flex-end;padding-top:20px;border-top:1.5px solid #f1f5f9;margin-top:20px">
+                <button type="button" id="btnSubmitProfile" onclick="ssSubmitProfileDirect()" style="background:linear-gradient(135deg, #4f46e5, #6366f1);color:#ffffff;border:none;padding:14px 34px;font-size:15px;font-weight:700;border-radius:10px;box-shadow:0 4px 14px rgba(79,70,229,0.35);cursor:pointer;display:inline-flex;align-items:center;gap:8px">
+                    ${ssState.isSaving ? '<div class="spinner" style="width:16px;height:16px;display:inline-block"></div> Saving...' : '💾 Save &amp; Update Profile'}
                 </button>
             </div>
-        </div>
+        </form>
     </div>
     `;
 }
