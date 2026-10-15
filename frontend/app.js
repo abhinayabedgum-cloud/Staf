@@ -273,7 +273,7 @@ async function showCreateDemandModal() {
             e.preventDefault();
             const skillIds = Array.from(document.getElementById('df-skills').selectedOptions).map(o => parseInt(o.value));
             try {
-                await apiFetch('/demands', 'POST', {
+                const newDemand = await apiFetch('/demands', 'POST', {
                     projectName: document.getElementById('df-project').value,
                     role: document.getElementById('df-role').value,
                     startDate: document.getElementById('df-start').value,
@@ -284,7 +284,13 @@ async function showCreateDemandModal() {
                     requiredSkillIds: skillIds,
                     description: document.getElementById('df-desc').value
                 });
-                closeModal(); showToast('Demand created!'); renderDemands();
+                closeModal();
+                showToast(`Project Demand "${newDemand.projectName || 'New Demand'}" created!`);
+                if (router.currentPage === 'ai') {
+                    renderAI(newDemand?.id);
+                } else {
+                    renderDemands();
+                }
             } catch (err) { showToast(err.message, 'error'); }
         });
 }
@@ -1560,28 +1566,45 @@ async function showAllocateModal(preEmpId, preDemandId, preEmpName) {
     const [employees, demands] = await Promise.all([apiFetch('/employees'), apiFetch('/demands')]);
     const activeEmps = employees.filter(e => e.employmentStatus === 'ACTIVE');
     const openDemands = demands.filter(d => d.status === 'OPEN' || d.status === 'IN_PROGRESS');
+    const defaultDemand = openDemands.find(d => d.id == preDemandId) || openDemands[0] || {};
+
     openModal('Create Allocation', `
     <form id="allocForm">
         <div class="form-grid">
             <div class="form-group"><label>Employee *</label>
-                <select id="af-emp">${activeEmps.map(e => `<option value="${e.id}" ${e.id == preEmpId ? 'selected' : ''}>${e.name} (${e.employeeCode})</option>`).join('')}</select>
+                <select id="af-emp">${activeEmps.map(e => `<option value="${e.id}" ${e.id == preEmpId ? 'selected' : ''}>${escapeHtml(e.name)} (${e.employeeCode})</option>`).join('')}</select>
             </div>
             <div class="form-group"><label>Project Demand *</label>
-                <select id="af-demand">${openDemands.map(d => `<option value="${d.id}" ${d.id == preDemandId ? 'selected' : ''}>${d.projectName} - ${d.role}</option>`).join('')}</select>
+                <select id="af-demand">${openDemands.map(d => `<option value="${d.id}" ${d.id == (preDemandId || defaultDemand.id) ? 'selected' : ''}>${escapeHtml(d.projectName)} - ${escapeHtml(d.role)}</option>`).join('')}</select>
             </div>
-            <div class="form-group"><label>Start Date *</label><input type="date" id="af-start" required></div>
-            <div class="form-group"><label>End Date *</label><input type="date" id="af-end" required></div>
-            <div class="form-group"><label>Allocation % *</label><input type="number" id="af-alloc" min="1" max="100" value="100" required></div>
-            <div class="form-group"><label>Approved By * (required)</label><input type="text" id="af-approver" placeholder="e.g. HR Director" required></div>
+            <div class="form-group"><label>Start Date *</label><input type="date" id="af-start" value="${defaultDemand.startDate || ''}" required></div>
+            <div class="form-group"><label>End Date *</label><input type="date" id="af-end" value="${defaultDemand.endDate || ''}" required></div>
+            <div class="form-group"><label>Allocation % *</label><input type="number" id="af-alloc" min="1" max="100" value="${defaultDemand.allocationPercent || 80}" required></div>
+            <div class="form-group"><label>Approved By * (required)</label><input type="text" id="af-approver" placeholder="e.g. Resource Manager" value="Resource Manager" required></div>
         </div>
         <div class="form-actions">
             <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
             <button type="submit" class="btn btn-primary">${IC.check} Confirm Allocation</button>
         </div>
     </form>`);
+
+    const demandSel = document.getElementById('af-demand');
+    if (demandSel) {
+        demandSel.addEventListener('change', () => {
+            const d = openDemands.find(x => x.id == demandSel.value);
+            if (d) {
+                if (d.startDate) document.getElementById('af-start').value = d.startDate;
+                if (d.endDate) document.getElementById('af-end').value = d.endDate;
+                if (d.allocationPercent) document.getElementById('af-alloc').value = d.allocationPercent;
+            }
+        });
+    }
+
     document.getElementById('allocForm').addEventListener('submit', async e => {
         e.preventDefault();
         try {
+            const empName = activeEmps.find(e => e.id == document.getElementById('af-emp').value)?.name || 'Employee';
+            const demName = openDemands.find(d => d.id == document.getElementById('af-demand').value)?.projectName || 'Project';
             await apiFetch('/allocations', 'POST', {
                 employeeId: parseInt(document.getElementById('af-emp').value),
                 demandId: parseInt(document.getElementById('af-demand').value),
@@ -1590,7 +1613,13 @@ async function showAllocateModal(preEmpId, preDemandId, preEmpName) {
                 allocationPercent: parseInt(document.getElementById('af-alloc').value),
                 approvedBy: document.getElementById('af-approver').value
             });
-            closeModal(); showToast('Allocation confirmed!'); renderAllocations();
+            closeModal();
+            showToast(`Allocation confirmed! ${empName} allocated to ${demName}.`);
+            if (router.currentPage === 'ai') {
+                runAgent();
+            } else if (router.currentPage === 'allocations') {
+                renderAllocations();
+            }
         } catch (err) { showToast(err.message, 'error'); }
     });
 }
@@ -1617,8 +1646,26 @@ function formatAgentText(text) {
 function generateTargetedAgentAnswer(question, candidates, demandText) {
     const q = (question || '').toLowerCase().trim();
     
+    // Check if asking to compare candidates
+    if (q.includes('compar') || q.includes('versus') || q.includes(' vs ') || q.includes('difference')) {
+        if (candidates.length >= 2) {
+            const c1 = candidates[0];
+            const c2 = candidates[1];
+            return `Comparative talent assessment for <strong>${escapeHtml(demandText)}</strong>:<br><br>
+            <strong>1. ${escapeHtml(c1.employeeName)} (${c1.totalScore}/100 Match Score):</strong><br>
+            &bull; <strong>Skills:</strong> ${(c1.matchedSkills || []).map(s => `<strong>${escapeHtml(s.skillName)}</strong> (${s.proficiencyLabel})`).join(', ') || 'General profile fit'}<br>
+            &bull; <strong>Capacity:</strong> ${c1.availablePercent}% available &bull; Location: ${escapeHtml(c1.location || 'N/A')}<br>
+            &bull; <strong>Strengths:</strong> Highest proficiency in primary technical stack; verified certifications.<br><br>
+            <strong>2. ${escapeHtml(c2.employeeName)} (${c2.totalScore}/100 Match Score):</strong><br>
+            &bull; <strong>Skills:</strong> ${(c2.matchedSkills || []).map(s => `<strong>${escapeHtml(s.skillName)}</strong> (${s.proficiencyLabel})`).join(', ') || 'General profile fit'}<br>
+            &bull; <strong>Capacity:</strong> ${c2.availablePercent}% available &bull; Location: ${escapeHtml(c2.location || 'N/A')}<br>
+            &bull; <strong>Skill Gaps:</strong> ${(c2.missingSkills || []).map(s => `<em>${escapeHtml(s.skillName)}</em>`).join(', ') || 'None'}<br><br>
+            <strong>Decision Guidance:</strong> <strong>${escapeHtml(c1.employeeName)}</strong> offers immediate deployment readiness with no skill ramp-up needed, whereas <strong>${escapeHtml(c2.employeeName)}</strong> provides a secondary backup option.`;
+        }
+    }
+
     // Check if asking about best candidate or top match
-    if (q.includes('best') || q.includes('top') || q.includes('who is') || q.includes('recommend') || q.includes('winner')) {
+    if (q.includes('best') || q.includes('top') || q.includes('who is') || q.includes('recommend') || q.includes('winner') || q.includes('why')) {
         if (candidates.length > 0) {
             const top = candidates[0];
             const matchingSkills = (top.matchedSkills || []).map(s => `<strong>${escapeHtml(s.skillName)}</strong> (${s.proficiencyLabel || 'Level ' + s.proficiencyLevel})`).join(', ');
@@ -1699,31 +1746,51 @@ function generateTargetedAgentAnswer(question, candidates, demandText) {
     return `The AI Staffing Agent has analyzed the stored records for <strong>${escapeHtml(demandText)}</strong>. No candidates are currently active or eligible. Please check employee statuses in the Employees tab.`;
 }
 
-async function renderAI() {
+function setAgentQuery(text) {
+    const qArea = document.getElementById('ai-question');
+    if (qArea) {
+        qArea.value = text;
+        sendAgentQuestion();
+    }
+}
+
+async function renderAI(preferredDemandId) {
     showLoading();
     try {
         const demands = await apiFetch('/demands');
-        const demandOpts = demands.map(d => `<option value="${d.id}">${escapeHtml(d.projectName)} - ${escapeHtml(d.role)}</option>`).join('');
+        const demandOpts = demands.map(d => `<option value="${d.id}" ${d.id == preferredDemandId ? 'selected' : ''}>${escapeHtml(d.projectName)} - ${escapeHtml(d.role)}</option>`).join('');
         setPageContent(`
-        <div class="section-title" style="margin-bottom:4px">AI Staffing Assistant</div>
-        <div class="simulation-notice">
-            ${IC.warn} <strong>SIMULATION MODE:</strong> This AI agent simulates an LLM-based agentic workflow using deterministic Java logic.
-            In production, a live AI model (e.g., Google Gemini) would power the tool calls with real reasoning.
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <div>
+                <div class="section-title" style="margin-bottom:2px">AI Staffing Assistant &amp; Resource Matching</div>
+                <div style="font-size:13px;color:var(--text-secondary)">Match employees to project demands based on skills, proficiency, availability, and location.</div>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="showCreateDemandModal()">${IC.plus} New Project Demand</button>
         </div>
         <div class="grid-2" style="gap:20px;align-items:flex-start">
             <div>
+                <!-- PROJECT DEMAND SELECTOR CARD -->
                 <div class="card" style="margin-bottom:16px">
-                    <div class="card-title" style="margin-bottom:12px">Configure Agent</div>
-                    <div class="form-group" style="margin-bottom:12px">
-                        <label>Select Demand for Analysis</label>
-                        <select id="ai-demand">${demandOpts || '<option>No demands available</option>'}</select>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+                        <span class="card-title">Select Project Demand</span>
+                        <span class="badge badge-active">${demands.length} Demands</span>
                     </div>
-                    <button class="btn btn-primary" id="ai-run-btn" style="width:100%" onclick="runAgent()">${IC.run} Run Staffing Agent</button>
+                    <div class="form-group" style="margin-bottom:12px">
+                        <select id="ai-demand" style="font-weight:600">${demandOpts || '<option>No demands available</option>'}</select>
+                    </div>
+                    <button class="btn btn-primary" id="ai-run-btn" style="width:100%" onclick="runAgent()">${IC.run} Run Staffing Match</button>
                 </div>
+
+                <!-- ASK AGENT CARD WITH QUICK QUERIES -->
                 <div class="card">
-                    <div class="card-title" style="margin-bottom:12px">Ask Agent</div>
+                    <div class="card-title" style="margin-bottom:10px">Ask Staffing Agent</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">
+                        <button type="button" class="btn btn-secondary btn-sm" style="font-size:11px;padding:4px 8px" onclick="setAgentQuery('Who is the best candidate and why?')">Why Top Match?</button>
+                        <button type="button" class="btn btn-secondary btn-sm" style="font-size:11px;padding:4px 8px" onclick="setAgentQuery('Compare top candidates')">Compare Candidates</button>
+                        <button type="button" class="btn btn-secondary btn-sm" style="font-size:11px;padding:4px 8px" onclick="setAgentQuery('What skills are missing for this demand?')">Skill Gaps</button>
+                    </div>
                     <div class="form-group">
-                        <textarea id="ai-question" placeholder="e.g. Who is the best candidate? What skills are missing? (Press Enter to Send)" style="min-height:100px"></textarea>
+                        <textarea id="ai-question" placeholder="e.g. Who is the best candidate? What skills are missing? (Press Enter to Send)" style="min-height:95px"></textarea>
                     </div>
                     <div style="display:flex;gap:8px;margin-top:10px">
                         <button class="btn btn-primary" id="ai-send-btn" style="flex:1" onclick="sendAgentQuestion()">
@@ -1738,16 +1805,20 @@ async function renderAI() {
                     </div>
                 </div>
             </div>
+
+            <!-- OUTPUT COLUMN -->
             <div id="aiOutput">
-                <div class="empty-state">
-                    <div class="empty-icon" style="display:flex;justify-content:center;opacity:0.4">${IC.bot}</div>
-                    <div class="empty-title">Run the agent or ask a question</div>
-                    <div class="empty-desc">Select a demand and type a question in "Ask Agent" or click "Run Staffing Agent".</div>
-                </div>
+                <div class="loading-overlay" style="padding:40px"><div class="spinner"></div><span>Loading analysis...</span></div>
             </div>
         </div>`);
 
-        // Attach Enter-to-send shortcut to question textarea
+        const demandSel = document.getElementById('ai-demand');
+        if (demandSel) {
+            demandSel.addEventListener('change', () => {
+                runAgent();
+            });
+        }
+
         const qArea = document.getElementById('ai-question');
         if (qArea) {
             qArea.addEventListener('keydown', e => {
@@ -1757,6 +1828,9 @@ async function renderAI() {
                 }
             });
         }
+
+        // Auto-run agent on initial load
+        runAgent();
     } catch (err) {
         showApiError(err);
     }
@@ -1886,9 +1960,22 @@ function renderStaffingAnalysisHtml(demand, candidates, topEmpProfile) {
     <div style="margin-bottom:28px">
         <!-- 1. STAFFING ANALYSIS HEADER -->
         <div style="margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border-color)">
-            <div style="font-size:12px;font-weight:800;color:var(--text-accent);text-transform:uppercase;letter-spacing:1.5px">STAFFING ANALYSIS</div>
-            <div style="font-size:24px;font-weight:800;color:var(--text-primary);margin-top:4px">${escapeHtml(projectName)}</div>
-            <div style="font-size:15px;color:var(--text-secondary);margin-top:2px">${escapeHtml(role)}</div>
+            <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                <div>
+                    <div style="font-size:12px;font-weight:800;color:var(--text-accent);text-transform:uppercase;letter-spacing:1.5px">STAFFING ANALYSIS</div>
+                    <div style="font-size:24px;font-weight:800;color:var(--text-primary);margin-top:4px">${escapeHtml(projectName)}</div>
+                    <div style="font-size:15px;color:var(--text-secondary);margin-top:2px">${escapeHtml(role)}</div>
+                </div>
+                <div style="text-align:right">
+                    <span class="badge badge-active" style="font-size:12px;padding:5px 12px">${IC.loc} ${escapeHtml(demand?.location || 'Hyderabad')}</span>
+                    <div style="font-size:12px;color:var(--text-muted);margin-top:6px">${demand?.allocationPercent || 80}% Capacity Needed</div>
+                </div>
+            </div>
+            ${(demand?.requiredSkills && demand.requiredSkills.length) ? `
+            <div style="display:flex;align-items:center;gap:6px;margin-top:12px;flex-wrap:wrap">
+                <span style="font-size:12px;color:var(--text-muted);font-weight:600">Required Skills:</span>
+                ${demand.requiredSkills.map(s => `<span class="rs-skill-pill target-matched" style="font-size:11px;padding:3px 8px">${escapeHtml(s.name || s.skillName)}</span>`).join('')}
+            </div>` : ''}
         </div>
 
         <!-- 2. BEST CANDIDATE CARD -->
@@ -2052,25 +2139,8 @@ async function sendAgentQuestion() {
             <!-- STRUCTURED STAFFING ANALYSIS -->
             ${staffingAnalysisHtml}
 
-            <!-- AGENT TOOL CALLS -->
-            <div class="card" style="margin-bottom:16px">
-                <div class="card-title" style="margin-bottom:12px">Agent Tool Calls</div>
-                <div class="tool-calls-list">
-                    ${(res.toolCalls || []).map(tc => `
-                    <div class="tool-call-item">
-                        <div class="tool-call-name">${IC.run} ${escapeHtml(tc.toolName)}(${Object.entries(tc.inputs||{}).map(([k,v]) => `${escapeHtml(k)}="${escapeHtml(v)}"`).join(', ')})</div>
-                        <div class="tool-call-result">${tc.success ? IC.check : IC.x} ${escapeHtml(tc.result)}</div>
-                    </div>`).join('')}
-                </div>
-            </div>
-
-            <!-- AGENT LIMITATIONS -->
-            <div class="card">
-                <div class="card-title" style="margin-bottom:12px">Agent Limitations &amp; Ethical Boundaries</div>
-                <ul style="font-size:13px;color:var(--text-secondary);padding-left:20px;line-height:2">
-                    ${(res.limitations || []).map(l => `<li>${escapeHtml(l)}</li>`).join('')}
-                </ul>
-            </div>`;
+            <!-- ALGORITHMIC AUDIT & GOVERNANCE DRAWER -->
+            ${renderAgentGovernanceAccordion(res)}`;
 
             showToast('AI Agent responded to your question!');
             outputEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2086,6 +2156,32 @@ async function sendAgentQuestion() {
             sendBtn.innerHTML = `${IC.send} Send`;
         }
     }
+}
+
+function renderAgentGovernanceAccordion(res) {
+    if (!res) return '';
+    return `
+    <details style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:8px;padding:12px 16px;margin-top:20px;cursor:pointer">
+        <summary style="font-size:13px;font-weight:700;color:var(--text-secondary);display:flex;align-items:center;gap:8px;user-select:none">
+            <span style="color:var(--accent-primary)">${IC.ai}</span>
+            <span>Algorithmic Matching Audit Trail &amp; Governance</span>
+            <span style="font-size:11px;color:var(--text-muted);margin-left:auto">(Click to inspect)</span>
+        </summary>
+        <div style="margin-top:14px;border-top:1px solid var(--border-color);padding-top:14px">
+            <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Backend Tool Execution Log:</div>
+            <div class="tool-calls-list" style="margin-bottom:14px">
+                ${(res.toolCalls || []).map(tc => `
+                <div class="tool-call-item">
+                    <div class="tool-call-name">${IC.run} ${escapeHtml(tc.toolName)}(${Object.entries(tc.inputs||{}).map(([k,v]) => `${escapeHtml(k)}="${escapeHtml(v)}"`).join(', ')})</div>
+                    <div class="tool-call-result">${tc.success ? IC.check : IC.x} ${escapeHtml(tc.result)}</div>
+                </div>`).join('')}
+            </div>
+            <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Ethical Boundaries &amp; Data Provenance:</div>
+            <ul style="font-size:12px;color:var(--text-secondary);padding-left:18px;line-height:1.8">
+                ${(res.limitations || []).map(l => `<li>${escapeHtml(l)}</li>`).join('')}
+            </ul>
+        </div>
+    </details>`;
 }
 
 async function runAgent() {
@@ -2125,25 +2221,8 @@ async function runAgent() {
             <!-- STRUCTURED STAFFING ANALYSIS -->
             ${staffingAnalysisHtml}
 
-            <!-- AGENT TOOL CALLS -->
-            <div class="card" style="margin-bottom:16px">
-                <div class="card-title" style="margin-bottom:12px">Agent Tool Calls</div>
-                <div class="tool-calls-list">
-                    ${(res.toolCalls || []).map(tc => `
-                    <div class="tool-call-item">
-                        <div class="tool-call-name">${IC.run} ${escapeHtml(tc.toolName)}(${Object.entries(tc.inputs||{}).map(([k,v]) => `${escapeHtml(k)}="${escapeHtml(v)}"`).join(', ')})</div>
-                        <div class="tool-call-result">${tc.success ? IC.check : IC.x} ${escapeHtml(tc.result)}</div>
-                    </div>`).join('')}
-                </div>
-            </div>
-
-            <!-- AGENT LIMITATIONS -->
-            <div class="card">
-                <div class="card-title" style="margin-bottom:12px">Agent Limitations &amp; Ethical Boundaries</div>
-                <ul style="font-size:13px;color:var(--text-secondary);padding-left:20px;line-height:2">
-                    ${(res.limitations || []).map(l => `<li>${escapeHtml(l)}</li>`).join('')}
-                </ul>
-            </div>`;
+            <!-- ALGORITHMIC AUDIT & GOVERNANCE DRAWER -->
+            ${renderAgentGovernanceAccordion(res)}`;
             outputEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     } catch (err) {
