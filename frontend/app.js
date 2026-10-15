@@ -2652,11 +2652,11 @@ async function renderPortal() {
         <!-- PORTAL TOGGLE SWITCH -->
         <div class="portal-toggle-bar">
             <div class="portal-segmented-control">
-                <button type="button" class="portal-tab-btn ${portalActiveTab === 'employee' ? 'active' : ''}" onclick="switchPortalTab('employee')">
+                <button type="button" id="tabBtnEmployee" class="portal-tab-btn ${portalActiveTab === 'employee' ? 'active' : ''}" onclick="switchPortalTab('employee')">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     Employee Self-Service
                 </button>
-                <button type="button" class="portal-tab-btn manager ${portalActiveTab === 'manager' ? 'active' : ''}" onclick="switchPortalTab('manager')">
+                <button type="button" id="tabBtnManager" class="portal-tab-btn manager ${portalActiveTab === 'manager' ? 'active' : ''}" onclick="switchPortalTab('manager')">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                     Manager Login
                 </button>
@@ -2697,7 +2697,7 @@ function renderPortalManagerView() {
                 </label>
                 <span style="color:#d97706;font-weight:600;cursor:pointer">Enterprise SSO</span>
             </div>
-            <button type="button" onclick="doManagerLogin()" style="width:100%;padding:14px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#ffffff;border:none;border-radius:10px;font-size:15px;font-weight:700;box-shadow:0 4px 14px rgba(245,158,11,0.35);cursor:pointer;margin-top:6px;display:inline-flex;align-items:center;justify-content:center;gap:8px">
+            <button type="button" id="btnManagerLogin" onclick="doManagerLogin()" style="width:100%;padding:14px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#ffffff;border:none;border-radius:10px;font-size:15px;font-weight:700;box-shadow:0 4px 14px rgba(245,158,11,0.35);cursor:pointer;margin-top:6px;display:inline-flex;align-items:center;justify-content:center;gap:8px">
                 Sign In to Manager Dashboard &rarr;
             </button>
         </form>
