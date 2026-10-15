@@ -36,15 +36,26 @@ const IC = {
 const authState = {
     token: sessionStorage.getItem('ts_auth_token') || null,
     role: sessionStorage.getItem('ts_auth_role') || null,
-    user: JSON.parse(sessionStorage.getItem('ts_auth_user') || 'null'),
+    user: (() => {
+        try {
+            const raw = sessionStorage.getItem('ts_auth_user');
+            if (!raw || raw === 'undefined' || raw === 'null') return null;
+            return JSON.parse(raw);
+        } catch (e) {
+            return null;
+        }
+    })(),
 
     setSession(token, role, user) {
-        this.token = token;
-        this.role = role;
-        this.user = user;
-        sessionStorage.setItem('ts_auth_token', token);
-        sessionStorage.setItem('ts_auth_role', role);
-        sessionStorage.setItem('ts_auth_user', JSON.stringify(user));
+        this.token = token || null;
+        this.role = role || null;
+        this.user = user || null;
+        if (token) sessionStorage.setItem('ts_auth_token', token);
+        else sessionStorage.removeItem('ts_auth_token');
+        if (role) sessionStorage.setItem('ts_auth_role', role);
+        else sessionStorage.removeItem('ts_auth_role');
+        if (this.user) sessionStorage.setItem('ts_auth_user', JSON.stringify(this.user));
+        else sessionStorage.removeItem('ts_auth_user');
         this.updateSessionUI();
         this.updateNavPermissions();
     },
@@ -250,9 +261,8 @@ async function apiFetch(path, method = 'GET', body = null) {
             });
             if (reauth.ok) {
                 const redata = await reauth.json();
-                authState.token = redata.token;
-                authState.saveSession();
-                opts.headers['Authorization'] = `Bearer ${authState.token}`;
+                authState.setSession(redata.token, redata.role, redata.user);
+                opts.headers['Authorization'] = `Bearer ${redata.token}`;
                 const retryRes = await fetch(API_BASE + path, opts);
                 if (retryRes.ok) return await retryRes.json();
             }
@@ -2549,16 +2559,18 @@ function handleViewSwitch(val) {
 function managerExit() {
     authState.clearSession();
     portalActiveTab = 'manager';
+    sessionStorage.setItem('ts_manual_logout', 'true');
     router.navigate('portal');
     showToast('Signed out. Please enter credentials to access Manager Portal.', 'info');
 }
 
 function exitToManagerLogin() {
     portalActiveTab = 'manager';
-    renderPortal();
+    router.navigate('portal');
 }
 
 async function doManagerLogin() {
+    sessionStorage.removeItem('ts_manual_logout');
     const userEl = document.getElementById('mgrLoginEmail');
     const passEl = document.getElementById('mgrLoginPassword');
     const username = (userEl && userEl.value.trim()) ? userEl.value.trim() : 'manager';
@@ -2651,50 +2663,21 @@ async function renderPortal() {
         }
     }
 
-    let employeesList = [];
-    try {
-        employeesList = await apiFetch('/employees');
-    } catch {
-        employeesList = [
-            { id: 1, employeeCode: 'EMP001', name: 'Ram', currentRole: 'Lead Java Architect' },
-            { id: 2, employeeCode: 'EMP002', name: 'Priya', currentRole: 'React Frontend Lead' },
-            { id: 3, employeeCode: 'EMP003', name: 'Vikram', currentRole: 'Data Engineer' },
-            { id: 4, employeeCode: 'EMP004', name: 'Amina', currentRole: 'Cloud Platform Lead' },
-            { id: 5, employeeCode: 'EMP005', name: 'Carlos', currentRole: 'Full Stack Developer' },
-            { id: 6, employeeCode: 'EMP006', name: 'Sarah', currentRole: 'DevOps Architect' }
-        ];
+    if (portalActiveTab === 'employee') {
+        // Only the employee form is visible; everything else fades off
+        setPageContent(`
+        <div class="portal-container" style="max-width:1040px;margin:20px auto;animation:fadeIn 0.25s ease">
+            ${renderPortalEmployeeView()}
+        </div>
+        `);
+    } else {
+        // Dedicated Manager Login card
+        setPageContent(`
+        <div class="portal-container" style="max-width:480px;margin:60px auto;animation:fadeIn 0.25s ease">
+            ${renderPortalManagerView()}
+        </div>
+        `);
     }
-
-    setPageContent(`
-    <div class="portal-container">
-        <!-- BRAND HEADER -->
-        <div class="portal-brand-header">
-            <div class="portal-brand-logo">
-                <div class="portal-brand-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                </div>
-                <span class="portal-brand-text">TalentSync</span>
-            </div>
-            <p class="portal-brand-sub">Workforce Profile &amp; Project Resource Allocation Portal</p>
-        </div>
-
-        <!-- PORTAL TOGGLE SWITCH -->
-        <div class="portal-toggle-bar">
-            <div class="portal-segmented-control">
-                <button type="button" id="tabBtnEmployee" class="portal-tab-btn ${portalActiveTab === 'employee' ? 'active' : ''}" onclick="switchPortalTab('employee')">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    Employee Self-Service
-                </button>
-                <button type="button" id="tabBtnManager" class="portal-tab-btn manager ${portalActiveTab === 'manager' ? 'active' : ''}" onclick="switchPortalTab('manager')">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                    Manager Login
-                </button>
-            </div>
-        </div>
-
-        ${portalActiveTab === 'employee' ? renderPortalEmployeeView() : renderPortalManagerView()}
-    </div>
-    `);
 }
 
 function renderPortalManagerView() {
@@ -2726,7 +2709,7 @@ function renderPortalManagerView() {
                 </label>
                 <span style="color:#d97706;font-weight:600;cursor:pointer">Enterprise SSO</span>
             </div>
-            <button type="button" id="btnManagerLogin" onclick="doManagerLogin()" style="width:100%;padding:14px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#ffffff;border:none;border-radius:10px;font-size:15px;font-weight:700;box-shadow:0 4px 14px rgba(245,158,11,0.35);cursor:pointer;margin-top:6px;display:inline-flex;align-items:center;justify-content:center;gap:8px">
+            <button type="submit" id="btnManagerLogin" style="width:100%;padding:14px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#ffffff;border:none;border-radius:10px;font-size:15px;font-weight:700;box-shadow:0 4px 14px rgba(245,158,11,0.35);cursor:pointer;margin-top:6px;display:inline-flex;align-items:center;justify-content:center;gap:8px">
                 Sign In to Manager Dashboard &rarr;
             </button>
         </form>
@@ -4217,14 +4200,18 @@ document.addEventListener('click', (e) => {
     }
 });
 
-document.addEventListener('DOMContentLoaded', () => {
+async function initApp() {
     document.querySelectorAll('.nav-link').forEach(link => {
         link.addEventListener('click', e => { e.preventDefault(); router.navigate(link.dataset.page); });
     });
-    document.getElementById('modalClose').addEventListener('click', closeModal);
-    document.getElementById('modalOverlay').addEventListener('click', e => {
-        if (e.target === document.getElementById('modalOverlay')) closeModal();
-    });
+    const modalClose = document.getElementById('modalClose');
+    if (modalClose) modalClose.addEventListener('click', closeModal);
+    const modalOverlay = document.getElementById('modalOverlay');
+    if (modalOverlay) {
+        modalOverlay.addEventListener('click', e => {
+            if (e.target === modalOverlay) closeModal();
+        });
+    }
     window.addEventListener('hashchange', () => {
         const hash = window.location.hash.replace('#', '');
         if (pageTitles[hash] && router.currentPage !== hash) {
@@ -4240,22 +4227,51 @@ document.addEventListener('DOMContentLoaded', () => {
     checkApiStatus();
     setInterval(checkApiStatus, 10000);
 
+    const isManualLogout = sessionStorage.getItem('ts_manual_logout') === 'true';
+
+    if (isManualLogout) {
+        portalActiveTab = 'manager';
+        authState.clearSession();
+        router.navigate('portal');
+        return;
+    }
+
+    // Default to manager session on startup for demo call
+    if (!authState.isManager() || !authState.token) {
+        try {
+            const authRes = await fetch(API_BASE + '/auth/manager-login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: 'manager', password: 'admin123' })
+            });
+            if (authRes.ok) {
+                const authData = await authRes.json();
+                authState.setSession(authData.token, authData.role, authData.user);
+            } else {
+                authState.setSession('mgr-active-token', 'ROLE_MANAGER', { username: 'manager', role: 'ROLE_MANAGER', name: 'Resource Manager' });
+            }
+        } catch (e) {
+            authState.setSession('mgr-active-token', 'ROLE_MANAGER', { username: 'manager', role: 'ROLE_MANAGER', name: 'Resource Manager' });
+        }
+    }
+
     authState.updateSessionUI();
     authState.updateNavPermissions();
 
-    // Ensure manager session by default for the demo call
-    if (!authState.isManager()) {
-        authState.setSession('mgr-active-token', 'ROLE_MANAGER', { username: 'manager', role: 'ROLE_MANAGER', name: 'Resource Manager' });
-    }
-
     const initialHash = window.location.hash.replace('#', '');
     let initialPage = 'dashboard';
-    if (initialHash === 'portal' && portalActiveTab === 'employee') {
+    if (initialHash === 'portal') {
         initialPage = 'portal';
-    } else if (pageTitles[initialHash] && initialHash !== 'portal' && initialHash !== 'self-service') {
+    } else if (pageTitles[initialHash] && initialHash !== 'self-service') {
         initialPage = initialHash;
     }
     router.navigate(initialPage);
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    initApp();
+}
 
 
