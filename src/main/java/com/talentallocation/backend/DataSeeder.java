@@ -53,26 +53,26 @@ public class DataSeeder {
                 "Senior Java Developer", 6, "Project Phoenix", "Backend Lead",
                 LocalDate.now().minusMonths(2), LocalDate.now().plusMonths(1), 75,
                 Employee.AvailabilityStatus.AVAILABLE_FOR_NEW_PROJECT, LocalDate.now());
-            cert(certRepo, ram, "Oracle Certified Professional: Java SE 17 Developer", "Oracle", LocalDate.of(2023, 5, 20), null);
-            cert(certRepo, ram, "Spring Certified Professional", "VMware", LocalDate.of(2023, 11, 15), null);
+            cert(certRepo, ram, "Oracle Certified Professional: Java SE 17 Developer", "Oracle", LocalDate.of(2025, 5, 20), null);
+            cert(certRepo, ram, "Spring Certified Professional", "VMware", LocalDate.of(2025, 11, 15), null);
             Employee nikhil = employee(employeeRepo, "EMP002", "Nikhil", "Pune",
                 Employee.EmploymentStatus.ACTIVE, "Engineering", "nikhil@example.com",
                 "Full Stack Developer", 4, "Enterprise CRM", "Full Stack Engineer",
                 LocalDate.now().minusMonths(3), LocalDate.now().plusWeeks(2), 90,
                 Employee.AvailabilityStatus.AVAILABLE_FOR_NEW_PROJECT, LocalDate.now());
-            cert(certRepo, nikhil, "AWS Certified Developer - Associate", "Amazon Web Services", LocalDate.of(2023, 9, 10), LocalDate.of(2026, 9, 10));
+            cert(certRepo, nikhil, "AWS Certified Developer - Associate", "Amazon Web Services", LocalDate.of(2025, 9, 10), LocalDate.of(2028, 9, 10));
             Employee shree = employee(employeeRepo, "EMP003", "Shree", "Hyderabad",
                 Employee.EmploymentStatus.ACTIVE, "Data Science", "shree@example.com",
                 "Data Scientist", 5, "Data Analytics Core", "ML Specialist",
                 LocalDate.now().minusMonths(4), LocalDate.now().plusMonths(2), 60,
                 Employee.AvailabilityStatus.PARTIALLY_AVAILABLE, LocalDate.now().plusMonths(1));
-            cert(certRepo, shree, "TensorFlow Developer Certificate", "Google", LocalDate.of(2023, 4, 12), null);
+            cert(certRepo, shree, "TensorFlow Developer Certificate", "Google", LocalDate.of(2025, 4, 12), null);
             Employee preethi = employee(employeeRepo, "EMP004", "Preethi", "Pune",
                 Employee.EmploymentStatus.ACTIVE, "DevOps", "preethi@example.com",
                 "DevOps Specialist", 5, "Cloud Automation", "DevOps Engineer",
                 LocalDate.now().minusMonths(1), LocalDate.now().plusMonths(3), 40,
                 Employee.AvailabilityStatus.PARTIALLY_AVAILABLE, LocalDate.now().plusMonths(2));
-            cert(certRepo, preethi, "Certified Kubernetes Administrator (CKA)", "Cloud Native Computing Foundation", LocalDate.of(2023, 8, 1), LocalDate.of(2026, 8, 1));
+            cert(certRepo, preethi, "Certified Kubernetes Administrator (CKA)", "Cloud Native Computing Foundation", LocalDate.of(2025, 8, 1), LocalDate.of(2028, 8, 1));
             Employee shruthi = employee(employeeRepo, "EMP005", "Shruthi", "Hyderabad",
                 Employee.EmploymentStatus.ACTIVE, "Frontend", "shruthi@example.com",
                 "Frontend Engineer", 3, "Customer Portal UI", "React Developer",
@@ -85,29 +85,29 @@ public class DataSeeder {
 
             // === EMPLOYEE SKILLS ===
             // Ram: Senior Java developer
-            empSkill(empSkillRepo, ram, java, 5, LocalDate.of(2024, 3, 15), "Oracle Java SE 17 Certified");
-            empSkill(empSkillRepo, ram, springBoot, 4, LocalDate.of(2024, 3, 15), "Built 3 production microservices");
-            empSkill(empSkillRepo, ram, sql, 3, LocalDate.of(2023, 6, 1), "PostgreSQL experience");
-            empSkill(empSkillRepo, ram, docker, 3, LocalDate.of(2023, 11, 1), "Docker Certified Associate");
+            empSkill(empSkillRepo, ram, java, 5, LocalDate.of(2026, 3, 15), "Oracle Java SE 17 Certified");
+            empSkill(empSkillRepo, ram, springBoot, 4, LocalDate.of(2026, 3, 15), "Built 3 production microservices");
+            empSkill(empSkillRepo, ram, sql, 3, LocalDate.of(2025, 6, 1), "PostgreSQL experience");
+            empSkill(empSkillRepo, ram, docker, 3, LocalDate.of(2025, 11, 1), "Docker Certified Associate");
 
             // Nikhil: Full stack, no ML
-            empSkill(empSkillRepo, nikhil, java, 3, LocalDate.of(2023, 8, 10), "Java Developer certification");
-            empSkill(empSkillRepo, nikhil, springBoot, 3, LocalDate.of(2023, 8, 10), "Spring Boot training completed");
-            empSkill(empSkillRepo, nikhil, react, 4, LocalDate.of(2024, 1, 20), "React advanced course");
-            empSkill(empSkillRepo, nikhil, sql, 4, LocalDate.of(2024, 2, 1), "MySQL DBA certification");
+            empSkill(empSkillRepo, nikhil, java, 3, LocalDate.of(2025, 8, 10), "Java Developer certification");
+            empSkill(empSkillRepo, nikhil, springBoot, 3, LocalDate.of(2025, 8, 10), "Spring Boot training completed");
+            empSkill(empSkillRepo, nikhil, react, 4, LocalDate.of(2026, 1, 20), "React advanced course");
+            empSkill(empSkillRepo, nikhil, sql, 4, LocalDate.of(2026, 2, 1), "MySQL DBA certification");
 
             // Shree: Data scientist
-            empSkill(empSkillRepo, shree, python, 5, LocalDate.of(2024, 5, 1), "Python certified expert");
-            empSkill(empSkillRepo, shree, ml, 4, LocalDate.of(2024, 4, 1), "Kaggle Grandmaster");
-            empSkill(empSkillRepo, shree, sql, 3, LocalDate.of(2023, 9, 1), "Data analysis with SQL");
+            empSkill(empSkillRepo, shree, python, 5, LocalDate.of(2026, 5, 1), "Python certified expert");
+            empSkill(empSkillRepo, shree, ml, 4, LocalDate.of(2026, 4, 1), "Kaggle Grandmaster");
+            empSkill(empSkillRepo, shree, sql, 3, LocalDate.of(2025, 9, 1), "Data analysis with SQL");
 
             // Preethi: DevOps expert
-            empSkill(empSkillRepo, preethi, docker, 5, LocalDate.of(2024, 6, 1), "Docker certified expert");
-            empSkill(empSkillRepo, preethi, kubernetes, 4, LocalDate.of(2024, 6, 1), "CKA certified");
-            empSkill(empSkillRepo, preethi, aws, 4, LocalDate.of(2024, 3, 1), "AWS Solutions Architect");
+            empSkill(empSkillRepo, preethi, docker, 5, LocalDate.of(2026, 6, 1), "Docker certified expert");
+            empSkill(empSkillRepo, preethi, kubernetes, 4, LocalDate.of(2026, 6, 1), "CKA certified");
+            empSkill(empSkillRepo, preethi, aws, 4, LocalDate.of(2026, 3, 1), "AWS Solutions Architect");
 
             // Shruthi: Frontend developer
-            empSkill(empSkillRepo, shruthi, react, 5, LocalDate.of(2024, 7, 1), "React core team contributor");
+            empSkill(empSkillRepo, shruthi, react, 5, LocalDate.of(2026, 7, 1), "React core team contributor");
             empSkill(empSkillRepo, shruthi, python, 2, null, "Self-taught, no certification");
 
             // Ashu is on leave, no allocations

@@ -166,7 +166,7 @@ const authState = {
 
 function logout() {
     authState.clearSession();
-    showToast('Signed out successfully. Switched to TalentSync Entry Portal.', 'success');
+    showToast('Signed out successfully. Switched to Portal Access.', 'success');
     router.navigate('portal');
 }
 
@@ -174,7 +174,7 @@ function logout() {
 // ROUTER
 // ============================================================
 const pageTitles = {
-    portal: 'TalentSync Entry Portal',
+    portal: 'Portal Access & Switcher',
     'self-service': 'Employee Self-Service',
     dashboard: 'Dashboard',
     demands: 'Project Demands',
