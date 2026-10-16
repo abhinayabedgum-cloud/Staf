@@ -2618,6 +2618,7 @@ function loadProfileIntoSsState(profile) {
         name: profile.name || '',
         email: profile.email || '',
         department: profile.department || '',
+        location: profile.location || 'Hyderabad',
         currentRole: profile.currentRole || 'Software Engineer',
         yearsOfExperience: profile.yearsOfExperience !== null && profile.yearsOfExperience !== undefined ? profile.yearsOfExperience : 5,
         skills: (profile.skills || []).map(s => ({
@@ -2625,6 +2626,7 @@ function loadProfileIntoSsState(profile) {
             skillName: s.skillName,
             category: s.category || '',
             proficiencyLevel: s.proficiencyLevel || 3,
+            isLearning: s.evidence === 'Currently Learning' || s.isLearning === true,
             evidence: s.evidence || '',
             lastValidatedAt: s.lastValidatedAt || ''
         })),
@@ -2720,8 +2722,6 @@ function renderPortalManagerView() {
 function renderPortalEmployeeView() {
     const p = ssState.profile || {};
     const skillsList = p.skills || [];
-    const certsList = p.certifications || [];
-    const completion = p.projectCompletionPercent !== undefined && p.projectCompletionPercent !== null ? p.projectCompletionPercent : 75;
 
     return `
     <div class="portal-white-card">
@@ -2729,8 +2729,8 @@ function renderPortalEmployeeView() {
         <div class="pwc-header" style="display:flex;justify-content:space-between;align-items:flex-start">
             <div>
                 <span class="pwc-badge">Employee Workforce Portal</span>
-                <h1 class="pwc-title">Workforce Profile &amp; Project Allocation</h1>
-                <p class="pwc-subtitle">Update your personal details, current project allocation, skills, and availability for profile and resource staffing analysis.</p>
+                <h1 class="pwc-title">Workforce Profile &amp; Availability</h1>
+                <p class="pwc-subtitle">Self-service profile management for resource allocation. Maintain your skills and availability so staffing assignments match your capabilities.</p>
             </div>
             <button type="button" onclick="exitToManagerLogin()" style="display:inline-flex;align-items:center;gap:6px;background:#f8fafc;border:1.5px solid #cbd5e1;color:#334155;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all 0.2s ease" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -2739,222 +2739,186 @@ function renderPortalEmployeeView() {
         </div>
 
         ${ssState.submitSuccess ? `
-            <div style="background:#ecfdf5;border:1.5px solid #6ee7b7;border-radius:12px;padding:20px;display:flex;align-items:center;gap:14px;margin-bottom:24px">
-                <div style="width:36px;height:36px;border-radius:50%;background:#d1fae5;color:#059669;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <div style="background:#ecfdf5;border:1.5px solid #6ee7b7;border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:14px;margin-bottom:24px">
+                <div style="width:34px;height:34px;border-radius:50%;background:#d1fae5;color:#059669;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                 </div>
                 <div style="flex:1">
-                    <div style="font-weight:700;font-size:15px;color:#065f46">Profile Saved &amp; Updated Successfully!</div>
-                    <div style="font-size:13px;color:#047857;margin-top:2px">Your project allocation and skills have been synchronized to the platform for profile analysis.</div>
+                    <div style="font-weight:700;font-size:15px;color:#065f46">Profile updated successfully.</div>
+                    <div style="font-size:13px;color:#047857;margin-top:2px">Your skills and availability are now updated and synchronized with the staffing system.</div>
                 </div>
-                <button type="button" class="btn btn-sm" onclick="switchPortalTab('manager')" style="background:#059669;color:#ffffff;border:none;padding:8px 16px;border-radius:8px;font-weight:600;cursor:pointer">
-                    Go to Manager Portal &rarr;
-                </button>
+            </div>
+        ` : ''}
+
+        ${ssState.errorMessage ? `
+            <div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:14px;margin-bottom:24px">
+                <div style="width:34px;height:34px;border-radius:50%;background:#fee2e2;color:#dc2626;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                </div>
+                <div style="flex:1">
+                    <div style="font-weight:700;font-size:15px;color:#991b1b">Unable to update profile</div>
+                    <div style="font-size:13px;color:#b91c1c;margin-top:2px">${escapeHtml(ssState.errorMessage)}</div>
+                </div>
             </div>
         ` : ''}
 
         <form id="employeeProfileForm" onsubmit="event.preventDefault(); ssSubmitProfileDirect();">
-            <!-- SECTION 1: PERSONAL & CORPORATE INFO -->
+            <!-- 1. BASIC EMPLOYEE INFORMATION -->
             <div class="pwc-section">
                 <div class="pwc-section-header">
                     <div class="pwc-section-num">1</div>
-                    <span class="pwc-section-title">Personal &amp; Corporate Information</span>
-                    <span class="pwc-section-desc">Primary workforce details</span>
+                    <span class="pwc-section-title">Basic Information</span>
+                    <span class="pwc-section-desc">Employee corporate details</span>
                 </div>
                 <div class="pwc-grid-3">
                     <div class="pwc-field">
                         <label class="pwc-label">Employee Code</label>
-                        <input type="text" class="pwc-input" value="${escapeHtml(p.employeeCode || 'EMP001')}" readonly>
+                        <input type="text" class="pwc-input" value="${escapeHtml(p.employeeCode || 'EMP001')}" readonly disabled style="background:#f1f5f9;color:#64748b;cursor:not-allowed">
                     </div>
                     <div class="pwc-field">
                         <label class="pwc-label">Full Name *</label>
-                        <input type="text" class="pwc-input" id="ss-name" value="${escapeHtml(p.name || 'Ram')}" required oninput="ssState.profile.name = this.value">
+                        <input type="text" class="pwc-input" id="ss-name" value="${escapeHtml(p.name || '')}" required oninput="ssState.profile.name = this.value">
                     </div>
                     <div class="pwc-field">
                         <label class="pwc-label">Corporate Email *</label>
-                        <input type="email" class="pwc-input" id="ss-email" value="${escapeHtml(p.email || 'ram@example.com')}" required oninput="ssState.profile.email = this.value">
+                        <input type="email" class="pwc-input" id="ss-email" value="${escapeHtml(p.email || '')}" required oninput="ssState.profile.email = this.value">
                     </div>
                 </div>
-                <div class="pwc-grid-2" style="margin-top:14px">
+                <div class="pwc-grid-3" style="margin-top:14px">
                     <div class="pwc-field">
                         <label class="pwc-label">Department *</label>
-                        <input type="text" class="pwc-input" id="ss-dept" value="${escapeHtml(p.department || 'Core Engineering')}" required oninput="ssState.profile.department = this.value">
+                        <input type="text" class="pwc-input" id="ss-dept" value="${escapeHtml(p.department || '')}" required oninput="ssState.profile.department = this.value">
                     </div>
                     <div class="pwc-field">
                         <label class="pwc-label">Current Role / Designation *</label>
-                        <input type="text" class="pwc-input" id="ss-role" value="${escapeHtml(p.currentRole || 'Lead Java Architect')}" required oninput="ssState.profile.currentRole = this.value">
+                        <input type="text" class="pwc-input" id="ss-role" value="${escapeHtml(p.currentRole || '')}" required oninput="ssState.profile.currentRole = this.value">
                     </div>
-                </div>
-                <div class="pwc-field" style="max-width:280px;margin-top:14px">
-                    <label class="pwc-label">Years of Experience</label>
-                    <input type="number" class="pwc-input" id="ss-years" min="0" max="40" value="${p.yearsOfExperience || 9}" required oninput="ssState.profile.yearsOfExperience = parseInt(this.value)||0">
+                    <div class="pwc-field">
+                        <label class="pwc-label">Location</label>
+                        <input type="text" class="pwc-input" id="ss-location" value="${escapeHtml(p.location || 'Hyderabad')}" placeholder="e.g. Hyderabad, Remote" oninput="ssState.profile.location = this.value">
+                    </div>
                 </div>
             </div>
 
-            <!-- SECTION 2: CURRENT PROJECT ALLOCATION -->
+            <!-- 2. MY SKILLS -->
             <div class="pwc-section">
                 <div class="pwc-section-header">
                     <div class="pwc-section-num">2</div>
-                    <span class="pwc-section-title">Current Project Allocation</span>
-                    <span class="pwc-section-desc">Active engagement and progress</span>
+                    <span class="pwc-section-title">My Skills</span>
+                    <span class="pwc-section-desc">Proficiency ratings (1 to 5)</span>
                 </div>
-                <div class="pwc-grid-2">
-                    <div class="pwc-field">
-                        <label class="pwc-label">Current Project Name *</label>
-                        <input type="text" class="pwc-input" id="ss-proj-name" value="${escapeHtml(p.currentProject || 'Project Phoenix')}" placeholder="e.g. Project Phoenix" required oninput="ssState.profile.currentProject = this.value">
-                    </div>
-                    <div class="pwc-field">
-                        <label class="pwc-label">Role in Project *</label>
-                        <input type="text" class="pwc-input" id="ss-proj-role" value="${escapeHtml(p.projectRole || 'Principal Architect')}" placeholder="e.g. Principal Architect" required oninput="ssState.profile.projectRole = this.value">
-                    </div>
-                </div>
-                <div class="pwc-grid-2" style="margin-top:14px">
-                    <div class="pwc-field">
-                        <label class="pwc-label">Project Start Date</label>
-                        <input type="date" class="pwc-input" id="ss-proj-start" value="${p.projectStartDate || '2024-01-01'}" onchange="ssState.profile.projectStartDate = this.value">
-                    </div>
-                    <div class="pwc-field">
-                        <label class="pwc-label">Expected Completion Date</label>
-                        <input type="date" class="pwc-input" id="ss-proj-end" value="${p.projectEndDate || '2024-12-31'}" onchange="ssState.profile.projectEndDate = this.value">
-                    </div>
-                </div>
-
-                <div style="margin-top:16px">
-                    <label class="pwc-label" style="margin-bottom:8px;display:block">Project Completion Progress</label>
-                    <div class="pwc-slider-box">
-                        <div class="pwc-slider-head">
-                            <span style="font-size:13.5px;font-weight:600;color:#334155">Deliverables Completed:</span>
-                            <span class="pwc-slider-val" id="ssCompletionVal">${completion}%</span>
+                
+                <div style="display:flex;flex-direction:column;gap:10px">
+                    ${skillsList.length === 0 ? `
+                        <div style="text-align:center;padding:22px;border:1.5px dashed #cbd5e1;border-radius:10px;color:#64748b;font-size:13.5px">
+                            No skills listed yet. Add your technical skills and proficiency below.
                         </div>
-                        <input type="range" class="pwc-slider-input" min="0" max="100" value="${completion}" oninput="ssUpdateCompletionSlider(this.value)">
-                        <div style="display:flex;justify-content:space-between;font-size:11.5px;color:#94a3b8;font-weight:600">
-                            <span>0% (Kickoff)</span>
-                            <span>50% (Milestone)</span>
-                            <span>100% (Complete)</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SECTION 3: STAFFING AVAILABILITY -->
-            <div class="pwc-section">
-                <div class="pwc-section-header">
-                    <div class="pwc-section-num">3</div>
-                    <span class="pwc-section-title">Staffing &amp; Resource Availability</span>
-                    <span class="pwc-section-desc">Availability status for project staffing</span>
-                </div>
-                <div class="pwc-avail-grid">
-                    <div class="pwc-avail-card ${p.availabilityStatus === 'AVAILABLE_FOR_NEW_PROJECT' ? 'selected' : ''}" onclick="ssSelectAvailability('AVAILABLE_FOR_NEW_PROJECT')">
-                        <div class="pwc-avail-card-title">
-                            <span>Available for New Project</span>
-                            <div class="pwc-avail-radio"></div>
-                        </div>
-                        <span class="pwc-avail-card-desc">Ready for immediate assignment on upcoming demands.</span>
-                    </div>
-                    <div class="pwc-avail-card ${p.availabilityStatus === 'PARTIALLY_AVAILABLE' ? 'selected' : ''}" onclick="ssSelectAvailability('PARTIALLY_AVAILABLE')">
-                        <div class="pwc-avail-card-title">
-                            <span>Partially Available</span>
-                            <div class="pwc-avail-radio"></div>
-                        </div>
-                        <span class="pwc-avail-card-desc">Available for fractional or advisory allocation.</span>
-                    </div>
-                    <div class="pwc-avail-card ${p.availabilityStatus === 'FULLY_ALLOCATED' ? 'selected' : ''}" onclick="ssSelectAvailability('FULLY_ALLOCATED')">
-                        <div class="pwc-avail-card-title">
-                            <span>Fully Allocated</span>
-                            <div class="pwc-avail-radio"></div>
-                        </div>
-                        <span class="pwc-avail-card-desc">100% committed to current active engagement.</span>
-                    </div>
-                </div>
-                <div class="pwc-field" style="max-width:320px;margin-top:14px">
-                    <label class="pwc-label">Expected Availability Date</label>
-                    <input type="date" class="pwc-input" id="ss-avail-date" value="${p.expectedAvailabilityDate || ''}" onchange="ssState.profile.expectedAvailabilityDate = this.value">
-                </div>
-            </div>
-
-            <!-- SECTION 4: SKILLS & PROFICIENCY -->
-            <div class="pwc-section">
-                <div class="pwc-section-header">
-                    <div class="pwc-section-num">4</div>
-                    <span class="pwc-section-title">Core Skills &amp; Proficiency</span>
-                    <span class="pwc-section-desc">Rating: 1 (Beginner) to 5 (Expert)</span>
-                </div>
-                <div style="display:flex;flex-direction:column;gap:8px">
-                    ${skillsList.map((s, idx) => `
-                        <div class="pwc-skill-row">
-                            <div style="display:flex;flex-direction:column">
-                                <span class="pwc-skill-name">${escapeHtml(s.skillName)}</span>
-                                <span class="pwc-skill-cat">${escapeHtml(s.category || 'Competency')}</span>
+                    ` : skillsList.map((s, idx) => `
+                        <div class="pwc-skill-row" style="background:#ffffff;border:1.5px solid #e2e8f0;border-radius:10px;padding:12px 16px;box-shadow:0 1px 3px rgba(0,0,0,0.02)">
+                            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                                <span class="pwc-skill-name" style="font-size:14.5px;color:#0f172a">${escapeHtml(s.skillName)}</span>
+                                ${s.isLearning ? `
+                                    <span style="display:inline-flex;align-items:center;gap:4px;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px">
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+                                        Currently Learning
+                                    </span>
+                                ` : ''}
                             </div>
                             <div style="display:flex;align-items:center;gap:12px">
-                                <select class="pwc-select" onchange="ssUpdateSkillProficiency(${idx}, this.value)">
+                                <select class="pwc-select" onchange="ssUpdateSkillProficiency(${idx}, this.value)" style="padding:6px 12px;font-weight:600;border-radius:8px">
                                     <option value="1" ${s.proficiencyLevel === 1 ? 'selected' : ''}>1 — Beginner</option>
                                     <option value="2" ${s.proficiencyLevel === 2 ? 'selected' : ''}>2 — Basic</option>
                                     <option value="3" ${s.proficiencyLevel === 3 ? 'selected' : ''}>3 — Intermediate</option>
                                     <option value="4" ${s.proficiencyLevel === 4 ? 'selected' : ''}>4 — Advanced</option>
                                     <option value="5" ${s.proficiencyLevel === 5 ? 'selected' : ''}>5 — Expert</option>
                                 </select>
-                                <button type="button" onclick="ssRemoveSkill(${idx})" style="background:none;border:none;color:#ef4444;cursor:pointer;padding:4px" title="Remove Skill">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                <button type="button" onclick="ssRemoveSkill(${idx})" style="background:#fef2f2;border:1px solid #fecaca;color:#ef4444;border-radius:8px;padding:6px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;transition:all 0.15s ease" title="Remove Skill" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                    Remove
                                 </button>
                             </div>
                         </div>
                     `).join('')}
                 </div>
-                <div style="display:flex;gap:10px;margin-top:12px;align-items:center">
-                    <select id="ss-new-skill-id" class="pwc-select" style="flex:1;padding:9px 12px">
-                        <option value="">Select a skill to add...</option>
-                        ${(ssState.masterSkills || []).filter(ms => !skillsList.some(s => s.skillId === ms.id || s.skillName === ms.name)).map(ms => `
-                            <option value="${ms.id}">${escapeHtml(ms.name)} (${escapeHtml(ms.category)})</option>
-                        `).join('')}
-                    </select>
-                    <select id="ss-new-skill-level" class="pwc-select" style="padding:9px 12px">
-                        <option value="1">1 — Beginner</option>
-                        <option value="2">2 — Basic</option>
-                        <option value="3" selected>3 — Intermediate</option>
-                        <option value="4">4 — Advanced</option>
-                        <option value="5">5 — Expert</option>
-                    </select>
-                    <button type="button" onclick="ssHandleAddSkill()" style="background:#f1f5f9;color:#334155;border:1.5px solid #cbd5e1;padding:9px 18px;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer">
-                        + Add Skill
-                    </button>
+
+                <!-- ADD SKILL INLINE -->
+                <div style="margin-top:14px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:16px">
+                    <div style="font-size:12.5px;font-weight:700;color:#334155;margin-bottom:12px;display:flex;align-items:center;gap:6px">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Add Skill to Profile
+                    </div>
+                    <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end">
+                        <div style="flex:2;min-width:200px">
+                            <label class="pwc-label" style="margin-bottom:6px;display:block">Skill Name *</label>
+                            <input type="text" list="masterSkillsDatalist" id="ss-new-skill-input" class="pwc-input" placeholder="Select or enter skill (e.g. Java, React, SQL)..." autocomplete="off">
+                            <datalist id="masterSkillsDatalist">
+                                ${(ssState.masterSkills || []).map(ms => `<option value="${escapeHtml(ms.name)}">`).join('')}
+                            </datalist>
+                        </div>
+                        <div style="flex:1;min-width:160px">
+                            <label class="pwc-label" style="margin-bottom:6px;display:block">Proficiency Level *</label>
+                            <select id="ss-new-skill-level" class="pwc-input" style="height:42px;cursor:pointer">
+                                <option value="1">1 — Beginner</option>
+                                <option value="2">2 — Basic</option>
+                                <option value="3" selected>3 — Intermediate</option>
+                                <option value="4">4 — Advanced</option>
+                                <option value="5">5 — Expert</option>
+                            </select>
+                        </div>
+                        <div style="display:flex;align-items:center;height:42px;padding:0 4px">
+                            <label style="display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:#475569;cursor:pointer;user-select:none">
+                                <input type="checkbox" id="ss-new-skill-learning" style="accent-color:#4f46e5;width:17px;height:17px;cursor:pointer">
+                                <span>Currently Learning</span>
+                            </label>
+                        </div>
+                        <button type="button" onclick="ssHandleAddSkill()" style="background:#4f46e5;color:#ffffff;border:none;padding:11px 22px;border-radius:8px;font-weight:700;font-size:13.5px;cursor:pointer;white-space:nowrap;transition:all 0.15s ease;display:inline-flex;align-items:center;gap:6px" onmouseover="this.style.background='#4338ca'" onmouseout="this.style.background='#4f46e5'">
+                            + Add Skill
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <!-- SECTION 5: CERTIFICATIONS -->
+            <!-- 3. AVAILABILITY -->
             <div class="pwc-section">
                 <div class="pwc-section-header">
-                    <div class="pwc-section-num">5</div>
-                    <span class="pwc-section-title">Certifications &amp; Credentials</span>
-                    <span class="pwc-section-desc">Verified industry credentials</span>
+                    <div class="pwc-section-num">3</div>
+                    <span class="pwc-section-title">Availability</span>
+                    <span class="pwc-section-desc">Staffing status for project allocations</span>
                 </div>
-                <div style="display:flex;flex-direction:column;gap:8px">
-                    ${certsList.map((c, idx) => `
-                        <div class="pwc-skill-row">
-                            <div>
-                                <span class="pwc-skill-name">${escapeHtml(c.name)}</span>
-                                <span class="pwc-skill-cat" style="display:block;margin-top:2px">${escapeHtml(c.issuingOrganization || 'Authority')} ${c.issueDate ? `&bull; Issued: ${c.issueDate}` : ''}</span>
-                            </div>
-                            <button type="button" onclick="ssRemoveCertification(${idx})" style="background:none;border:none;color:#ef4444;cursor:pointer;padding:4px" title="Remove Certificate">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                            </button>
+                <div class="pwc-avail-grid">
+                    <div class="pwc-avail-card ${(p.availabilityStatus === 'AVAILABLE_FOR_NEW_PROJECT' || !p.availabilityStatus) ? 'selected' : ''}" onclick="ssSelectAvailability('AVAILABLE_FOR_NEW_PROJECT')">
+                        <div class="pwc-avail-card-title">
+                            <span>Available for New Project</span>
+                            <div class="pwc-avail-radio"></div>
                         </div>
-                    `).join('')}
+                        <span class="pwc-avail-card-desc">Ready for immediate placement and matching by the resource allocation system.</span>
+                    </div>
+                    <div class="pwc-avail-card ${p.availabilityStatus === 'PARTIALLY_AVAILABLE' ? 'selected' : ''}" onclick="ssSelectAvailability('PARTIALLY_AVAILABLE')">
+                        <div class="pwc-avail-card-title">
+                            <span>Partially Available</span>
+                            <div class="pwc-avail-radio"></div>
+                        </div>
+                        <span class="pwc-avail-card-desc">Available for fractional allocation, mentoring, or part-time assignments.</span>
+                    </div>
+                    <div class="pwc-avail-card ${p.availabilityStatus === 'FULLY_ALLOCATED' ? 'selected' : ''}" onclick="ssSelectAvailability('FULLY_ALLOCATED')">
+                        <div class="pwc-avail-card-title">
+                            <span>Fully Allocated</span>
+                            <div class="pwc-avail-radio"></div>
+                        </div>
+                        <span class="pwc-avail-card-desc">Currently 100% committed to existing engagements.</span>
+                    </div>
                 </div>
-                <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
-                    <input type="text" id="ss-cert-name" class="pwc-input" placeholder="Certification title (e.g. AWS Solutions Architect)" style="flex:2;min-width:220px">
-                    <input type="text" id="ss-cert-org" class="pwc-input" placeholder="Issuer (e.g. AWS)" style="flex:1;min-width:140px">
-                    <input type="date" id="ss-cert-issue" class="pwc-input" style="flex:1;min-width:130px" title="Date Obtained">
-                    <button type="button" onclick="ssHandleAddCert()" style="background:#f1f5f9;color:#334155;border:1.5px solid #cbd5e1;padding:9px 18px;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer">
-                        + Add Certificate
-                    </button>
+                <div class="pwc-field" style="max-width:320px;margin-top:16px">
+                    <label class="pwc-label">Available From Date</label>
+                    <input type="date" class="pwc-input" id="ss-avail-date" value="${p.expectedAvailabilityDate || ''}" onchange="ssState.profile.expectedAvailabilityDate = this.value">
+                    <span style="font-size:11.5px;color:#94a3b8;margin-top:4px;display:block">Date from which employee is ready for new project staffing</span>
                 </div>
             </div>
 
-            <!-- SUBMIT BUTTON -->
-            <div style="display:flex;justify-content:flex-end;padding-top:20px;border-top:1.5px solid #f1f5f9;margin-top:20px">
-                <button type="button" id="btnSubmitProfile" onclick="ssSubmitProfileDirect()" style="background:linear-gradient(135deg, #4f46e5, #6366f1);color:#ffffff;border:none;padding:14px 34px;font-size:15px;font-weight:700;border-radius:10px;box-shadow:0 4px 14px rgba(79,70,229,0.35);cursor:pointer;display:inline-flex;align-items:center;gap:8px">
-                    ${ssState.isSaving ? '<div class="spinner" style="width:16px;height:16px;display:inline-block"></div> Saving...' : '💾 Save &amp; Update Profile'}
+            <!-- 4. SAVE PROFILE -->
+            <div style="display:flex;justify-content:flex-end;padding-top:20px;border-top:1.5px solid #f1f5f9;margin-top:24px">
+                <button type="submit" id="btnSubmitProfile" style="background:linear-gradient(135deg, #4f46e5, #6366f1);color:#ffffff;border:none;padding:14px 38px;font-size:15px;font-weight:700;border-radius:10px;box-shadow:0 4px 14px rgba(79,70,229,0.35);cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all 0.2s ease" onmouseover="this.style.opacity='0.92'" onmouseout="this.style.opacity='1'">
+                    ${ssState.isSaving ? '<div class="spinner" style="width:16px;height:16px;display:inline-block"></div> Saving profile...' : 'Save Profile'}
                 </button>
             </div>
         </form>
@@ -2964,76 +2928,116 @@ function renderPortalEmployeeView() {
 
 async function ssSubmitProfileDirect() {
     const p = ssState.profile;
-    if (!p.name || !p.name.trim()) { showToast('Full Name is required.', 'error'); return; }
+    if (!p) return;
+
+    if (!p.name || !p.name.trim()) {
+        showToast('Full Name is required.', 'error');
+        const el = document.getElementById('ss-name');
+        if (el) el.focus();
+        return;
+    }
+    if (!p.email || !p.email.trim() || !p.email.includes('@')) {
+        showToast('A valid corporate email is required.', 'error');
+        const el = document.getElementById('ss-email');
+        if (el) el.focus();
+        return;
+    }
+    if (!p.department || !p.department.trim()) {
+        showToast('Department is required.', 'error');
+        const el = document.getElementById('ss-dept');
+        if (el) el.focus();
+        return;
+    }
+    if (!p.currentRole || !p.currentRole.trim()) {
+        showToast('Current Role is required.', 'error');
+        const el = document.getElementById('ss-role');
+        if (el) el.focus();
+        return;
+    }
 
     ssState.isSaving = true;
+    ssState.submitSuccess = false;
+    ssState.errorMessage = null;
+
     const btn = document.getElementById('btnSubmitProfile');
     if (btn) {
         btn.disabled = true;
-        btn.innerHTML = `<div class="spinner" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:6px"></div> Saving profile...`;
+        btn.innerHTML = `<div class="spinner" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:8px"></div> Saving profile...`;
     }
 
     try {
+        // Resolve any skills that do not have a skillId yet
+        for (const s of (p.skills || [])) {
+            if (!s.skillId) {
+                const matched = (ssState.masterSkills || []).find(ms => ms.name.toLowerCase() === s.skillName.toLowerCase());
+                if (matched) {
+                    s.skillId = matched.id;
+                } else {
+                    try {
+                        const newSkill = await apiFetch('/skills', 'POST', {
+                            name: s.skillName,
+                            category: s.category || 'Technical',
+                            description: 'Added via employee self-service'
+                        });
+                        if (newSkill && newSkill.id) {
+                            s.skillId = newSkill.id;
+                            ssState.masterSkills.push(newSkill);
+                        }
+                    } catch (skErr) {
+                        console.warn('Skill resolution attempt:', skErr);
+                        try {
+                            const refreshed = await apiFetch('/skills');
+                            ssState.masterSkills = refreshed || [];
+                            const refMatch = ssState.masterSkills.find(ms => ms.name.toLowerCase() === s.skillName.toLowerCase());
+                            if (refMatch) s.skillId = refMatch.id;
+                        } catch (e2) {}
+                    }
+                }
+            }
+        }
+
         const payload = {
-            name: p.name,
-            email: p.email,
-            department: p.department,
-            currentRole: p.currentRole,
-            yearsOfExperience: p.yearsOfExperience,
-            skills: (p.skills || []).map(s => ({
+            currentRole: p.currentRole.trim(),
+            yearsOfExperience: p.yearsOfExperience !== undefined && p.yearsOfExperience !== null ? p.yearsOfExperience : 5,
+            location: (p.location || 'Hyderabad').trim(),
+            department: p.department.trim(),
+            email: p.email.trim(),
+            skills: (p.skills || []).filter(s => s.skillId).map(s => ({
                 skillId: s.skillId,
-                skillName: s.skillName,
-                proficiencyLevel: s.proficiencyLevel,
-                evidence: s.evidence || '',
-                lastValidatedAt: s.lastValidatedAt || null
+                proficiencyLevel: Math.max(1, Math.min(5, parseInt(s.proficiencyLevel) || 3)),
+                evidence: s.isLearning ? 'Currently Learning' : (s.evidence || 'Self-reported'),
+                lastValidatedAt: s.lastValidatedAt || new Date().toISOString().split('T')[0]
             })),
-            certifications: (p.certifications || []).map(c => ({
-                name: c.name,
-                issuingOrganization: c.issuingOrganization,
-                issueDate: c.issueDate || null,
-                expiryDate: c.expiryDate || null
-            })),
-            currentProject: p.currentProject,
-            projectRole: p.projectRole,
-            projectStartDate: p.projectStartDate || null,
-            projectEndDate: p.projectEndDate || null,
-            projectCompletionPercent: p.projectCompletionPercent,
-            availabilityStatus: p.availabilityStatus,
+            availabilityStatus: p.availabilityStatus || 'AVAILABLE_FOR_NEW_PROJECT',
             expectedAvailabilityDate: p.expectedAvailabilityDate || null
         };
 
-        // If employee token exists for this profile, update via self-service
-        let updated;
+        // Authenticate with employee session if needed
         try {
-            // First try authenticated self-service
-            if (!authState.token) {
-                // Obtain session for selected employee
-                const loginRes = await apiFetch('/auth/employee-login', 'POST', { employeeCode: p.employeeCode, email: p.email });
+            const loginRes = await apiFetch('/auth/employee-login', 'POST', {
+                employeeCode: p.employeeCode,
+                email: p.email
+            });
+            if (loginRes && loginRes.token) {
                 authState.setSession(loginRes.token, loginRes.role, loginRes.user);
             }
-            updated = await apiFetch('/self-service/profile', 'PUT', payload);
-        } catch (e) {
-            // Fallback via manager employee update endpoint
-            const mgrRes = await apiFetch('/auth/manager-login', 'POST', { username: 'manager', password: 'admin123' });
-            authState.setSession(mgrRes.token, mgrRes.role, mgrRes.user);
-            updated = await apiFetch(`/employees/${p.id}`, 'PUT', {
-                name: p.name,
-                email: p.email,
-                department: p.department,
-                location: p.location || 'Hyderabad',
-                employmentStatus: 'ACTIVE',
-                currentRole: p.currentRole,
-                yearsOfExperience: p.yearsOfExperience
-            });
+        } catch (authErr) {
+            console.warn('Employee login notice:', authErr);
         }
+
+        await apiFetch('/self-service/profile', 'PUT', payload);
 
         ssState.isSaving = false;
         ssState.submitSuccess = true;
+        ssState.errorMessage = null;
         showToast('Profile updated successfully.', 'success');
         renderPortal();
     } catch (err) {
+        console.error('Save profile error:', err);
         ssState.isSaving = false;
-        showToast('Unable to update your profile. Please try again.', 'error');
+        ssState.submitSuccess = false;
+        ssState.errorMessage = (err && err.message) ? err.message : 'Unable to update profile. Please verify your details.';
+        showToast(ssState.errorMessage, 'error');
         renderPortal();
     }
 }
@@ -3610,41 +3614,91 @@ function ssValidateStep(step) {
 }
 
 function ssHandleAddSkill() {
-    const skillSelect = document.getElementById('ss-new-skill-id');
+    const input = document.getElementById('ss-new-skill-input') || document.getElementById('ss-new-skill-id');
     const levelSelect = document.getElementById('ss-new-skill-level');
-    if (!skillSelect || !levelSelect) return;
+    const learningCheckbox = document.getElementById('ss-new-skill-learning');
+    if (!input || !levelSelect) return;
 
-    const skillId = parseInt(skillSelect.value);
-    const level = parseInt(levelSelect.value);
-    const masterSkill = ssState.masterSkills.find(s => s.id === skillId);
-    if (!masterSkill) return;
+    const rawVal = (input.value || '').trim();
+    if (!rawVal) {
+        showToast('Please select or enter a skill name.', 'warning');
+        return;
+    }
+
+    let skillName = rawVal;
+    let skillId = null;
+    let category = 'Technical';
+
+    // If numeric ID from legacy select
+    const asNum = parseInt(rawVal);
+    const msById = !isNaN(asNum) ? (ssState.masterSkills || []).find(ms => ms.id === asNum) : null;
+    if (msById) {
+        skillId = msById.id;
+        skillName = msById.name;
+        category = msById.category || 'Technical';
+    } else {
+        const msByName = (ssState.masterSkills || []).find(ms => ms.name.toLowerCase() === rawVal.toLowerCase());
+        if (msByName) {
+            skillId = msByName.id;
+            skillName = msByName.name;
+            category = msByName.category || 'Technical';
+        }
+    }
+
+    const level = parseInt(levelSelect.value) || 3;
+    const isLearning = learningCheckbox ? learningCheckbox.checked : false;
+
+    if (!ssState.profile.skills) ssState.profile.skills = [];
 
     // Check if already in list
-    const existing = ssState.profile.skills.find(s => s.skillId === skillId);
+    const existing = ssState.profile.skills.find(
+        s => (skillId && s.skillId === skillId) || (s.skillName && s.skillName.toLowerCase() === skillName.toLowerCase())
+    );
+
     if (existing) {
         existing.proficiencyLevel = level;
-        showToast(`Updated proficiency for ${masterSkill.name} to level ${level}.`, 'success');
+        existing.isLearning = isLearning;
+        existing.evidence = isLearning ? 'Currently Learning' : (existing.evidence || 'Self-reported');
+        showToast(`Updated ${existing.skillName} (Level ${level}${isLearning ? ' · Currently Learning' : ''})`, 'success');
     } else {
         ssState.profile.skills.push({
-            skillId: masterSkill.id,
-            skillName: masterSkill.name,
-            category: masterSkill.category,
+            skillId: skillId,
+            skillName: skillName,
+            category: category,
             proficiencyLevel: level,
-            evidence: 'Self-reported proficiency',
+            isLearning: isLearning,
+            evidence: isLearning ? 'Currently Learning' : 'Self-reported',
             lastValidatedAt: new Date().toISOString().split('T')[0]
         });
-        showToast(`Added ${masterSkill.name} (Level ${level})`, 'success');
+        showToast(`Added ${skillName} (Level ${level}${isLearning ? ' · Currently Learning' : ''})`, 'success');
     }
-    renderSelfServiceContainer();
+
+    if (input.tagName === 'INPUT') input.value = '';
+    if (learningCheckbox) learningCheckbox.checked = false;
+
+    if (portalActiveTab === 'employee') {
+        renderPortal();
+    } else if (document.getElementById('ssCardContainer')) {
+        renderSelfServiceContainer();
+    }
 }
 
 function ssRemoveSkill(index) {
-    ssState.profile.skills.splice(index, 1);
-    renderSelfServiceContainer();
+    if (ssState.profile && ssState.profile.skills) {
+        const removed = ssState.profile.skills.splice(index, 1);
+        if (removed.length > 0) {
+            showToast(`Removed skill: ${removed[0].skillName}`, 'info');
+        }
+    }
+    if (portalActiveTab === 'employee') {
+        renderPortal();
+    } else if (document.getElementById('ssCardContainer')) {
+        renderSelfServiceContainer();
+    }
 }
 
 function ssUpdateSkillProficiency(index, newLevel) {
-    if (ssState.profile.skills[index]) {
+    if (ssState.profile && ssState.profile.skills && ssState.profile.skills[index]) {
         ssState.profile.skills[index].proficiencyLevel = parseInt(newLevel);
     }
 }
@@ -3676,8 +3730,13 @@ function ssRemoveCertification(index) {
 }
 
 function ssSelectAvailability(status) {
+    if (!ssState.profile) return;
     ssState.profile.availabilityStatus = status;
-    renderSelfServiceContainer();
+    if (portalActiveTab === 'employee') {
+        renderPortal();
+    } else if (document.getElementById('ssCardContainer')) {
+        renderSelfServiceContainer();
+    }
 }
 
 function ssUpdateCompletionSlider(val) {
