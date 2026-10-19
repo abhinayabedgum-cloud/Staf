@@ -170,13 +170,13 @@ function logout() {
 const pageTitles = {
     portal: 'Employee Workforce Portal',
     'self-service': 'Employee Workforce Portal',
-    dashboard: 'Workforce Dashboard',
-    demands: 'Project Demands',
+    dashboard: 'Utilization & Skill-Gap Dashboard',
+    demands: 'Project Demands & Intake',
     employees: 'Employee Directory',
-    skills: 'Skills Matrix',
-    search: 'Resource Search',
-    allocations: 'Allocations & Approvals',
-    ai: 'AI Assistant'
+    skills: 'Employee Skills Matrix',
+    search: 'Resource Search & Ranking',
+    allocations: 'Allocation Approval Workflow',
+    ai: 'AI Staffing Assistant'
 };
 
 const router = {
@@ -508,7 +508,7 @@ async function renderDemands() {
         setPageContent(`
         <div class="section-header">
             <span class="section-title">Project Demands</span>
-            <button class="btn btn-primary" onclick="showCreateDemandModal()">${IC.plus} New Demand</button>
+            <button class="btn btn-primary" onclick="showCreateDemandModal()">${IC.plus} Demand Intake Form</button>
         </div>
         <div class="card">
             <div class="table-container"><table>
@@ -546,7 +546,7 @@ async function showCreateDemandModal() {
     } catch (err) {
         console.warn('Failed to load skills list:', err);
     }
-    openModal('Create New Demand', `
+    openModal('Demand Intake Form', `
         <form id="demandForm">
             <div class="form-grid">
                 <div class="form-group"><label>Project Name *</label><input type="text" id="df-project" placeholder="e.g. Project Alpha" required></div>
