@@ -208,6 +208,9 @@ const router = {
 
         const pageTitleEl = document.getElementById('pageTitle');
         if (pageTitleEl) pageTitleEl.textContent = pageTitles[page] || page;
+        if (pageTitles[page]) {
+            document.title = `${pageTitles[page]} — SkillMatch`;
+        }
 
         authState.updateNavPermissions();
         authState.updateSessionUI();
