@@ -417,281 +417,229 @@ async function renderDashboard() {
         ]);
 
         const activeEmployees = employees.filter(e => e.employmentStatus === 'ACTIVE');
-        const totalEmployeesCount = activeEmployees.length || 1;
-        
-        // Compute Overall Workforce Capacity and Utilization
-        let totalAllocatedPercent = 0;
-        allocations.filter(a => a.status === 'APPROVED' || a.status === 'CONFIRMED').forEach(a => {
-            totalAllocatedPercent += (a.allocationPercent || 0);
-        });
-        const totalPossibleCapacity = totalEmployeesCount * 100;
-        const avgUtilization = Math.min(100, Math.round((totalAllocatedPercent / totalPossibleCapacity) * 100));
-        const benchPercent = Math.max(0, 100 - avgUtilization);
+        const activeCount = activeEmployees.length || 1;
 
-        // Core operational counts
-        const availableResources = employees.filter(e => e.employmentStatus === 'ACTIVE' && 
-            (e.availabilityStatus === 'AVAILABLE_FOR_NEW_PROJECT' || e.availabilityStatus === 'PARTIALLY_AVAILABLE' || !e.currentProject)
-        ).length;
+        // Group active employees by real department
+        const deptMap = {};
+        activeEmployees.forEach(e => {
+            const dept = e.department || 'Engineering';
+            if (!deptMap[dept]) deptMap[dept] = { count: 0, committed: 0 };
+            deptMap[dept].count++;
+            let c = 0;
+            if (e.availabilityStatus === 'FULLY_ALLOCATED') c = 100;
+            else if (e.availabilityStatus === 'PARTIALLY_AVAILABLE') c = 50;
+            else if (e.currentProject) c = 30;
+            deptMap[dept].committed += c;
+        });
+
+        // Compute overall utilization from real allocations or availability commitments
+        let totalCommittedPercent = 0;
+        const approvedAllocations = allocations.filter(a => a.status === 'APPROVED' || a.status === 'CONFIRMED');
+        if (approvedAllocations.length > 0) {
+            approvedAllocations.forEach(a => totalCommittedPercent += (a.allocationPercent || 0));
+        } else {
+            Object.values(deptMap).forEach(d => totalCommittedPercent += d.committed);
+        }
+
+        const totalCapacity = activeCount * 100;
+        const avgUtilDisplay = (totalCommittedPercent / totalCapacity * 100).toFixed(1);
+        const benchCapacityDisplay = (Math.max(0, 100 - parseFloat(avgUtilDisplay))).toFixed(1);
+
         const openDemandsList = demands.filter(d => d.status === 'OPEN' || d.status === 'IN_PROGRESS');
         const openDemandsCount = openDemandsList.length;
-        const pendingApprovalsCount = allocations.filter(a => a.status === 'PENDING').length;
-        const activeAllocationsCount = allocations.filter(a => a.status === 'CONFIRMED' || a.status === 'APPROVED').length;
 
-        // Skill-Gap Analysis: Match required skills across open demands with staff supply
-        const skillDemandCounts = {};
-        const skillSupplyCounts = {};
+        // Skill Demand & Supply matching by skill name and requiredSkills
+        const skillReqCounts = {};
+        const skillQualCounts = {};
+
         (skills || []).forEach(s => {
-            skillDemandCounts[s.id] = 0;
-            skillSupplyCounts[s.id] = 0;
+            const key = (s.name || '').toLowerCase().trim();
+            skillReqCounts[key] = 0;
+            skillQualCounts[key] = 0;
         });
 
         openDemandsList.forEach(d => {
-            const reqIds = (d.requiredSkillIds || '').split(',').map(id => parseInt(id.trim())).filter(n => !isNaN(n));
-            reqIds.forEach(id => {
-                skillDemandCounts[id] = (skillDemandCounts[id] || 0) + 1;
+            (d.requiredSkills || []).forEach(s => {
+                const key = (s.name || '').toLowerCase().trim();
+                skillReqCounts[key] = (skillReqCounts[key] || 0) + 1;
             });
         });
 
         activeEmployees.forEach(emp => {
             (emp.skills || []).forEach(es => {
-                if (es.proficiencyLevel >= 2) {
-                    skillSupplyCounts[es.skillId] = (skillSupplyCounts[es.skillId] || 0) + 1;
+                const key = (es.skillName || '').toLowerCase().trim();
+                // Qualified (L3+ as shown on the screen)
+                if (es.proficiencyLevel >= 3) {
+                    skillQualCounts[key] = (skillQualCounts[key] || 0) + 1;
                 }
             });
         });
 
-        const skillGaps = (skills || [])
-            .filter(s => (skillDemandCounts[s.id] || 0) > 0)
-            .map(s => {
-                const demanded = skillDemandCounts[s.id] || 0;
-                const supplied = skillSupplyCounts[s.id] || 0;
-                const gap = demanded - supplied;
-                return {
-                    id: s.id,
-                    name: s.name,
-                    category: s.category || 'Technical',
-                    demanded,
-                    supplied,
-                    gap
-                };
-            })
-            .sort((a, b) => b.gap - a.gap);
+        const skillGapsTable = (skills || []).map(s => {
+            const key = (s.name || '').toLowerCase().trim();
+            const req = skillReqCounts[key] || 0;
+            const qual = skillQualCounts[key] || 0;
+            const deficit = Math.max(0, req - qual);
+            return {
+                id: s.id,
+                category: (s.category || 'Technical').toUpperCase(),
+                name: s.name,
+                required: req,
+                qualified: qual,
+                deficit: deficit
+            };
+        }).filter(s => s.required > 0 || s.qualified > 0)
+          .sort((a, b) => b.deficit - a.deficit || b.required - a.required);
 
-        const totalGapsCount = skillGaps.filter(g => g.gap > 0).length;
-        const displayAvgUtil = totalAllocatedPercent > 0 ? (totalAllocatedPercent / totalPossibleCapacity * 100).toFixed(1) + '%' : '12.8%';
-        const displayActiveStaff = activeEmployees.length > 0 ? (activeEmployees.length >= 8 ? activeEmployees.length : 8) : 8;
-        const displayOpenDemands = openDemandsCount > 0 ? openDemandsCount : 4;
-        const displaySkillGaps = totalGapsCount > 0 ? totalGapsCount : 2;
-        const displayBench = totalAllocatedPercent > 0 ? (100 - (totalAllocatedPercent / totalPossibleCapacity * 100)).toFixed(1) + '%' : '87.2%';
+        const totalDeficitsCount = skillGapsTable.filter(s => s.deficit > 0).length;
 
-        const dpDemand = demands.find(d => (d.projectName || '').toLowerCase().includes('data platform'));
-        const phxDemand = demands.find(d => (d.projectName || '').toLowerCase().includes('phoenix'));
-        const cmDemand = demands.find(d => (d.projectName || '').toLowerCase().includes('cloud migration'));
+        const unstaffedDemandsCount = openDemandsList.filter(d => {
+            const hasAlloc = allocations.some(a => a.demandId === d.id && (a.status === 'APPROVED' || a.status === 'CONFIRMED'));
+            return !hasAlloc;
+        }).length;
 
-        const attentionDemands = [
-            {
-                id: dpDemand ? dpDemand.id : (demands[1] ? demands[1].id : 2),
-                dot: '🔴',
-                projectName: 'Data Platform',
-                role: 'Data Scientist',
-                priority: 'CRITICAL',
-                badgeStyle: 'background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;'
-            },
-            {
-                id: phxDemand ? phxDemand.id : (demands[0] ? demands[0].id : 1),
-                dot: '🟠',
-                projectName: 'Project Phoenix',
-                role: 'Java Developer',
-                priority: 'HIGH',
-                badgeStyle: 'background:#fffbeb;color:#b45309;border:1px solid #fde68a;'
-            },
-            {
-                id: cmDemand ? cmDemand.id : (demands[2] ? demands[2].id : 3),
-                dot: '🔵',
-                projectName: 'Cloud Migration',
-                role: 'DevOps Engineer',
-                priority: 'MEDIUM',
-                badgeStyle: 'background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;'
-            }
-        ];
-
-        const recentAllocationsList = (allocations && allocations.length > 0) ? allocations.slice(0, 5) : [
-            { employeeName: 'Aarav Sharma', role: 'Java Developer', projectName: 'Project Phoenix', allocationPercent: 100, status: 'APPROVED' },
-            { employeeName: 'Priya Patel', role: 'DevOps Engineer', projectName: 'Cloud Migration', allocationPercent: 80, status: 'APPROVED' },
-            { employeeName: 'Vikram Seth', role: 'Data Scientist', projectName: 'Data Platform', allocationPercent: 100, status: 'APPROVED' }
-        ];
+        const deptPalette = ['#059669', '#2563eb', '#d97706', '#8b5cf6', '#ec4899'];
+        const departmentList = Object.keys(deptMap).map((name, i) => {
+            const d = deptMap[name];
+            const util = Math.min(100, Math.round(d.committed / (d.count * 100) * 100));
+            return {
+                name,
+                count: d.count,
+                util,
+                color: deptPalette[i % deptPalette.length]
+            };
+        });
 
         setPageContent(`
         <!-- HEADER -->
-        <div style="margin-bottom:20px">
-            <h1 style="font-size:18px;font-weight:800;color:#0f172a;letter-spacing:0.5px;text-transform:uppercase;margin:0 0 4px 0">
+        <div style="margin-bottom:12px">
+            <h1 style="font-size:16px;font-weight:800;color:#0f172a;letter-spacing:0.5px;text-transform:uppercase;margin:0 0 2px 0">
                 UTILIZATION &amp; SKILL-GAP DASHBOARD
             </h1>
-            <div style="color:#64748b;font-size:13px">
+            <div style="color:#64748b;font-size:12px">
                 Real-time workforce capacity and staffing intelligence
             </div>
         </div>
 
-        <!-- 5-METRIC CAPACITY BAR -->
-        <div class="card" style="padding:0;margin-bottom:24px;border:1px solid #e2e8f0;border-radius:10px;background:#ffffff;box-shadow:0 1px 3px rgba(0,0,0,0.04);overflow:hidden">
-            <div style="display:grid;grid-template-columns:repeat(5, 1fr)">
-                <div style="padding:16px 20px;border-right:1px solid #f1f5f9">
-                    <div style="font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;line-height:1.3">Avg<br>Util.</div>
-                    <div style="font-size:26px;font-weight:800;color:#0f172a;margin-top:6px">${displayAvgUtil}</div>
-                </div>
-                <div style="padding:16px 20px;border-right:1px solid #f1f5f9">
-                    <div style="font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;line-height:1.3">Active<br>Staff</div>
-                    <div style="font-size:26px;font-weight:800;color:#0f172a;margin-top:6px">${displayActiveStaff}</div>
-                </div>
-                <div style="padding:16px 20px;border-right:1px solid #f1f5f9">
-                    <div style="font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;line-height:1.3">Open<br>Demands</div>
-                    <div style="font-size:26px;font-weight:800;color:#0f172a;margin-top:6px">${displayOpenDemands}</div>
-                </div>
-                <div style="padding:16px 20px;border-right:1px solid #f1f5f9">
-                    <div style="font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;line-height:1.3">Skill<br>Gaps</div>
-                    <div style="font-size:26px;font-weight:800;color:#dc2626;margin-top:6px">${displaySkillGaps}</div>
-                </div>
-                <div style="padding:16px 20px">
-                    <div style="font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;line-height:1.3">Bench<br>Capacity</div>
-                    <div style="font-size:26px;font-weight:800;color:#059669;margin-top:6px">${displayBench}</div>
-                </div>
+        <!-- 4 TOP KPI CARDS (Matching the 2nd picture pattern) -->
+        <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:12px;margin-bottom:12px">
+            <div class="card" style="padding:12px 14px;border:1px solid #e2e8f0;border-radius:8px;background:#ffffff;box-shadow:0 1px 2px rgba(0,0,0,0.03)">
+                <div style="font-size:10.5px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px">AVERAGE UTILIZATION</div>
+                <div style="font-size:22px;font-weight:800;color:#0f172a;margin-top:4px">${avgUtilDisplay}%</div>
+                <div style="font-size:10.5px;color:#94a3b8;margin-top:2px">Across active resources</div>
+            </div>
+            <div class="card" style="padding:12px 14px;border:1px solid #e2e8f0;border-radius:8px;background:#ffffff;box-shadow:0 1px 2px rgba(0,0,0,0.03)">
+                <div style="font-size:10.5px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px">ACTIVE HEADCOUNT</div>
+                <div style="font-size:22px;font-weight:800;color:#0f172a;margin-top:4px">${activeEmployees.length}</div>
+                <div style="font-size:10.5px;color:#94a3b8;margin-top:2px">Qualified active employees</div>
+            </div>
+            <div class="card" style="padding:12px 14px;border:1px solid #e2e8f0;border-radius:8px;background:#ffffff;box-shadow:0 1px 2px rgba(0,0,0,0.03)">
+                <div style="font-size:10.5px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px">OPEN DEMANDS</div>
+                <div style="font-size:22px;font-weight:800;color:#0f172a;margin-top:4px">${openDemandsCount}</div>
+                <div style="font-size:10.5px;color:#94a3b8;margin-top:2px">Active project staffing requests</div>
+            </div>
+            <div class="card" style="padding:12px 14px;border:1px solid #e2e8f0;border-radius:8px;background:#ffffff;box-shadow:0 1px 2px rgba(0,0,0,0.03)">
+                <div style="font-size:10.5px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px">UNSTAFFED DEMANDS</div>
+                <div style="font-size:22px;font-weight:800;color:${unstaffedDemandsCount > 0 ? '#ea580c' : '#059669'};margin-top:4px">${unstaffedDemandsCount}</div>
+                <div style="font-size:10.5px;color:#94a3b8;margin-top:2px">Demands lacking primary allocation</div>
             </div>
         </div>
 
-        <!-- 2-COLUMN ROW: UTILIZATION BY DEPARTMENT & SKILL GAPS -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
-            <!-- Utilization by Department -->
-            <div class="card" style="padding:20px;border:1px solid #e2e8f0;border-radius:10px;background:#ffffff">
-                <div style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:18px;padding-bottom:10px;border-bottom:1px solid #f1f5f9">
+        <!-- MIDDLE SECTION (2 COLUMNS) -->
+        <div style="display:grid;grid-template-columns:1fr 1.35fr;gap:12px;margin-bottom:12px">
+            <!-- LEFT: Utilization by Department -->
+            <div class="card" style="padding:14px;border:1px solid #e2e8f0;border-radius:8px;background:#ffffff">
+                <div style="font-size:13.5px;font-weight:700;color:#0f172a;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid #f1f5f9">
                     Utilization by Department
                 </div>
-                <div style="display:flex;flex-direction:column;gap:16px">
-                    <div>
-                        <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600;margin-bottom:6px">
-                            <span style="color:#1e293b">Engineering</span>
-                            <span style="color:#059669;font-weight:700">85%</span>
-                        </div>
-                        <div style="width:100%;height:9px;background:#f1f5f9;border-radius:6px;overflow:hidden">
-                            <div style="width:85%;height:100%;background:#059669;border-radius:6px"></div>
-                        </div>
-                    </div>
-                    <div>
-                        <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600;margin-bottom:6px">
-                            <span style="color:#1e293b">Cloud/DevOps</span>
-                            <span style="color:#2563eb;font-weight:700">80%</span>
-                        </div>
-                        <div style="width:100%;height:9px;background:#f1f5f9;border-radius:6px;overflow:hidden">
-                            <div style="width:80%;height:100%;background:#2563eb;border-radius:6px"></div>
-                        </div>
-                    </div>
-                    <div>
-                        <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600;margin-bottom:6px">
-                            <span style="color:#1e293b">Data Science</span>
-                            <span style="color:#d97706;font-weight:700">70%</span>
-                        </div>
-                        <div style="width:100%;height:9px;background:#f1f5f9;border-radius:6px;overflow:hidden">
-                            <div style="width:70%;height:100%;background:#d97706;border-radius:6px"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Skill Gaps & Talent Deficits -->
-            <div class="card" style="padding:20px;border:1px solid #e2e8f0;border-radius:10px;background:#ffffff">
-                <div style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:18px;padding-bottom:10px;border-bottom:1px solid #f1f5f9">
-                    Skill Gaps &amp; Talent Deficits
-                </div>
-                <div style="display:flex;flex-direction:column;gap:14px">
-                    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f8fafc">
-                        <span style="font-size:13.5px;font-weight:600;color:#1e293b">Java</span>
-                        <div style="display:flex;align-items:center;gap:10px">
-                            <span style="font-size:12px;font-weight:600;color:#475569;background:#f1f5f9;padding:3px 9px;border-radius:5px">Req 3</span>
-                            <span style="font-size:12px;font-weight:700;color:#dc2626;background:#fef2f2;border:1px solid #fecaca;padding:3px 9px;border-radius:5px">Gap 2</span>
-                        </div>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f8fafc">
-                        <span style="font-size:13.5px;font-weight:600;color:#1e293b">Python</span>
-                        <div style="display:flex;align-items:center;gap:10px">
-                            <span style="font-size:12px;font-weight:600;color:#475569;background:#f1f5f9;padding:3px 9px;border-radius:5px">Req 3</span>
-                            <span style="font-size:12px;font-weight:700;color:#d97706;background:#fffbeb;border:1px solid #fde68a;padding:3px 9px;border-radius:5px">Gap 1</span>
-                        </div>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0">
-                        <span style="font-size:13.5px;font-weight:600;color:#1e293b">AWS</span>
-                        <div style="display:flex;align-items:center;gap:10px">
-                            <span style="font-size:12px;font-weight:600;color:#475569;background:#f1f5f9;padding:3px 9px;border-radius:5px">Req 2</span>
-                            <span style="font-size:12px;font-weight:700;color:#d97706;background:#fffbeb;border:1px solid #fde68a;padding:3px 9px;border-radius:5px">Gap 1</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 3RD SECTION: DEMANDS NEEDING ATTENTION -->
-        <div class="card" style="padding:20px;margin-bottom:24px;border:1px solid #e2e8f0;border-radius:10px;background:#ffffff">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #f1f5f9">
-                <span style="font-size:14px;font-weight:800;color:#0f172a;text-transform:uppercase;letter-spacing:0.5px">DEMANDS NEEDING ATTENTION</span>
-                <button class="btn btn-ghost btn-sm" onclick="router.navigate('demands')" style="font-size:12.5px;font-weight:600;color:#059669;padding:4px 8px;cursor:pointer;display:flex;align-items:center;gap:4px">
-                    View All &rarr;
-                </button>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:10px">
-                ${attentionDemands.map(d => `
-                    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px">
-                        <div style="display:flex;align-items:center;gap:12px;min-width:220px">
-                            <span style="font-size:13px">${d.dot}</span>
-                            <span style="font-weight:700;font-size:14px;color:#0f172a">${escapeHtml(d.projectName)}</span>
-                        </div>
-                        <div style="font-size:13.5px;font-weight:500;color:#475569;flex:1;padding:0 16px">
-                            ${escapeHtml(d.role)}
-                        </div>
-                        <div style="margin-right:16px">
-                            <span style="${d.badgeStyle};font-weight:700;font-size:11px;padding:3px 10px;border-radius:12px;text-transform:uppercase;letter-spacing:0.5px">
-                                ${d.priority}
-                            </span>
-                        </div>
+                <div style="display:flex;flex-direction:column;gap:12px">
+                    ${departmentList.map(d => `
                         <div>
-                            <button class="btn btn-secondary btn-sm" onclick="showRecommendations(${d.id})" style="padding:6px 14px;font-size:12px;font-weight:600;gap:6px">
-                                ${IC.search} Find Match
-                            </button>
+                            <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:600;margin-bottom:4px">
+                                <span style="color:#1e293b">${escapeHtml(d.name)} (${d.count} engineer${d.count > 1 ? 's' : ''})</span>
+                                <span style="color:${d.color};font-weight:700">${d.util}%</span>
+                            </div>
+                            <div style="width:100%;height:7px;background:#f1f5f9;border-radius:4px;overflow:hidden">
+                                <div style="width:${Math.max(4, d.util)}%;height:100%;background:${d.color};border-radius:4px"></div>
+                            </div>
                         </div>
-                    </div>
-                `).join('')}
+                    `).join('')}
+                </div>
+            </div>
+
+            <!-- RIGHT: Skill Gaps & Talent Deficits (Table matching picture 2) -->
+            <div class="card" style="padding:14px;border:1px solid #e2e8f0;border-radius:8px;background:#ffffff">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #f1f5f9">
+                    <span style="font-size:13.5px;font-weight:700;color:#0f172a">Skill Gaps &amp; Talent Deficits</span>
+                    <button class="btn btn-ghost btn-sm" onclick="router.navigate('skills')" style="padding:2px 8px;font-size:11px;color:#059669">
+                        View Skills Matrix &rarr;
+                    </button>
+                </div>
+                <div style="max-height:190px;overflow-y:auto">
+                    <table class="table-dashboard" style="font-size:11.5px;width:100%">
+                        <thead>
+                            <tr style="color:#64748b;font-size:10.5px;text-transform:uppercase;letter-spacing:0.4px">
+                                <th style="padding:5px 8px">Category</th>
+                                <th style="padding:5px 8px">Skill</th>
+                                <th style="text-align:center;padding:5px 8px">Required</th>
+                                <th style="text-align:center;padding:5px 8px">Qualified (L3+)</th>
+                                <th style="text-align:center;padding:5px 8px">Deficit/Gap</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${skillGapsTable.map(s => `
+                                <tr style="border-bottom:1px solid #f8fafc">
+                                    <td style="padding:5px 8px">
+                                        <span style="background:#f1f5f9;color:#475569;font-size:9.5px;font-weight:700;padding:2px 5px;border-radius:3px">
+                                            ${escapeHtml(s.category)}
+                                        </span>
+                                    </td>
+                                    <td style="padding:5px 8px;font-weight:600;color:#0f172a">
+                                        ${escapeHtml(s.name)}
+                                    </td>
+                                    <td style="text-align:center;padding:5px 8px;font-weight:600;color:#334155">
+                                        ${s.required}
+                                    </td>
+                                    <td style="text-align:center;padding:5px 8px;font-weight:600;color:#334155">
+                                        ${s.qualified}
+                                    </td>
+                                    <td style="text-align:center;padding:5px 8px">
+                                        ${s.deficit > 0 ? `
+                                            <span style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;font-weight:700;padding:1px 6px;border-radius:8px;font-size:10.5px">
+                                                ${s.deficit}
+                                            </span>
+                                        ` : `
+                                            <span style="background:#ecfdf5;color:#059669;font-weight:600;padding:1px 6px;border-radius:8px;font-size:10.5px">
+                                                0
+                                            </span>
+                                        `}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
-        <!-- 4TH SECTION: RECENT ALLOCATION DECISIONS -->
-        <div class="card" style="padding:20px;border:1px solid #e2e8f0;border-radius:10px;background:#ffffff">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #f1f5f9">
-                <span style="font-size:14px;font-weight:800;color:#0f172a;text-transform:uppercase;letter-spacing:0.5px">RECENT ALLOCATION DECISIONS</span>
-                <button class="btn btn-ghost btn-sm" onclick="router.navigate('allocations')" style="font-size:12.5px;font-weight:600;color:#059669;padding:4px 8px;cursor:pointer;display:flex;align-items:center;gap:4px">
-                    View All &rarr;
-                </button>
+        <!-- BOTTOM PANEL: Resource Bench Capacity & Committed Allocations -->
+        <div class="card" style="padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;background:#ffffff">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                <span style="font-size:13px;font-weight:700;color:#0f172a">
+                    Resource Bench Capacity &amp; Committed Allocations
+                </span>
+                <span style="font-size:11.5px;font-weight:700;color:#059669">
+                    ${benchCapacityDisplay}% Bench Available
+                </span>
             </div>
-            <div class="table-container">
-                <table class="table-dashboard">
-                    <thead>
-                        <tr>
-                            <th>EMPLOYEE</th>
-                            <th>PROJECT</th>
-                            <th style="text-align:center">CAPACITY</th>
-                            <th style="text-align:right">STATUS</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${recentAllocationsList.map(a => `
-                            <tr>
-                                <td>
-                                    <strong style="color:#0f172a">${escapeHtml(a.employeeName || 'Employee')}</strong>
-                                    <span style="font-size:11.5px;color:#64748b;display:block">${escapeHtml(a.role || 'Staff')}</span>
-                                </td>
-                                <td>${escapeHtml(a.projectName || '—')}</td>
-                                <td style="text-align:center;font-weight:700">${a.allocationPercent || 100}%</td>
-                                <td style="text-align:right">${badgeHtml(a.status || 'APPROVED')}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
+            <div style="width:100%;height:8px;background:#e2e8f0;border-radius:5px;overflow:hidden;display:flex">
+                <div style="width:${Math.max(2, parseFloat(avgUtilDisplay))}%;height:100%;background:linear-gradient(90deg, #059669, #10b981)" title="Committed: ${avgUtilDisplay}%"></div>
+                <div style="width:${parseFloat(benchCapacityDisplay)}%;height:100%;background:#f1f5f9" title="Available Bench: ${benchCapacityDisplay}%"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#64748b;margin-top:5px">
+                <span>● Committed to Work: ${avgUtilDisplay}%</span>
+                <span>○ Available Bench Capacity: ${benchCapacityDisplay}%</span>
+                <span>Active Personnel: ${activeEmployees.length} | Open Demands: ${openDemandsCount} | Total Deficits: ${totalDeficitsCount}</span>
             </div>
         </div>`);
     } catch (err) {
@@ -700,6 +648,7 @@ async function renderDashboard() {
             <div class="empty-desc">Make sure Spring Boot is running on port 8080.<br>${err.message}</div></div>`);
     }
 }
+
 
 // ============================================================
 // DEMANDS
