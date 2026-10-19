@@ -83,32 +83,32 @@ public class DataSeeder {
                 "Software Engineer", 2, null, null, null, null, 0,
                 Employee.AvailabilityStatus.FULLY_ALLOCATED, LocalDate.now().plusMonths(3));
 
-            // === EMPLOYEE SKILLS ===
-            // Ram: Senior Java developer
-            empSkill(empSkillRepo, ram, java, 5, LocalDate.of(2026, 3, 15), "Oracle Java SE 17 Certified");
-            empSkill(empSkillRepo, ram, springBoot, 4, LocalDate.of(2026, 3, 15), "Built 3 production microservices");
-            empSkill(empSkillRepo, ram, sql, 3, LocalDate.of(2025, 6, 1), "PostgreSQL experience");
-            empSkill(empSkillRepo, ram, docker, 3, LocalDate.of(2025, 11, 1), "Docker Certified Associate");
+            // === EMPLOYEE SKILLS (3 Stages: 1=Beginner, 2=Intermediate, 3=Advanced) ===
+            // Ram: Senior Java developer (Advanced in Java/Spring, Intermediate in SQL/Docker)
+            empSkill(empSkillRepo, ram, java, 3, LocalDate.of(2026, 3, 15), "Oracle Java SE 17 Certified");
+            empSkill(empSkillRepo, ram, springBoot, 3, LocalDate.of(2026, 3, 15), "Built 3 production microservices");
+            empSkill(empSkillRepo, ram, sql, 2, LocalDate.of(2025, 6, 1), "PostgreSQL experience");
+            empSkill(empSkillRepo, ram, docker, 2, LocalDate.of(2025, 11, 1), "Docker Certified Associate");
 
-            // Nikhil: Full stack, no ML
-            empSkill(empSkillRepo, nikhil, java, 3, LocalDate.of(2025, 8, 10), "Java Developer certification");
-            empSkill(empSkillRepo, nikhil, springBoot, 3, LocalDate.of(2025, 8, 10), "Spring Boot training completed");
-            empSkill(empSkillRepo, nikhil, react, 4, LocalDate.of(2026, 1, 20), "React advanced course");
-            empSkill(empSkillRepo, nikhil, sql, 4, LocalDate.of(2026, 2, 1), "MySQL DBA certification");
+            // Nikhil: Full stack (Intermediate Java/Spring, Advanced React/SQL)
+            empSkill(empSkillRepo, nikhil, java, 2, LocalDate.of(2025, 8, 10), "Java Developer certification");
+            empSkill(empSkillRepo, nikhil, springBoot, 2, LocalDate.of(2025, 8, 10), "Spring Boot training completed");
+            empSkill(empSkillRepo, nikhil, react, 3, LocalDate.of(2026, 1, 20), "React advanced course");
+            empSkill(empSkillRepo, nikhil, sql, 3, LocalDate.of(2026, 2, 1), "MySQL DBA certification");
 
-            // Shree: Data scientist
-            empSkill(empSkillRepo, shree, python, 5, LocalDate.of(2026, 5, 1), "Python certified expert");
-            empSkill(empSkillRepo, shree, ml, 4, LocalDate.of(2026, 4, 1), "Kaggle Grandmaster");
-            empSkill(empSkillRepo, shree, sql, 3, LocalDate.of(2025, 9, 1), "Data analysis with SQL");
+            // Shree: Data scientist (Advanced Python/ML, Intermediate SQL)
+            empSkill(empSkillRepo, shree, python, 3, LocalDate.of(2026, 5, 1), "Python certified expert");
+            empSkill(empSkillRepo, shree, ml, 3, LocalDate.of(2026, 4, 1), "Kaggle Grandmaster");
+            empSkill(empSkillRepo, shree, sql, 2, LocalDate.of(2025, 9, 1), "Data analysis with SQL");
 
-            // Preethi: DevOps expert
-            empSkill(empSkillRepo, preethi, docker, 5, LocalDate.of(2026, 6, 1), "Docker certified expert");
-            empSkill(empSkillRepo, preethi, kubernetes, 4, LocalDate.of(2026, 6, 1), "CKA certified");
-            empSkill(empSkillRepo, preethi, aws, 4, LocalDate.of(2026, 3, 1), "AWS Solutions Architect");
+            // Preethi: DevOps expert (Advanced Cloud/DevOps)
+            empSkill(empSkillRepo, preethi, docker, 3, LocalDate.of(2026, 6, 1), "Docker certified expert");
+            empSkill(empSkillRepo, preethi, kubernetes, 3, LocalDate.of(2026, 6, 1), "CKA certified");
+            empSkill(empSkillRepo, preethi, aws, 3, LocalDate.of(2026, 3, 1), "AWS Solutions Architect");
 
-            // Shruthi: Frontend developer
-            empSkill(empSkillRepo, shruthi, react, 5, LocalDate.of(2026, 7, 1), "React core team contributor");
-            empSkill(empSkillRepo, shruthi, python, 2, null, "Self-taught, no certification");
+            // Shruthi: Frontend developer (Advanced React, Beginner Python)
+            empSkill(empSkillRepo, shruthi, react, 3, LocalDate.of(2026, 7, 1), "React core team contributor");
+            empSkill(empSkillRepo, shruthi, python, 1, null, "Self-taught beginner, no certification");
 
             // Ashu is on leave, no allocations
 

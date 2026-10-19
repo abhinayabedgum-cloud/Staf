@@ -147,9 +147,7 @@ public class EmployeeService {
         return switch (level) {
             case 1 -> "Beginner";
             case 2 -> "Intermediate";
-            case 3 -> "Advanced";
-            case 4 -> "Expert";
-            case 5 -> "Master";
+            case 3, 4, 5 -> "Advanced";
             default -> "Unknown";
         };
     }
