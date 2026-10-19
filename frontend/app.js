@@ -97,54 +97,42 @@ const authState = {
 
         if (this.isManager()) {
             container.innerHTML = `
-                <div class="user-profile-menu-container" id="userProfileMenuContainer">
-                    <button class="user-profile-btn" id="userProfileBtn" onclick="toggleUserProfileDropdown(event)" title="Manager Account Menu">
-                        <div class="user-profile-avatar">M</div>
-                        <span class="user-profile-name">Manager</span>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:#64748b"><polyline points="6 9 12 15 18 9"/></svg>
-                    </button>
-                    <div id="userProfileDropdown" class="user-profile-dropdown" style="display:none">
-                        <div class="user-profile-dropdown-header">
-                            <div style="font-size:13px;font-weight:700;color:var(--text-primary)">Resource Manager</div>
-                            <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px">manager@skillmatch.internal</div>
+                <div style="display:flex;align-items:center;gap:12px">
+                    <div style="position:relative;display:inline-flex;align-items:center">
+                        <select id="portalViewDropdown" onchange="handleViewSwitch(this.value)" style="appearance:none;-webkit-appearance:none;background:#e0e7ff;border:1px solid #c7d2fe;color:#4338ca;padding:7px 32px 7px 14px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;outline:none;box-shadow:0 1px 2px rgba(0,0,0,0.05)">
+                            <option value="manager" ${router.currentPage !== 'portal' ? 'selected' : ''} style="background:#ffffff;color:#0f172a">Manager View</option>
+                            <option value="employee" ${router.currentPage === 'portal' && portalActiveTab === 'employee' ? 'selected' : ''} style="background:#ffffff;color:#0f172a">Employee Portal</option>
+                        </select>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="position:absolute;right:12px;pointer-events:none;color:#4338ca"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                    <div class="user-session-pill">
+                        <div class="user-session-avatar" style="background:#d97706;color:#ffffff">M</div>
+                        <div style="display:flex;flex-direction:column;line-height:1.2">
+                            <span class="user-session-name" style="font-size:13px;font-weight:700;color:var(--text-primary)">Manager Cockpit</span>
+                            <span style="font-size:10px;font-weight:700;color:var(--accent-primary)">ROLE_MANAGER</span>
                         </div>
-                        <div style="padding:4px 0">
-                            <button class="user-profile-dropdown-item" onclick="handleViewSwitch('employee');closeUserProfileDropdown()">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                                <span>Switch to Employee Portal</span>
-                            </button>
-                            <button class="user-profile-dropdown-item danger" onclick="managerExit();closeUserProfileDropdown()">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                                <span>Sign Out</span>
-                            </button>
-                        </div>
+                        <button class="btn-logout" onclick="managerExit()" title="Logout / Exit" style="margin-left:4px">Exit</button>
                     </div>
                 </div>
             `;
         } else if (this.isEmployee() && this.user) {
             const initial = (this.user.name || 'E').charAt(0).toUpperCase();
             container.innerHTML = `
-                <div class="user-profile-menu-container" id="userProfileMenuContainer">
-                    <button class="user-profile-btn" id="userProfileBtn" onclick="toggleUserProfileDropdown(event)" title="Employee Account Menu">
-                        <div class="user-profile-avatar" style="background:#4f46e5">${initial}</div>
-                        <span class="user-profile-name">${escapeHtml(this.user.name)}</span>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:#64748b"><polyline points="6 9 12 15 18 9"/></svg>
-                    </button>
-                    <div id="userProfileDropdown" class="user-profile-dropdown" style="display:none">
-                        <div class="user-profile-dropdown-header">
-                            <div style="font-size:13px;font-weight:700;color:var(--text-primary)">${escapeHtml(this.user.name)}</div>
-                            <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px">Employee Self-Service</div>
+                <div style="display:flex;align-items:center;gap:12px">
+                    <div style="position:relative;display:inline-flex;align-items:center">
+                        <select id="portalViewDropdown" onchange="handleViewSwitch(this.value)" style="appearance:none;-webkit-appearance:none;background:#e0e7ff;border:1px solid #c7d2fe;color:#4338ca;padding:7px 32px 7px 14px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;outline:none;box-shadow:0 1px 2px rgba(0,0,0,0.05)">
+                            <option value="manager" ${router.currentPage !== 'portal' ? 'selected' : ''} style="background:#ffffff;color:#0f172a">Manager View</option>
+                            <option value="employee" ${router.currentPage === 'portal' && portalActiveTab === 'employee' ? 'selected' : ''} style="background:#ffffff;color:#0f172a">Employee Portal</option>
+                        </select>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="position:absolute;right:12px;pointer-events:none;color:#4338ca"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                    <div class="user-session-pill">
+                        <div class="user-session-avatar" style="background:#4f46e5;color:#ffffff">${initial}</div>
+                        <div style="display:flex;flex-direction:column;line-height:1.2">
+                            <span class="user-session-name" style="font-size:13px;font-weight:700;color:var(--text-primary)">${escapeHtml(this.user.name)}</span>
+                            <span style="font-size:10px;font-weight:700;color:var(--text-muted)">EMPLOYEE</span>
                         </div>
-                        <div style="padding:4px 0">
-                            <button class="user-profile-dropdown-item" onclick="handleViewSwitch('manager');closeUserProfileDropdown()">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                                <span>Switch to Manager View</span>
-                            </button>
-                            <button class="user-profile-dropdown-item danger" onclick="logout();closeUserProfileDropdown()">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                                <span>Sign Out</span>
-                            </button>
-                        </div>
+                        <button class="btn-logout" onclick="logout()" title="Logout / Exit" style="margin-left:4px">Exit</button>
                     </div>
                 </div>
             `;

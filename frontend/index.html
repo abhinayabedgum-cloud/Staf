@@ -11,7 +11,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=20261019_v28">
+    <link rel="stylesheet" href="styles.css?v=20261019_v31">
 </head>
 <body>
     <!-- SIDEBAR NAV -->
@@ -64,6 +64,18 @@
                 <span class="nav-label">AI Assistant</span>
             </a></li>
         </ul>
+        <div class="sidebar-portal-box" id="sidebarPortalBox" style="padding:10px 12px;margin:8px 8px 0;border-top:1px solid var(--border-color)">
+            <button class="btn btn-secondary btn-sm" id="btnSidebarPortalSwitch" onclick="handleViewSwitch('employee')" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;padding:8px 10px;border-radius:8px">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <span>Employee Portal</span>
+            </button>
+        </div>
+        <div class="sidebar-footer">
+            <div class="api-status" id="apiStatus">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText">Checking...</span>
+            </div>
+        </div>
     </nav>
 
     <!-- MAIN CONTENT -->
@@ -117,6 +129,6 @@
     <!-- TOAST NOTIFICATIONS -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <script src="app.js?v=20261019_v30"></script>
+    <script src="app.js?v=20261019_v31"></script>
 </body>
 </html>
