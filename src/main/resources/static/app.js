@@ -97,28 +97,55 @@ const authState = {
 
         if (this.isManager()) {
             container.innerHTML = `
-                <div style="display:flex;align-items:center;gap:12px">
-                    <div style="position:relative;display:inline-flex;align-items:center">
-                        <select id="portalViewDropdown" onchange="handleViewSwitch(this.value)" style="appearance:none;-webkit-appearance:none;background:#f8fafc;border:1px solid #cbd5e1;color:#0f172a;padding:6px 28px 6px 12px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;outline:none">
-                            <option value="manager" ${router.currentPage !== 'portal' ? 'selected' : ''} style="background:#ffffff;color:#0f172a">Manager View</option>
-                            <option value="employee" ${router.currentPage === 'portal' && portalActiveTab === 'employee' ? 'selected' : ''} style="background:#ffffff;color:#0f172a">Employee View</option>
-                        </select>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="position:absolute;right:10px;pointer-events:none;color:#64748b"><polyline points="6 9 12 15 18 9"/></svg>
-                    </div>
-                    <div class="user-session-pill">
-                        <div class="user-session-avatar" style="background:#059669;color:#ffffff">M</div>
-                        <span class="user-session-name" style="font-size:13px;font-weight:600;color:var(--text-primary)">Manager</span>
-                        <button class="btn-logout" onclick="managerExit()" title="Logout / Exit">Exit</button>
+                <div class="user-profile-menu-container" id="userProfileMenuContainer">
+                    <button class="user-profile-btn" id="userProfileBtn" onclick="toggleUserProfileDropdown(event)" title="Manager Account Menu">
+                        <div class="user-profile-avatar">M</div>
+                        <span class="user-profile-name">Manager</span>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:#64748b"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                    <div id="userProfileDropdown" class="user-profile-dropdown" style="display:none">
+                        <div class="user-profile-dropdown-header">
+                            <div style="font-size:13px;font-weight:700;color:var(--text-primary)">Resource Manager</div>
+                            <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px">manager@skillmatch.internal</div>
+                        </div>
+                        <div style="padding:4px 0">
+                            <button class="user-profile-dropdown-item" onclick="handleViewSwitch('employee');closeUserProfileDropdown()">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                <span>Switch to Employee Portal</span>
+                            </button>
+                            <button class="user-profile-dropdown-item danger" onclick="managerExit();closeUserProfileDropdown()">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                                <span>Sign Out</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
         } else if (this.isEmployee() && this.user) {
             const initial = (this.user.name || 'E').charAt(0).toUpperCase();
             container.innerHTML = `
-                <div class="user-session-pill">
-                    <div class="user-session-avatar">${initial}</div>
-                    <span class="user-session-name" style="font-size:13px;font-weight:600;color:var(--text-primary)">${escapeHtml(this.user.name)}</span>
-                    <button class="btn-logout" onclick="logout()" title="Switch Access / Logout">Exit</button>
+                <div class="user-profile-menu-container" id="userProfileMenuContainer">
+                    <button class="user-profile-btn" id="userProfileBtn" onclick="toggleUserProfileDropdown(event)" title="Employee Account Menu">
+                        <div class="user-profile-avatar" style="background:#4f46e5">${initial}</div>
+                        <span class="user-profile-name">${escapeHtml(this.user.name)}</span>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:#64748b"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                    <div id="userProfileDropdown" class="user-profile-dropdown" style="display:none">
+                        <div class="user-profile-dropdown-header">
+                            <div style="font-size:13px;font-weight:700;color:var(--text-primary)">${escapeHtml(this.user.name)}</div>
+                            <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px">Employee Self-Service</div>
+                        </div>
+                        <div style="padding:4px 0">
+                            <button class="user-profile-dropdown-item" onclick="handleViewSwitch('manager');closeUserProfileDropdown()">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                                <span>Switch to Manager View</span>
+                            </button>
+                            <button class="user-profile-dropdown-item danger" onclick="logout();closeUserProfileDropdown()">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                                <span>Sign Out</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             `;
         }
@@ -707,7 +734,10 @@ async function renderDemands() {
         const demands = await apiFetch('/demands');
         setPageContent(`
         <div class="section-header">
-            <span class="section-title">Project Demands</span>
+            <div>
+                <span class="section-title">Demand Intake</span>
+                <div style="font-size:13px;color:var(--text-secondary);margin-top:2px">Manage project staffing requirements and find candidate matches.</div>
+            </div>
             <button class="btn btn-primary" onclick="showCreateDemandModal()">${IC.plus} Demand Intake Form</button>
         </div>
         <div class="card">
@@ -3649,77 +3679,64 @@ async function renderAllocations() {
 
         ${outcomeBannerHtml}
 
-        <!-- 4 SUMMARY CARDS: APPROVAL-FOCUSED WORKFLOW -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(210px, 1fr));gap:14px;margin-bottom:20px">
+        <!-- 4 INTERACTIVE SUMMARY FILTER CARDS -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(210px, 1fr));gap:14px;margin-bottom:18px">
             <!-- 1. TOTAL ALLOCATIONS -->
-            <div class="card" style="padding:16px 20px;background:var(--bg-card);border:1px solid var(--border-color);border-left:4px solid #6366f1">
+            <div class="alloc-stat-card ${allocState.statusFilter === 'ALL' ? 'active' : ''}" onclick="setAllocStatusFilter('ALL')" style="border-left:4px solid #6366f1" title="Click to view all allocations">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start">
                     <div>
                         <div style="font-size:11px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.8px">TOTAL ALLOCATIONS</div>
-                        <div style="font-size:28px;font-weight:800;color:var(--text-primary);margin-top:4px">${totalCount}</div>
+                        <div style="font-size:26px;font-weight:800;color:var(--text-primary);margin-top:4px">${totalCount}</div>
                         <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">All allocation requests</div>
                     </div>
-                    <div style="font-size:22px;color:#6366f1;background:rgba(99,102,241,0.12);width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center">📋</div>
+                    <div style="font-size:20px;color:#6366f1;background:rgba(99,102,241,0.12);width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center">📋</div>
                 </div>
             </div>
 
             <!-- 2. APPROVED -->
-            <div class="card" style="padding:16px 20px;background:var(--bg-card);border:1px solid var(--border-color);border-left:4px solid #10b981">
+            <div class="alloc-stat-card ${allocState.statusFilter === 'APPROVED' ? 'active' : ''}" onclick="setAllocStatusFilter('APPROVED')" style="border-left:4px solid #10b981" title="Click to filter by Approved">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start">
                     <div>
                         <div style="font-size:11px;font-weight:800;color:#10b981;text-transform:uppercase;letter-spacing:0.8px">APPROVED</div>
-                        <div style="font-size:28px;font-weight:800;color:var(--text-primary);margin-top:4px">${approvedCount}</div>
+                        <div style="font-size:26px;font-weight:800;color:var(--text-primary);margin-top:4px">${approvedCount}</div>
                         <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">Active allocations</div>
                     </div>
-                    <div style="font-size:22px;color:#10b981;background:rgba(16,185,129,0.12);width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center">✓</div>
+                    <div style="font-size:20px;color:#10b981;background:rgba(16,185,129,0.12);width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center">✓</div>
                 </div>
             </div>
 
             <!-- 3. PENDING APPROVAL -->
-            <div class="card" style="padding:16px 20px;background:var(--bg-card);border:1px solid var(--border-color);border-left:4px solid #f59e0b">
+            <div class="alloc-stat-card ${allocState.statusFilter === 'PENDING' ? 'active' : ''}" onclick="setAllocStatusFilter('PENDING')" style="border-left:4px solid #f59e0b" title="Click to filter by Pending Approval">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start">
                     <div>
                         <div style="font-size:11px;font-weight:800;color:#f59e0b;text-transform:uppercase;letter-spacing:0.8px">PENDING APPROVAL</div>
-                        <div style="font-size:28px;font-weight:800;color:var(--text-primary);margin-top:4px">${pendingCount}</div>
+                        <div style="font-size:26px;font-weight:800;color:var(--text-primary);margin-top:4px">${pendingCount}</div>
                         <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">Requires manager action</div>
                     </div>
-                    <div style="font-size:22px;color:#f59e0b;background:rgba(245,158,11,0.12);width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center">⏳</div>
+                    <div style="font-size:20px;color:#f59e0b;background:rgba(245,158,11,0.12);width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center">⏳</div>
                 </div>
             </div>
 
             <!-- 4. REJECTED -->
-            <div class="card" style="padding:16px 20px;background:var(--bg-card);border:1px solid var(--border-color);border-left:4px solid #ef4444">
+            <div class="alloc-stat-card ${allocState.statusFilter === 'REJECTED' ? 'active' : ''}" onclick="setAllocStatusFilter('REJECTED')" style="border-left:4px solid #ef4444" title="Click to filter by Rejected">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start">
                     <div>
                         <div style="font-size:11px;font-weight:800;color:#ef4444;text-transform:uppercase;letter-spacing:0.8px">REJECTED</div>
-                        <div style="font-size:28px;font-weight:800;color:var(--text-primary);margin-top:4px">${rejectedCount}</div>
+                        <div style="font-size:26px;font-weight:800;color:var(--text-primary);margin-top:4px">${rejectedCount}</div>
                         <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">Manager-declined requests</div>
                     </div>
-                    <div style="font-size:22px;color:#ef4444;background:rgba(239,68,68,0.12);width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center">✕</div>
+                    <div style="font-size:20px;color:#ef4444;background:rgba(239,68,68,0.12);width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center">✕</div>
                 </div>
             </div>
         </div>
 
-        <!-- FILTER TABS & SEARCH BAR -->
-        <div class="card" style="padding:12px 18px;margin-bottom:16px;background:var(--bg-card)">
-            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
-                <div style="display:flex;gap:8px;flex-wrap:wrap">
-                    <button class="btn btn-sm ${allocState.statusFilter === 'ALL' ? 'btn-primary' : 'btn-secondary'}" onclick="setAllocStatusFilter('ALL')" style="${allocState.statusFilter === 'ALL' ? 'box-shadow:0 0 12px rgba(99,102,241,0.4);font-weight:700' : 'font-weight:600'}">
-                        All (${totalCount})
-                    </button>
-                    <button class="btn btn-sm ${allocState.statusFilter === 'APPROVED' ? 'btn-primary' : 'btn-secondary'}" onclick="setAllocStatusFilter('APPROVED')" style="${allocState.statusFilter === 'APPROVED' ? 'background:linear-gradient(135deg,#10b981,#059669);border-color:#10b981;box-shadow:0 0 12px rgba(16,185,129,0.4);font-weight:700' : 'font-weight:600'}">
-                        Approved (${approvedCount})
-                    </button>
-                    <button class="btn btn-sm ${allocState.statusFilter === 'PENDING' ? 'btn-primary' : 'btn-secondary'}" onclick="setAllocStatusFilter('PENDING')" style="${allocState.statusFilter === 'PENDING' ? 'background:linear-gradient(135deg,#f59e0b,#d97706);border-color:#f59e0b;box-shadow:0 0 12px rgba(245,158,11,0.4);font-weight:700' : 'font-weight:600'}">
-                        Pending (${pendingCount})
-                    </button>
-                    <button class="btn btn-sm ${allocState.statusFilter === 'REJECTED' ? 'btn-primary' : 'btn-secondary'}" onclick="setAllocStatusFilter('REJECTED')" style="${allocState.statusFilter === 'REJECTED' ? 'background:linear-gradient(135deg,#ef4444,#dc2626);border-color:#ef4444;box-shadow:0 0 12px rgba(239,68,68,0.4);font-weight:700' : 'font-weight:600'}">
-                        Rejected (${rejectedCount})
-                    </button>
-                </div>
-                <div style="min-width:260px">
-                    <input type="text" class="form-input" placeholder="Search employee, project, role..." value="${escapeHtml(allocState.searchQuery)}" oninput="setAllocSearchQuery(this.value)" style="width:100%;padding:7px 12px;font-size:13px;border-radius:6px;background:var(--bg-input);border:1px solid var(--border-color);color:var(--text-primary)">
-                </div>
+        <!-- SEARCH & COUNT TOOLBAR -->
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px">
+            <div style="font-size:13px;font-weight:600;color:var(--text-secondary)">
+                Showing <strong>${filtered.length}</strong> of ${totalCount} allocations (${allocState.statusFilter === 'ALL' ? 'All' : allocState.statusFilter})
+            </div>
+            <div style="min-width:280px">
+                <input type="text" class="form-input" placeholder="Search employee, project, role..." value="${escapeHtml(allocState.searchQuery)}" oninput="setAllocSearchQuery(this.value)" style="width:100%;padding:8px 12px;font-size:13px;border-radius:8px;background:#ffffff;border:1px solid var(--border-color);color:var(--text-primary)">
             </div>
         </div>
 
@@ -6847,7 +6864,26 @@ document.addEventListener('click', (e) => {
     if (searchBar && !searchBar.contains(e.target) && searchDropdown) {
         searchDropdown.style.display = 'none';
     }
+
+    const profileContainer = document.getElementById('userProfileMenuContainer');
+    const profileDropdown = document.getElementById('userProfileDropdown');
+    if (profileContainer && !profileContainer.contains(e.target) && profileDropdown) {
+        profileDropdown.style.display = 'none';
+    }
 });
+
+function toggleUserProfileDropdown(e) {
+    if (e) e.stopPropagation();
+    const dropdown = document.getElementById('userProfileDropdown');
+    if (!dropdown) return;
+    const isVisible = dropdown.style.display === 'block';
+    dropdown.style.display = isVisible ? 'none' : 'block';
+}
+
+function closeUserProfileDropdown() {
+    const dropdown = document.getElementById('userProfileDropdown');
+    if (dropdown) dropdown.style.display = 'none';
+}
 
 async function initApp() {
     document.querySelectorAll('.nav-link').forEach(link => {
