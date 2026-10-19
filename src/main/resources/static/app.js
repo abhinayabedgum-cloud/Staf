@@ -733,11 +733,7 @@ async function renderDemands() {
     try {
         const demands = await apiFetch('/demands');
         setPageContent(`
-        <div class="section-header">
-            <div>
-                <span class="section-title">Demand Intake</span>
-                <div style="font-size:13px;color:var(--text-secondary);margin-top:2px">Manage project staffing requirements and find candidate matches.</div>
-            </div>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
             <button class="btn btn-primary" onclick="showCreateDemandModal()">${IC.plus} Demand Intake Form</button>
         </div>
         <div class="card">
