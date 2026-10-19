@@ -1208,27 +1208,15 @@ async function renderCandidateComparisonScreen(demandId = null) {
                                         </div>
                                     </td>
                                     <td>
-                                        ${r.locationMatch ? `
-                                            <span style="color:#059669;font-weight:600;font-size:12.5px;display:inline-flex;align-items:center;gap:3px">
-                                                ✓ ${escapeHtml(r.location)}
-                                            </span>` : `
-                                            <span style="color:#64748b;font-size:12.5px">
-                                                ${escapeHtml(r.location || 'Remote')}
-                                            </span>`}
+                                        <span style="color:#334155;font-size:13px;font-weight:500">
+                                            ${escapeHtml(r.location || 'Remote')}
+                                        </span>
                                     </td>
                                     <td style="text-align:center">
-                                        <div style="display:inline-flex;flex-direction:column;align-items:center;gap:2px">
-                                            <span style="font-size:15px;font-weight:800;color:${isTop ? '#059669' : score >= 60 ? '#0f172a' : '#64748b'}">${score}%</span>
-                                            <span style="font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:10px;${isReady ? 'background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0' : 'background:#fffbeb;color:#b45309;border:1px solid #fde68a'}">
-                                                ${isReady ? '✓ Ready' : 'Partial'}
-                                            </span>
-                                        </div>
+                                        <span style="font-size:15px;font-weight:800;color:${isTop ? '#059669' : '#0f172a'}">${score}%</span>
                                     </td>
                                     <td style="text-align:center">
-                                        <strong style="color:#0f172a;font-size:13px">${r.availablePercent}% Free</strong>
-                                        <div style="font-size:10.5px;color:${r.availablePercent >= selectedDemand.allocationPercent ? '#059669' : '#dc2626'}">
-                                            ${r.availablePercent >= selectedDemand.allocationPercent ? '✓ Meets req' : '⚠️ Deficit'}
-                                        </div>
+                                        <span style="color:#0f172a;font-size:13px;font-weight:600">${r.availablePercent}% Free</span>
                                     </td>
                                     <td>
                                         <div style="display:flex;flex-wrap:wrap;gap:4px">
@@ -1240,7 +1228,7 @@ async function renderCandidateComparisonScreen(demandId = null) {
                                     </td>
                                     <td>
                                         ${gaps.length === 0 ? `
-                                            <span style="color:#059669;font-weight:600;font-size:12px">✓ 0 Gaps</span>
+                                            <span style="color:#64748b;font-size:12.5px;font-weight:500">None</span>
                                         ` : `
                                             <div style="display:flex;flex-wrap:wrap;gap:4px">
                                                 ${gaps.map(g => `<span style="font-size:11px;font-weight:600;background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;padding:2px 7px;border-radius:6px">${escapeHtml(g.skillName)}</span>`).join('')}
@@ -1249,10 +1237,10 @@ async function renderCandidateComparisonScreen(demandId = null) {
                                     </td>
                                     <td style="text-align:right">
                                         <div style="display:inline-flex;gap:6px">
-                                            <button class="btn ${isTop ? 'btn-primary' : 'btn-secondary'} btn-sm" style="font-weight:700;padding:5px 10px;font-size:12px" onclick="showAllocateModal(${r.employeeId}, ${selectedDemand.id}, '${escapeHtml(r.employeeName)}')">
-                                                ${IC.check} Allocate
+                                            <button class="btn ${isTop ? 'btn-primary' : 'btn-secondary'} btn-sm" style="font-weight:700;padding:6px 12px;font-size:12px" onclick="showAllocateModal(${r.employeeId}, ${selectedDemand.id}, '${escapeHtml(r.employeeName)}')">
+                                                Allocate
                                             </button>
-                                            <button class="btn btn-secondary btn-sm" style="padding:5px 8px;font-size:12px" onclick="showEmployeeDetail(${r.employeeId})">
+                                            <button class="btn btn-secondary btn-sm" style="padding:6px 10px;font-size:12px" onclick="showEmployeeDetail(${r.employeeId})">
                                                 Profile
                                             </button>
                                         </div>
@@ -4931,19 +4919,6 @@ function renderStaffingAnalysisHtml(demand, candidates, topEmpProfile) {
 
 async function sendAgentQuestion() {
     const demandSelect = document.getElementById('ai-demand');
-    const demandId = demandSelect?.value;
-    const questionInput = document.getElementById('ai-question');
-    const question = questionInput?.value.trim();
-    const sendBtn = document.getElementById('ai-send-btn');
-
-    if (!demandId) {
-        showToast('Please select a project demand first', 'warning');
-        return;
-    }
-    if (!question) {
-        showToast('Please type a question for the AI Agent', 'warning');
-        async function sendAgentQuestion() {
-            const demandSelect = document.getElementById('ai-demand');
             const demandId = demandSelect?.value || (aiCurrentDemand ? aiCurrentDemand.id : null);
             const questionInput = document.getElementById('ai-question');
             const question = questionInput?.value.trim();

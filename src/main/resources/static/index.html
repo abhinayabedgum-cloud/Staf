@@ -1,72 +1,119 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SkillMatch — Resource Allocation &amp; Staffing Marketplace</title>
-    <meta name="description" content="AI-powered talent and resource allocation platform that matches employees to project demands using skills, availability, and location.">
+    <meta name="description"
+        content="AI-powered talent and resource allocation platform that matches employees to project demands using skills, availability, and location.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="styles.css?v=20261019_v42">
 </head>
+
 <body>
     <!-- SIDEBAR NAV -->
     <nav class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <div class="logo">
                 <div class="logo-icon">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                        <circle cx="9" cy="7" r="4"/>
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                     </svg>
                 </div>
                 <span class="logo-text">SkillMatch</span>
             </div>
             <button class="sidebar-toggle" id="sidebarToggle">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="6" x2="21" y2="6" />
+                    <line x1="3" y1="12" x2="21" y2="12" />
+                    <line x1="3" y1="18" x2="21" y2="18" />
                 </svg>
             </button>
         </div>
         <ul class="nav-links">
             <li id="nav-item-demands"><a href="#" class="nav-link" data-page="demands" id="nav-demands">
-                <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
-                <span class="nav-label">Demand Intake</span>
-            </a></li>
+                    <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                            <line x1="16" y1="13" x2="8" y2="13" />
+                            <line x1="16" y1="17" x2="8" y2="17" />
+                        </svg></span>
+                    <span class="nav-label">Demand Intake</span>
+                </a></li>
             <li id="nav-item-skills"><a href="#" class="nav-link" data-page="skills" id="nav-skills">
-                <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
-                <span class="nav-label">Skill matrix</span>
-            </a></li>
+                    <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon
+                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                        </svg></span>
+                    <span class="nav-label">Skill matrix</span>
+                </a></li>
             <li id="nav-item-search"><a href="#" class="nav-link" data-page="search" id="nav-search">
-                <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
-                <span class="nav-label">Resource Search</span>
-            </a></li>
+                    <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8" />
+                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg></span>
+                    <span class="nav-label">Resource Search</span>
+                </a></li>
             <li id="nav-item-compare"><a href="#" class="nav-link" data-page="compare" id="nav-compare">
-                <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg></span>
-                <span class="nav-label">Candidate Comparison</span>
-            </a></li>
+                    <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M16 3h5v5" />
+                            <path d="M4 20L21 3" />
+                            <path d="M21 16v5h-5" />
+                            <path d="M15 15l6 6" />
+                            <path d="M4 4l5 5" />
+                        </svg></span>
+                    <span class="nav-label">Candidate Comparison</span>
+                </a></li>
             <li id="nav-item-allocations"><a href="#" class="nav-link" data-page="allocations" id="nav-allocations">
-                <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
-                <span class="nav-label">Allocation Approval</span>
-            </a></li>
+                    <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                        </svg></span>
+                    <span class="nav-label">Allocation Approval</span>
+                </a></li>
             <li id="nav-item-dashboard"><a href="#" class="nav-link" data-page="dashboard" id="nav-dashboard">
-                <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span>
-                <span class="nav-label">Utilization Dashboard</span>
-            </a></li>
+                    <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="7" height="7" />
+                            <rect x="14" y="3" width="7" height="7" />
+                            <rect x="14" y="14" width="7" height="7" />
+                            <rect x="3" y="14" width="7" height="7" />
+                        </svg></span>
+                    <span class="nav-label">Utilization Dashboard</span>
+                </a></li>
             <li id="nav-item-ai"><a href="#" class="nav-link" data-page="ai" id="nav-ai">
-                <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg></span>
-                <span class="nav-label">AI Assistant</span>
-            </a></li>
+                    <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M12 8v4l3 3" />
+                        </svg></span>
+                    <span class="nav-label">AI Assistant</span>
+                </a></li>
         </ul>
-        <div class="sidebar-portal-box" id="sidebarPortalBox" style="padding:10px 12px;margin:8px 8px 0;border-top:1px solid var(--border-color)">
-            <button class="btn btn-secondary btn-sm" id="btnSidebarPortalSwitch" onclick="handleViewSwitch('employee')" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;padding:8px 10px;border-radius:8px">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <div class="sidebar-portal-box" id="sidebarPortalBox"
+            style="padding:10px 12px;margin:8px 8px 0;border-top:1px solid var(--border-color)">
+            <button class="btn btn-secondary btn-sm" id="btnSidebarPortalSwitch" onclick="handleViewSwitch('employee')"
+                style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;padding:8px 10px;border-radius:8px">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                </svg>
                 <span>Employee Portal</span>
             </button>
         </div>
@@ -85,14 +132,25 @@
             <div class="topbar-left"></div>
             <div class="topbar-right">
                 <div class="search-bar" id="globalSearchBar">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                    <input type="text" placeholder="Quick search employees, demands, skills..." id="globalSearch" autocomplete="off">
-                    <button id="searchClearBtn" style="display:none;background:none;border:none;color:var(--text-muted);cursor:pointer;padding:0 4px;font-size:16px;line-height:1" title="Clear search">&times;</button>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                    <input type="text" placeholder="Quick search employees, demands, skills..." id="globalSearch"
+                        autocomplete="off">
+                    <button id="searchClearBtn"
+                        style="display:none;background:none;border:none;color:var(--text-muted);cursor:pointer;padding:0 4px;font-size:16px;line-height:1"
+                        title="Clear search">&times;</button>
                     <div id="searchResultsDropdown" class="search-results-dropdown" style="display:none"></div>
                 </div>
                 <div class="notification-container" id="notificationContainer">
                     <div class="notification-bell" id="notificationBell" title="System Notifications">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                        </svg>
                         <span class="notif-dot" id="notifBadge"></span>
                     </div>
                     <div id="notificationsDropdown" class="notifications-dropdown" style="display:none"></div>
@@ -113,7 +171,11 @@
             <div class="modal-header">
                 <h2 id="modalTitle">Modal</h2>
                 <button class="modal-close" id="modalClose">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
                 </button>
             </div>
             <div class="modal-body" id="modalBody"></div>
@@ -121,16 +183,18 @@
     </div>
 
     <!-- FLOATING AI COPILOT LAUNCHER -->
-    <div class="floating-ai-launcher" id="floatingAiLauncher" onclick="toggleFloatingAiBot()" title="Open AI Staffing Copilot">
+    <div class="floating-ai-launcher" id="floatingAiLauncher" onclick="toggleFloatingAiBot()"
+        title="Open AI Staffing Copilot">
         <div class="floating-ai-pulse"></div>
         <div class="floating-ai-badge">AI</div>
         <div class="floating-ai-icon">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2 2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/>
-                <rect x="4" y="8" width="16" height="12" rx="4"/>
-                <circle cx="9" cy="13" r="1.5" fill="currentColor"/>
-                <circle cx="15" cy="13" r="1.5" fill="currentColor"/>
-                <path d="M9 17h6"/>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2 2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" />
+                <rect x="4" y="8" width="16" height="12" rx="4" />
+                <circle cx="9" cy="13" r="1.5" fill="currentColor" />
+                <circle cx="15" cy="13" r="1.5" fill="currentColor" />
+                <path d="M9 17h6" />
             </svg>
         </div>
         <span class="floating-ai-tooltip">✨ Ask AI Copilot</span>
@@ -151,7 +215,10 @@
             </div>
             <div class="floating-ai-header-actions">
                 <button class="floating-ai-btn-icon" onclick="toggleFloatingAiBot(false)" title="Minimize AI Copilot">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
                 </button>
             </div>
         </div>
@@ -166,9 +233,11 @@
         <div class="floating-ai-body" id="floatingAiMessages">
             <div class="floating-ai-msg bot">
                 <div class="floating-ai-msg-bubble">
-                    <div style="font-size:11px;font-weight:700;color:var(--text-accent);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px" id="aiCopilotResponseHeading">Advisor Assessment</div>
+                    <div style="font-size:11px;font-weight:700;color:var(--text-accent);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px"
+                        id="aiCopilotResponseHeading">Advisor Assessment</div>
                     <div id="aiCopilotAnswerText" style="font-size:13px;line-height:1.55;color:var(--text-primary)">
-                        Hello! I am your SkillMatch AI Copilot. Select any project demand to see instant staffing analysis, or ask questions below about candidate skills, availability, and gap mitigation.
+                        Hello! I am your SkillMatch AI Copilot. Select any project demand to see instant staffing
+                        analysis, or ask questions below about candidate skills, availability, and gap mitigation.
                     </div>
                 </div>
                 <span class="floating-ai-msg-time">Online</span>
@@ -179,27 +248,36 @@
         <div class="floating-ai-chips-wrap">
             <div class="floating-ai-chips-label">Quick Inquiries:</div>
             <div class="floating-ai-chips">
-                <button type="button" class="floating-ai-chip" onclick="setAgentQuery('Who is the best candidate and why?')">Why Top Match?</button>
-                <button type="button" class="floating-ai-chip" onclick="setAgentQuery('Compare top candidates')">Compare Candidates</button>
-                <button type="button" class="floating-ai-chip" onclick="setAgentQuery('What skills are missing for this demand?')">Skill Gaps</button>
-                <button type="button" class="floating-ai-chip" onclick="setAgentQuery('What is the availability of evaluated candidates?')">Availability</button>
+                <button type="button" class="floating-ai-chip"
+                    onclick="setAgentQuery('Who is the best candidate and why?')">Why Top Match?</button>
+                <button type="button" class="floating-ai-chip" onclick="setAgentQuery('Compare top candidates')">Compare
+                    Candidates</button>
+                <button type="button" class="floating-ai-chip"
+                    onclick="setAgentQuery('What skills are missing for this demand?')">Skill Gaps</button>
+                <button type="button" class="floating-ai-chip"
+                    onclick="setAgentQuery('What is the availability of evaluated candidates?')">Availability</button>
             </div>
         </div>
 
         <!-- FOOTER INPUT -->
         <div class="floating-ai-footer">
             <div class="floating-ai-input-wrap">
-                <textarea id="ai-question" class="floating-ai-textarea" placeholder="Ask staffing questions... (Enter to Send)" rows="1"></textarea>
-                <button class="floating-ai-send-btn" id="ai-send-btn" onclick="sendAgentQuestion()" title="Send Question">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <textarea id="ai-question" class="floating-ai-textarea"
+                    placeholder="Ask staffing questions... (Enter to Send)" rows="1"></textarea>
+                <button class="floating-ai-send-btn" id="ai-send-btn" onclick="sendAgentQuestion()"
+                    title="Send Question">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
                         <line x1="22" y1="2" x2="11" y2="13"></line>
                         <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                     </svg>
                 </button>
             </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;font-size:10.5px;color:var(--text-muted)">
+            <div
+                style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;font-size:10.5px;color:var(--text-muted)">
                 <span>Tip: Press Enter to send, Shift+Enter for newline</span>
-                <span style="cursor:pointer;text-decoration:underline" onclick="document.getElementById('ai-question').value='';document.getElementById('ai-question').focus();">Clear</span>
+                <span style="cursor:pointer;text-decoration:underline"
+                    onclick="document.getElementById('ai-question').value='';document.getElementById('ai-question').focus();">Clear</span>
             </div>
         </div>
     </div>
@@ -207,6 +285,7 @@
     <!-- TOAST NOTIFICATIONS -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <script src="app.js?v=20261019_v46"></script>
+    <script src="app.js?v=20261019_v47"></script>
 </body>
+
 </html>

@@ -10,24 +10,24 @@ const API_BASE = 'http://localhost:8080/api';
 // ============================================================
 const IC = {
     dashboard: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>`,
-    demands:   `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,
+    demands: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,
     employees: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
-    skills:    `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
-    search:    `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
-    alloc:     `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,
-    ai:        `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>`,
-    check:     `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
-    x:         `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
-    warn:      `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
-    loc:       `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
-    bot:       `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7"/><path d="M5 14a7 7 0 0 1 7-7h1V5.73"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>`,
-    plus:      `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
-    close:     `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
-    run:       `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>`,
-    logo:      `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
-    bell:      `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`,
-    menu:      `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>`,
-    send:      `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`,
+    skills: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+    search: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
+    alloc: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,
+    ai: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>`,
+    check: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+    x: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+    warn: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+    loc: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
+    bot: `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7"/><path d="M5 14a7 7 0 0 1 7-7h1V5.73"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>`,
+    plus: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+    close: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+    run: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>`,
+    logo: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+    bell: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`,
+    menu: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>`,
+    send: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`,
 };
 
 // ============================================================
@@ -406,7 +406,7 @@ function formatDateRange(startDate, endDate) {
         const parseD = s => {
             const p = s.split('-');
             if (p.length < 3) return s;
-            const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             const m = parseInt(p[1], 10);
             return `${parseInt(p[2], 10)} ${months[m - 1] || p[1]} '${p[0].slice(2)}`;
         };
@@ -497,7 +497,7 @@ async function renderDashboard() {
                 deficit: deficit
             };
         }).filter(s => s.required > 0 || s.qualified > 0)
-          .sort((a, b) => b.deficit - a.deficit || b.required - a.required);
+            .sort((a, b) => b.deficit - a.deficit || b.required - a.required);
 
         const totalDeficitsCount = skillGapsTable.filter(s => s.deficit > 0).length;
 
@@ -674,15 +674,15 @@ async function renderDemands() {
             <div class="table-container"><table>
                 <thead><tr><th>Project</th><th>Role</th><th>Location</th><th>Period</th><th>Alloc%</th><th>Priority</th><th>Status</th><th>Actions</th></tr></thead>
                 <tbody>${demands.length === 0
-                    ? `<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:40px">No demands yet.</td></tr>`
-                    : demands.map(d => `<tr>
+                ? `<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:40px">No demands yet.</td></tr>`
+                : demands.map(d => `<tr>
                         <td><strong>${d.projectName}</strong></td>
                         <td>${d.role}</td>
                         <td>${IC.loc} ${d.location || 'Remote'}</td>
                         <td style="font-size:12px">${d.startDate} &rarr; ${d.endDate}</td>
                         <td>${d.allocationPercent}%</td>
                         <td>${badgeHtml(d.priority, d.priority.toLowerCase())}</td>
-                        <td>${badgeHtml(d.status, d.status.toLowerCase().replace('_','-'))}</td>
+                        <td>${badgeHtml(d.status, d.status.toLowerCase().replace('_', '-'))}</td>
                         <td>
                             <button class="btn btn-secondary btn-sm" onclick="showRecommendations(${d.id})" title="View all matching candidates">${IC.ai} Find Match</button>
                         </td>
@@ -728,30 +728,30 @@ async function showCreateDemandModal() {
                 <button type="submit" class="btn btn-primary">Create Demand</button>
             </div>
         </form>`);
-        document.getElementById('demandForm').addEventListener('submit', async e => {
-            e.preventDefault();
-            const skillIds = Array.from(document.getElementById('df-skills').selectedOptions).map(o => parseInt(o.value));
-            try {
-                const newDemand = await apiFetch('/demands', 'POST', {
-                    projectName: document.getElementById('df-project').value,
-                    role: document.getElementById('df-role').value,
-                    startDate: document.getElementById('df-start').value,
-                    endDate: document.getElementById('df-end').value,
-                    allocationPercent: parseInt(document.getElementById('df-alloc').value),
-                    priority: document.getElementById('df-priority').value,
-                    location: document.getElementById('df-location').value,
-                    requiredSkillIds: skillIds,
-                    description: document.getElementById('df-desc').value
-                });
-                closeModal();
-                showToast(`Project Demand "${newDemand.projectName || 'New Demand'}" created!`);
-                if (router.currentPage === 'ai') {
-                    renderAI(newDemand?.id);
-                } else {
-                    renderDemands();
-                }
-            } catch (err) { showToast(err.message, 'error'); }
-        });
+    document.getElementById('demandForm').addEventListener('submit', async e => {
+        e.preventDefault();
+        const skillIds = Array.from(document.getElementById('df-skills').selectedOptions).map(o => parseInt(o.value));
+        try {
+            const newDemand = await apiFetch('/demands', 'POST', {
+                projectName: document.getElementById('df-project').value,
+                role: document.getElementById('df-role').value,
+                startDate: document.getElementById('df-start').value,
+                endDate: document.getElementById('df-end').value,
+                allocationPercent: parseInt(document.getElementById('df-alloc').value),
+                priority: document.getElementById('df-priority').value,
+                location: document.getElementById('df-location').value,
+                requiredSkillIds: skillIds,
+                description: document.getElementById('df-desc').value
+            });
+            closeModal();
+            showToast(`Project Demand "${newDemand.projectName || 'New Demand'}" created!`);
+            if (router.currentPage === 'ai') {
+                renderAI(newDemand?.id);
+            } else {
+                renderDemands();
+            }
+        } catch (err) { showToast(err.message, 'error'); }
+    });
 }
 
 // ============================================================
@@ -851,25 +851,25 @@ function renderDemandRecommendationsView() {
                 <div style="margin:12px 0">
                     <div class="progress-bar-container">
                         <div class="progress-label"><span>Skills Match</span><span>${r.scoreBreakdown.skillScore}/50</span></div>
-                        <div class="progress-bar"><div class="progress-fill" style="width:${(r.scoreBreakdown.skillScore/50)*100}%"></div></div>
+                        <div class="progress-bar"><div class="progress-fill" style="width:${(r.scoreBreakdown.skillScore / 50) * 100}%"></div></div>
                     </div>
                     <div class="progress-bar-container">
                         <div class="progress-label"><span>Availability</span><span>${r.scoreBreakdown.availabilityScore}/30</span></div>
-                        <div class="progress-bar"><div class="progress-fill" style="width:${(r.scoreBreakdown.availabilityScore/30)*100}%;background:linear-gradient(90deg,#10b981,#34d399)"></div></div>
+                        <div class="progress-bar"><div class="progress-fill" style="width:${(r.scoreBreakdown.availabilityScore / 30) * 100}%;background:linear-gradient(90deg,#10b981,#34d399)"></div></div>
                     </div>
                     <div class="progress-bar-container">
                         <div class="progress-label"><span>Location</span><span>${r.scoreBreakdown.locationScore}/10</span></div>
-                        <div class="progress-bar"><div class="progress-fill" style="width:${(r.scoreBreakdown.locationScore/10)*100}%;background:linear-gradient(90deg,#8b5cf6,#a78bfa)"></div></div>
+                        <div class="progress-bar"><div class="progress-fill" style="width:${(r.scoreBreakdown.locationScore / 10) * 100}%;background:linear-gradient(90deg,#8b5cf6,#a78bfa)"></div></div>
                     </div>
                 </div>` : ''}
 
                 <div class="candidate-tags">
-                    ${(r.matchedSkills||[]).map(s => {
-                        const lvlClamped = Math.min(3, Math.max(1, s.proficiencyLevel));
-                        const colorCls = getProfColorClass(lvlClamped);
-                        return `<span class="heatmap-badge ${colorCls}" style="padding:3px 9px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:4px">${IC.check} ${escapeHtml(s.skillName)} (${getProfLabel(lvlClamped)})</span>`;
-                    }).join(' ')}
-                    ${(r.missingSkills||[]).map(s => `<span class="skill-tag missing">${IC.x} ${escapeHtml(s.skillName)}</span>`).join(' ')}
+                    ${(r.matchedSkills || []).map(s => {
+                const lvlClamped = Math.min(3, Math.max(1, s.proficiencyLevel));
+                const colorCls = getProfColorClass(lvlClamped);
+                return `<span class="heatmap-badge ${colorCls}" style="padding:3px 9px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:4px">${IC.check} ${escapeHtml(s.skillName)} (${getProfLabel(lvlClamped)})</span>`;
+            }).join(' ')}
+                    ${(r.missingSkills || []).map(s => `<span class="skill-tag missing">${IC.x} ${escapeHtml(s.skillName)}</span>`).join(' ')}
                 </div>
 
                 ${!r.meetsSkillRequirements ? `<div class="warning-badge">${IC.warn} Missing required skills</div>` : ''}
@@ -985,8 +985,8 @@ function openCandidateComparisonView(candidatesToCompare = null) {
         <!-- Multi-Column Comparison Cards -->
         <div class="comparison-grid" style="grid-template-columns: repeat(${colCount}, minmax(260px, 1fr))">
             ${sorted.map((r, idx) => {
-                const isBest = idx === 0;
-                return `
+        const isBest = idx === 0;
+        return `
                 <div class="comparison-card ${isBest ? 'best-match' : ''}">
                     ${isBest ? '<span class="comparison-rank-badge top-pick">★ Top Pick</span>' : ''}
 
@@ -1033,16 +1033,16 @@ function openCandidateComparisonView(candidatesToCompare = null) {
                         </div>
                         <div style="display:flex;flex-direction:column;gap:6px">
                             ${(r.matchedSkills || []).map(s => {
-                                const lvl = Math.min(3, Math.max(1, s.proficiencyLevel));
-                                const label = getProfLabel(lvl);
-                                return `
+            const lvl = Math.min(3, Math.max(1, s.proficiencyLevel));
+            const label = getProfLabel(lvl);
+            return `
                                 <div class="comparison-skill-row">
                                     <span style="font-weight:600;color:#0f172a">${escapeHtml(s.skillName)}</span>
                                     <span style="font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:6px;background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;white-space:nowrap">
                                         Level ${lvl} (${label})
                                     </span>
                                 </div>`;
-                            }).join('')}
+        }).join('')}
                             ${(r.missingSkills || []).map(s => `
                                 <div class="comparison-skill-row" style="background:#fef2f2;border-color:#fecaca">
                                     <span style="color:#b91c1c;font-weight:500">${escapeHtml(s.skillName)}</span>
@@ -1061,7 +1061,7 @@ function openCandidateComparisonView(candidatesToCompare = null) {
                         </button>
                     </div>
                 </div>`;
-            }).join('')}
+    }).join('')}
         </div>
     </div>`, 'modal-xl');
 }
@@ -1148,7 +1148,7 @@ async function renderCandidateComparisonScreen(demandId = null) {
             <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
                 <strong style="font-size:15px;color:#0f172a">${escapeHtml(selectedDemand.projectName)} &bull; ${escapeHtml(selectedDemand.role)}</strong>
                 ${badgeHtml(selectedDemand.priority, selectedDemand.priority.toLowerCase())}
-                ${badgeHtml(selectedDemand.status, selectedDemand.status.toLowerCase().replace('_','-'))}
+                ${badgeHtml(selectedDemand.status, selectedDemand.status.toLowerCase().replace('_', '-'))}
                 <span style="font-size:12.5px;color:#64748b;margin-left:4px">
                     ${IC.loc} ${escapeHtml(selectedDemand.location || 'Remote')} &bull; Timeline: ${formatDateRange(selectedDemand.startDate, selectedDemand.endDate)} &bull; Required: <strong>${selectedDemand.allocationPercent}% Capacity</strong>
                 </span>
@@ -1183,13 +1183,13 @@ async function renderCandidateComparisonScreen(demandId = null) {
                         </thead>
                         <tbody>
                             ${candidates.map((r, idx) => {
-                                const isTop = idx === 0;
-                                const score = Math.round(r.totalScore || 0);
-                                const isReady = r.meetsSkillRequirements && r.meetsAvailabilityRequirement;
-                                const gaps = r.missingSkills || [];
-                                const matched = r.matchedSkills || [];
+            const isTop = idx === 0;
+            const score = Math.round(r.totalScore || 0);
+            const isReady = r.meetsSkillRequirements && r.meetsAvailabilityRequirement;
+            const gaps = r.missingSkills || [];
+            const matched = r.matchedSkills || [];
 
-                                return `
+            return `
                                 <tr style="${isTop ? 'background:rgba(236,253,245,0.45);' : ''}">
                                     <td style="text-align:center">
                                         ${isTop ? `<span style="display:inline-block;background:#059669;color:#ffffff;font-size:11px;font-weight:800;padding:2px 8px;border-radius:12px;white-space:nowrap">★ #1</span>` : `<span style="color:#64748b;font-weight:700">#${idx + 1}</span>`}
@@ -1208,39 +1208,27 @@ async function renderCandidateComparisonScreen(demandId = null) {
                                         </div>
                                     </td>
                                     <td>
-                                        ${r.locationMatch ? `
-                                            <span style="color:#059669;font-weight:600;font-size:12.5px;display:inline-flex;align-items:center;gap:3px">
-                                                ✓ ${escapeHtml(r.location)}
-                                            </span>` : `
-                                            <span style="color:#64748b;font-size:12.5px">
-                                                ${escapeHtml(r.location || 'Remote')}
-                                            </span>`}
+                                        <span style="color:#334155;font-size:13px;font-weight:500">
+                                            ${escapeHtml(r.location || 'Remote')}
+                                        </span>
                                     </td>
                                     <td style="text-align:center">
-                                        <div style="display:inline-flex;flex-direction:column;align-items:center;gap:2px">
-                                            <span style="font-size:15px;font-weight:800;color:${isTop ? '#059669' : score >= 60 ? '#0f172a' : '#64748b'}">${score}%</span>
-                                            <span style="font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:10px;${isReady ? 'background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0' : 'background:#fffbeb;color:#b45309;border:1px solid #fde68a'}">
-                                                ${isReady ? '✓ Ready' : 'Partial'}
-                                            </span>
-                                        </div>
+                                        <span style="font-size:15px;font-weight:800;color:${isTop ? '#059669' : '#0f172a'}">${score}%</span>
                                     </td>
                                     <td style="text-align:center">
-                                        <strong style="color:#0f172a;font-size:13px">${r.availablePercent}% Free</strong>
-                                        <div style="font-size:10.5px;color:${r.availablePercent >= selectedDemand.allocationPercent ? '#059669' : '#dc2626'}">
-                                            ${r.availablePercent >= selectedDemand.allocationPercent ? '✓ Meets req' : '⚠️ Deficit'}
-                                        </div>
+                                        <span style="color:#0f172a;font-size:13px;font-weight:600">${r.availablePercent}% Free</span>
                                     </td>
                                     <td>
                                         <div style="display:flex;flex-wrap:wrap;gap:4px">
                                             ${matched.map(s => {
-                                                const lvl = Math.min(3, Math.max(1, s.proficiencyLevel || 1));
-                                                return `<span style="font-size:11px;font-weight:600;background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;padding:2px 7px;border-radius:6px" title="${escapeHtml(s.evidence || '')}">${escapeHtml(s.skillName)} (L${lvl})</span>`;
-                                            }).join('')}
+                const lvl = Math.min(3, Math.max(1, s.proficiencyLevel || 1));
+                return `<span style="font-size:11px;font-weight:600;background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;padding:2px 7px;border-radius:6px" title="${escapeHtml(s.evidence || '')}">${escapeHtml(s.skillName)} (L${lvl})</span>`;
+            }).join('')}
                                         </div>
                                     </td>
                                     <td>
                                         ${gaps.length === 0 ? `
-                                            <span style="color:#059669;font-weight:600;font-size:12px">✓ 0 Gaps</span>
+                                            <span style="color:#64748b;font-size:12.5px;font-weight:500">None</span>
                                         ` : `
                                             <div style="display:flex;flex-wrap:wrap;gap:4px">
                                                 ${gaps.map(g => `<span style="font-size:11px;font-weight:600;background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;padding:2px 7px;border-radius:6px">${escapeHtml(g.skillName)}</span>`).join('')}
@@ -1249,16 +1237,16 @@ async function renderCandidateComparisonScreen(demandId = null) {
                                     </td>
                                     <td style="text-align:right">
                                         <div style="display:inline-flex;gap:6px">
-                                            <button class="btn ${isTop ? 'btn-primary' : 'btn-secondary'} btn-sm" style="font-weight:700;padding:5px 10px;font-size:12px" onclick="showAllocateModal(${r.employeeId}, ${selectedDemand.id}, '${escapeHtml(r.employeeName)}')">
-                                                ${IC.check} Allocate
+                                            <button class="btn ${isTop ? 'btn-primary' : 'btn-secondary'} btn-sm" style="font-weight:700;padding:6px 12px;font-size:12px" onclick="showAllocateModal(${r.employeeId}, ${selectedDemand.id}, '${escapeHtml(r.employeeName)}')">
+                                                Allocate
                                             </button>
-                                            <button class="btn btn-secondary btn-sm" style="padding:5px 8px;font-size:12px" onclick="showEmployeeDetail(${r.employeeId})">
+                                            <button class="btn btn-secondary btn-sm" style="padding:6px 10px;font-size:12px" onclick="showEmployeeDetail(${r.employeeId})">
                                                 Profile
                                             </button>
                                         </div>
                                     </td>
                                 </tr>`;
-                            }).join('')}
+        }).join('')}
                         </tbody>
                     </table>
                 </div>
@@ -1291,7 +1279,7 @@ async function renderEmployees() {
                     <td>${IC.loc} ${e.location || 'N/A'}</td>
                     <td>${e.department || 'N/A'}</td>
                     <td>${badgeHtml(e.employmentStatus, e.employmentStatus === 'ACTIVE' ? 'active' : e.employmentStatus === 'ON_LEAVE' ? 'on-leave' : 'cancelled')}</td>
-                    <td>${(e.skills||[]).slice(0,3).map(s => `<span class="skill-tag">${s.skillName}</span>`).join(' ')}${(e.skills||[]).length > 3 ? `<span class="skill-tag">+${(e.skills||[]).length-3}</span>` : ''}</td>
+                    <td>${(e.skills || []).slice(0, 3).map(s => `<span class="skill-tag">${s.skillName}</span>`).join(' ')}${(e.skills || []).length > 3 ? `<span class="skill-tag">+${(e.skills || []).length - 3}</span>` : ''}</td>
                     <td>
                         <button class="btn btn-secondary btn-sm" onclick="showEmployeeDetail(${e.id})">View</button>
                         <button class="btn btn-secondary btn-sm" onclick="showAddSkillModal(${e.id},'${e.name}')">${IC.plus} Skill</button>
@@ -1501,12 +1489,12 @@ async function showEmployeeDetail(id, highlightSkillName = null) {
     </div>
 
     ${!skillsList.length ? '<div style="color:var(--text-muted);text-align:center;padding:24px 0">No skills currently recorded for this employee.</div>' :
-    skillsList.map(s => {
-        const isTarget = highlightSkillName && s.skillName.toLowerCase() === highlightSkillName.toLowerCase();
-        const lvlClamped = Math.min(3, Math.max(1, s.proficiencyLevel));
-        const pct = Math.min(100, Math.max(0, (lvlClamped / 3) * 100));
-        const colorCls = getProfColorClass(lvlClamped);
-        return `
+            skillsList.map(s => {
+                const isTarget = highlightSkillName && s.skillName.toLowerCase() === highlightSkillName.toLowerCase();
+                const lvlClamped = Math.min(3, Math.max(1, s.proficiencyLevel));
+                const pct = Math.min(100, Math.max(0, (lvlClamped / 3) * 100));
+                const colorCls = getProfColorClass(lvlClamped);
+                return `
         <div class="skill-bar-card ${isTarget ? 'highlighted' : ''}">
             <div class="skill-bar-top">
                 <div class="skill-bar-name">
@@ -1527,7 +1515,7 @@ async function showEmployeeDetail(id, highlightSkillName = null) {
                 <span>${s.evidence ? 'Evidence: ' + s.evidence : 'Self-reported'}</span>
             </div>
         </div>`;
-    }).join('')}`);
+            }).join('')}`);
 }
 
 async function showCellDetail(empId, skillName) {
@@ -1574,7 +1562,7 @@ async function showCellDetail(empId, skillName) {
                 <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px">Other Relevant Skills</div>
                 <div style="display:flex;flex-wrap:wrap;gap:8px">
                     ${otherSkills.length === 0 ? `<span style="font-size:12.5px;color:var(--text-muted)">No other skills recorded</span>` :
-                        otherSkills.map(s => `
+                otherSkills.map(s => `
                             <span class="skill-tag" style="padding:5px 12px;font-size:12px">
                                 <strong>${escapeHtml(s.skillName)}</strong> &mdash; ${s.proficiencyLevel} (${getProfLabel(s.proficiencyLevel)})
                             </span>
@@ -1614,15 +1602,15 @@ function updateMatrixFilter(key, val) {
     const isSearch = (key === 'search');
     const inputEl = document.getElementById('matrixSearchInput');
     const cursor = inputEl ? inputEl.selectionStart : null;
-    
+
     renderSkillsMatrixView();
-    
+
     if (isSearch) {
         const nextInput = document.getElementById('matrixSearchInput');
         if (nextInput) {
             nextInput.focus();
             if (cursor !== null) {
-                try { nextInput.setSelectionRange(cursor, cursor); } catch (e) {}
+                try { nextInput.setSelectionRange(cursor, cursor); } catch (e) { }
             }
         }
     }
@@ -1789,34 +1777,34 @@ function renderSkillsMatrixView() {
                             No skills found matching your search and filter criteria.
                         </td></tr>
                     ` :
-                    filteredSkills.map(skill => {
-                        const cells = displayEmployees.map(emp => {
-                            const es = (emp.skills || []).find(s => s.skillName === skill.name);
-                            if (es) {
-                                const lvl = Math.min(3, Math.max(1, es.proficiencyLevel));
-                                const lbl = getProfLabel(lvl);
-                                const cls = getProfColorClass(lvl);
-                                const titleTxt = `${emp.name}: Level ${lvl} (${lbl}) - ${skill.name}`;
-                                return `
+            filteredSkills.map(skill => {
+                const cells = displayEmployees.map(emp => {
+                    const es = (emp.skills || []).find(s => s.skillName === skill.name);
+                    if (es) {
+                        const lvl = Math.min(3, Math.max(1, es.proficiencyLevel));
+                        const lbl = getProfLabel(lvl);
+                        const cls = getProfColorClass(lvl);
+                        const titleTxt = `${emp.name}: Level ${lvl} (${lbl}) - ${skill.name}`;
+                        return `
                                 <td class="heatmap-cell">
                                     <div class="heatmap-badge ${cls}" title="${escapeHtml(titleTxt)}" 
                                          onclick="showCellDetail(${emp.id}, '${escapeHtml(skill.name)}')">
                                         ${lvl}
                                     </div>
                                 </td>`;
-                            } else {
-                                const titleTxt = `${emp.name} is not rated for ${skill.name}. Click to add.`;
-                                return `
+                    } else {
+                        const titleTxt = `${emp.name} is not rated for ${skill.name}. Click to add.`;
+                        return `
                                 <td class="heatmap-cell">
                                     <div class="heatmap-badge lvl-none" title="${escapeHtml(titleTxt)}" 
                                          onclick="showAddSkillModal(${emp.id}, '${escapeHtml(emp.name)}')">
                                         &mdash;
                                     </div>
                                 </td>`;
-                            }
-                        }).join('');
+                    }
+                }).join('');
 
-                        return `
+                return `
                         <tr>
                             <td>
                                 <strong style="color:var(--text-primary);font-size:13.5px">${escapeHtml(skill.name)}</strong>
@@ -1825,7 +1813,7 @@ function renderSkillsMatrixView() {
                             <td><span class="skill-tag">${escapeHtml(skill.category)}</span></td>
                             ${cells}
                         </tr>`;
-                    }).join('')}
+            }).join('')}
                 </tbody>
             </table>
         </div>
@@ -1947,7 +1935,7 @@ function calculateResourceMatchScore(emp, requiredSkillId, requiredSkillName, lo
     const reasons = [];
 
     const skills = emp.skills || [];
-    const matchedSkill = requiredSkillId 
+    const matchedSkill = requiredSkillId
         ? skills.find(s => s.id == requiredSkillId || (requiredSkillName && s.skillName && s.skillName.toLowerCase() === requiredSkillName.toLowerCase()))
         : null;
 
@@ -2060,7 +2048,7 @@ function updateSummaryCards(resources, requiredSkillId, requiredSkillName) {
     const totalCount = resources.length;
     const bestScore = totalCount ? Math.max(...resources.map(r => r.matchData.totalScore)) : null;
     const avgCapacity = totalCount ? Math.round(resources.reduce((sum, r) => sum + r.availablePercent, 0) / totalCount) : null;
-    
+
     let coverageText = 'N/A';
     let coverageSub = 'No resources matched';
     if (totalCount > 0) {
@@ -2277,7 +2265,7 @@ async function renderSearch(preferredDemandId) {
                 <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid #f8fafc;font-size:12.5px">
                     <span style="font-weight:600;color:#64748b;font-size:12px">Required Skills:</span>
                     ${reqSkills.length === 0 ? '<span style="color:#64748b">General Technical Profile</span>' :
-                        reqSkills.map(s => `<span class="demand-skill-tag">${escapeHtml(s.name || s.skillName)}</span>`).join('')}
+                    reqSkills.map(s => `<span class="demand-skill-tag">${escapeHtml(s.name || s.skillName)}</span>`).join('')}
                 </div>
                 `}
             </div>
@@ -2500,9 +2488,9 @@ function renderDemandCandidatesList() {
                         </thead>
                         <tbody>
                             ${filtered.map((c, idx) => {
-                                const score = Math.round(c.totalScore || 0);
-                                const isEligible = c.meetsSkillRequirements && (c.availablePercent >= reqCap);
-                                return `
+            const score = Math.round(c.totalScore || 0);
+            const isEligible = c.meetsSkillRequirements && (c.availablePercent >= reqCap);
+            return `
                                 <tr>
                                     <td>
                                         <div style="display:flex;align-items:center;gap:10px">
@@ -2560,7 +2548,7 @@ function renderDemandCandidatesList() {
                                         </div>
                                     </td>
                                 </tr>`;
-                            }).join('')}
+        }).join('')}
                         </tbody>
                     </table>
                 </div>
@@ -2616,13 +2604,13 @@ function renderDemandCandidatesList() {
                 <div class="candidate-evaluation-title">Skills</div>
                 <div class="candidate-skills-flow">
                     ${(c.matchedSkills || []).map(s => {
-                        const lvl = Math.min(3, s.proficiencyLevel || 1);
-                        return `
+            const lvl = Math.min(3, s.proficiencyLevel || 1);
+            return `
                         <div class="modern-skill-item" title="${escapeHtml(s.evidence || 'Verified skill')}">
                             <span>${escapeHtml(s.skillName)}</span>
                             <span class="skill-level-tag">${getProfLabel(lvl)}</span>
                         </div>`;
-                    }).join('')}
+        }).join('')}
                     ${(c.missingSkills || []).map(m => `
                         <div class="modern-skill-item missing" title="${escapeHtml(m.trainingRecommendation || 'Skill Gap')}">
                             <span>${escapeHtml(m.skillName)}</span>
@@ -2751,9 +2739,9 @@ function renderDirectTalentResults() {
                     </thead>
                     <tbody>
                         ${filtered.map(e => {
-                            const avail = e.availablePercent !== undefined ? e.availablePercent : 100;
-                            const skills = e.skills || [];
-                            return `
+        const avail = e.availablePercent !== undefined ? e.availablePercent : 100;
+        const skills = e.skills || [];
+        return `
                             <tr>
                                 <td>
                                     <div style="display:flex;align-items:center;gap:10px">
@@ -2798,7 +2786,7 @@ function renderDirectTalentResults() {
                                     </div>
                                 </td>
                             </tr>`;
-                        }).join('')}
+    }).join('')}
                     </tbody>
                 </table>
             </div>
@@ -3099,13 +3087,13 @@ function renderResourceResults() {
                         <div class="rs-skills-label">Employee Skills &amp; Proficiency</div>
                         <div class="rs-skills-list">
                             ${skills.length ? skills.map(s => {
-                                const isTarget = skillId && (s.id == skillId || (r.matchData.matchedSkill && r.matchData.matchedSkill.id === s.id));
-                                return `
+                const isTarget = skillId && (s.id == skillId || (r.matchData.matchedSkill && r.matchData.matchedSkill.id === s.id));
+                return `
                                 <span class="rs-skill-pill ${isTarget ? 'target-matched' : ''}" title="${escapeHtml(s.skillName)} - ${s.proficiencyLabel || getProfLabel(s.proficiencyLevel)} (Level ${Math.min(3, s.proficiencyLevel)}/3)${s.evidence ? ' | ' + escapeHtml(s.evidence) : ''}">
                                     ${escapeHtml(s.skillName)}
                                     <span class="rs-skill-lvl-badge">L${Math.min(3, s.proficiencyLevel)}</span>
                                 </span>`;
-                            }).join('') : '<span style="font-size:12px;color:var(--text-muted)">No skills listed</span>'}
+            }).join('') : '<span style="font-size:12px;color:var(--text-muted)">No skills listed</span>'}
                         </div>
                     </div>
 
@@ -3151,10 +3139,10 @@ function renderResourceResults() {
                     </thead>
                     <tbody>
                         ${resources.map(r => {
-                            const badgeCls = getMatchBadgeClass(r.matchData.totalScore);
-                            const availCls = getAvailColorClass(r.availablePercent);
-                            const skills = r.skills || [];
-                            return `
+            const badgeCls = getMatchBadgeClass(r.matchData.totalScore);
+            const availCls = getAvailColorClass(r.availablePercent);
+            const skills = r.skills || [];
+            return `
                             <tr>
                                 <td>
                                     <strong style="color:var(--text-primary);cursor:pointer" onclick="showEmployeeDetail(${r.employeeId})">${escapeHtml(r.name)}</strong>
@@ -3165,11 +3153,11 @@ function renderResourceResults() {
                                 <td>
                                     <div style="display:flex;flex-wrap:wrap;gap:4px">
                                         ${skills.slice(0, 3).map(s => {
-                                            const isTarget = skillId && (s.id == skillId || (r.matchData.matchedSkill && r.matchData.matchedSkill.id === s.id));
-                                            return `<span class="rs-skill-pill ${isTarget ? 'target-matched' : ''}" style="font-size:10.5px;padding:2px 6px">
+                const isTarget = skillId && (s.id == skillId || (r.matchData.matchedSkill && r.matchData.matchedSkill.id === s.id));
+                return `<span class="rs-skill-pill ${isTarget ? 'target-matched' : ''}" style="font-size:10.5px;padding:2px 6px">
                                                 ${escapeHtml(s.skillName)} <span class="rs-skill-lvl-badge">L${s.proficiencyLevel}</span>
                                             </span>`;
-                                        }).join('')}
+            }).join('')}
                                         ${skills.length > 3 ? `<span style="font-size:11px;color:var(--text-muted)">+${skills.length - 3}</span>` : ''}
                                     </div>
                                 </td>
@@ -3196,7 +3184,7 @@ function renderResourceResults() {
                                     </div>
                                 </td>
                             </tr>`;
-                        }).join('')}
+        }).join('')}
                     </tbody>
                 </table>
             </div>
@@ -3252,15 +3240,15 @@ function renderResourceResults() {
                                         </div>
                                     </td>
                                     ${weeks.map(w => {
-                                        const alloc = getEmpWeeklyAllocation(r.employeeId, w.start, w.end, allocations);
-                                        if (alloc === 0) {
-                                            return `<td><div class="rs-timeline-block free" title="${escapeHtml(r.name)} | Week ${w.index}: 100% Free">100% Free</div></td>`;
-                                        } else if (alloc < 100) {
-                                            return `<td><div class="rs-timeline-block partial" title="${escapeHtml(r.name)} | Week ${w.index}: ${100 - alloc}% Available (${alloc}% Allocated)">${100 - alloc}% Avail</div></td>`;
-                                        } else {
-                                            return `<td><div class="rs-timeline-block booked" title="${escapeHtml(r.name)} | Week ${w.index}: Fully Booked (${alloc}% Allocated)">Booked</div></td>`;
-                                        }
-                                    }).join('')}
+            const alloc = getEmpWeeklyAllocation(r.employeeId, w.start, w.end, allocations);
+            if (alloc === 0) {
+                return `<td><div class="rs-timeline-block free" title="${escapeHtml(r.name)} | Week ${w.index}: 100% Free">100% Free</div></td>`;
+            } else if (alloc < 100) {
+                return `<td><div class="rs-timeline-block partial" title="${escapeHtml(r.name)} | Week ${w.index}: ${100 - alloc}% Available (${alloc}% Allocated)">${100 - alloc}% Avail</div></td>`;
+            } else {
+                return `<td><div class="rs-timeline-block booked" title="${escapeHtml(r.name)} | Week ${w.index}: Fully Booked (${alloc}% Allocated)">Booked</div></td>`;
+            }
+        }).join('')}
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -3490,9 +3478,9 @@ async function renderAllocations(keepSearchFocus = false) {
                 const currentList = getWorkflowAllocations();
                 let listChanged = false;
                 apiAllocations.forEach(ba => {
-                    const exists = currentList.find(ca => 
-                        (ca.backendId === ba.id) || 
-                        (ca.id === ba.id) || 
+                    const exists = currentList.find(ca =>
+                        (ca.backendId === ba.id) ||
+                        (ca.id === ba.id) ||
                         (ca.employeeName === ba.employeeName && ca.projectName === ba.projectName && !ca.backendId)
                     );
                     if (exists) {
@@ -3626,12 +3614,12 @@ async function renderAllocations(keepSearchFocus = false) {
                         </thead>
                         <tbody>
                             ${!allPending.length
-                                ? `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted)">
+                    ? `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted)">
                                     <div style="font-size:22px;margin-bottom:4px">✓</div>
                                     <div style="font-weight:700;font-size:13.5px;color:var(--text-primary)">No Pending Allocations Awaiting Approval</div>
                                     <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">All resource assignments are currently committed or reviewed.</div>
                                 </td></tr>`
-                                : allPending.map(a => `
+                    : allPending.map(a => `
                                 <tr>
                                     <td>
                                         <strong style="color:var(--text-primary);cursor:pointer;font-size:13px" onclick="showEmployeeDetail(${a.employeeId})">${escapeHtml(a.employeeName)}</strong>
@@ -3784,37 +3772,37 @@ async function renderAllocations(keepSearchFocus = false) {
                         </tr>
                     </thead>
                     <tbody>${!auditLogAllocations.length
-                        ? `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted)">
+                ? `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted)">
                             <div style="font-size:22px;margin-bottom:4px">📋</div>
                             <div style="font-weight:700;font-size:13.5px;color:var(--text-primary)">No allocations match your filter</div>
                             <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">Try clearing search or switching status filter above.</div>
                         </td></tr>`
-                        : auditLogAllocations.map(a => {
-                            const isPending = a.status === 'PENDING APPROVAL';
-                            const isApproved = a.status === 'APPROVED';
-                            const isRejected = a.status === 'REJECTED';
-                            const isCancelled = a.status === 'CANCELLED';
+                : auditLogAllocations.map(a => {
+                    const isPending = a.status === 'PENDING APPROVAL';
+                    const isApproved = a.status === 'APPROVED';
+                    const isRejected = a.status === 'REJECTED';
+                    const isCancelled = a.status === 'CANCELLED';
 
-                            let decisionByHtml = '';
-                            if (isPending) {
-                                decisionByHtml = `<span style="color:var(--text-muted);font-weight:600">—</span>`;
-                            } else if (isApproved) {
-                                decisionByHtml = `<strong style="color:var(--text-primary);font-size:12.5px">${escapeHtml(a.approvedBy || a.decisionBy || 'Resource Manager')}</strong>${a.approvedAtFormatted ? `<br><small style="color:var(--text-muted);font-size:11px">${escapeHtml(a.approvedAtFormatted)}</small>` : ''}`;
-                            } else if (isRejected) {
-                                decisionByHtml = `<strong style="color:var(--text-primary);font-size:12.5px">${escapeHtml(a.rejectedBy || a.decisionBy || 'Resource Manager')}</strong>${a.rejectedAtFormatted ? `<br><small style="color:var(--text-muted);font-size:11px">${escapeHtml(a.rejectedAtFormatted)}</small>` : ''}`;
-                            } else if (isCancelled) {
-                                decisionByHtml = `<strong style="color:var(--text-secondary);font-size:12.5px">${escapeHtml(a.cancelledBy || a.decisionBy || 'Resource Manager')}</strong>${a.cancelledAtFormatted ? `<br><small style="color:var(--text-muted);font-size:11px">${escapeHtml(a.cancelledAtFormatted)}</small>` : ''}`;
-                            }
+                    let decisionByHtml = '';
+                    if (isPending) {
+                        decisionByHtml = `<span style="color:var(--text-muted);font-weight:600">—</span>`;
+                    } else if (isApproved) {
+                        decisionByHtml = `<strong style="color:var(--text-primary);font-size:12.5px">${escapeHtml(a.approvedBy || a.decisionBy || 'Resource Manager')}</strong>${a.approvedAtFormatted ? `<br><small style="color:var(--text-muted);font-size:11px">${escapeHtml(a.approvedAtFormatted)}</small>` : ''}`;
+                    } else if (isRejected) {
+                        decisionByHtml = `<strong style="color:var(--text-primary);font-size:12.5px">${escapeHtml(a.rejectedBy || a.decisionBy || 'Resource Manager')}</strong>${a.rejectedAtFormatted ? `<br><small style="color:var(--text-muted);font-size:11px">${escapeHtml(a.rejectedAtFormatted)}</small>` : ''}`;
+                    } else if (isCancelled) {
+                        decisionByHtml = `<strong style="color:var(--text-secondary);font-size:12.5px">${escapeHtml(a.cancelledBy || a.decisionBy || 'Resource Manager')}</strong>${a.cancelledAtFormatted ? `<br><small style="color:var(--text-muted);font-size:11px">${escapeHtml(a.cancelledAtFormatted)}</small>` : ''}`;
+                    }
 
-                            let actionsHtml = '';
-                            if (isPending) {
-                                actionsHtml = `
+                    let actionsHtml = '';
+                    if (isPending) {
+                        actionsHtml = `
                                     <button class="btn btn-primary btn-sm" onclick="showPendingApprovalReviewModal('${a.id}')" style="font-weight:700;padding:4px 12px;font-size:11.5px">
                                         Review
                                     </button>
                                 `;
-                            } else if (isApproved) {
-                                actionsHtml = `
+                    } else if (isApproved) {
+                        actionsHtml = `
                                     <div style="display:inline-flex;gap:6px">
                                         <button class="btn btn-secondary btn-sm" onclick="showAllocationViewDetailsModal('${a.id}')" style="padding:4px 10px;font-size:11.5px">
                                             View
@@ -3824,15 +3812,15 @@ async function renderAllocations(keepSearchFocus = false) {
                                         </button>
                                     </div>
                                 `;
-                            } else {
-                                actionsHtml = `
+                    } else {
+                        actionsHtml = `
                                     <button class="btn btn-secondary btn-sm" onclick="showAllocationViewDetailsModal('${a.id}')" style="padding:4px 10px;font-size:11.5px">
                                         View
                                     </button>
                                 `;
-                            }
+                    }
 
-                            return `
+                    return `
                             <tr style="${isCancelled ? 'opacity:0.65' : ''}">
                                 <td>
                                     <strong style="color:var(--text-primary);cursor:pointer;font-size:13px" onclick="showEmployeeDetail(${a.employeeId})">${escapeHtml(a.employeeName)}</strong>
@@ -3854,7 +3842,7 @@ async function renderAllocations(keepSearchFocus = false) {
                                     </div>
                                 </td>
                                 <td>
-                                    ${badgeHtml(a.status, a.status.toLowerCase().replace(/[\s_]/g,'-'))}
+                                    ${badgeHtml(a.status, a.status.toLowerCase().replace(/[\s_]/g, '-'))}
                                 </td>
                                 <td>
                                     ${decisionByHtml}
@@ -3863,7 +3851,7 @@ async function renderAllocations(keepSearchFocus = false) {
                                     ${actionsHtml}
                                 </td>
                             </tr>`;
-                        }).join('')}
+                }).join('')}
                     </tbody>
                 </table>
             </div>
@@ -4269,7 +4257,7 @@ function showAllocationViewDetailsModal(allocId) {
                 </div>
             </div>
             <div>
-                ${badgeHtml(a.status, a.status.toLowerCase().replace(/[\s_]/g,'-'))}
+                ${badgeHtml(a.status, a.status.toLowerCase().replace(/[\s_]/g, '-'))}
             </div>
         </div>
 
@@ -4298,7 +4286,7 @@ function showAllocationViewDetailsModal(allocId) {
                 </div>
                 <div class="review-field">
                     <div class="review-field-label">Current Status</div>
-                    <div class="review-field-value">${badgeHtml(a.status, a.status.toLowerCase().replace(/[\s_]/g,'-'))}</div>
+                    <div class="review-field-value">${badgeHtml(a.status, a.status.toLowerCase().replace(/[\s_]/g, '-'))}</div>
                 </div>
             </div>
         </div>
@@ -4470,7 +4458,7 @@ function formatAgentText(text) {
 
 function generateTargetedAgentAnswer(question, candidates, demandText) {
     const q = (question || '').toLowerCase().trim();
-    
+
     // Check if asking to compare candidates
     if (q.includes('compar') || q.includes('versus') || q.includes(' vs ') || q.includes('difference')) {
         if (candidates.length >= 2) {
@@ -4501,7 +4489,7 @@ function generateTargetedAgentAnswer(question, candidates, demandText) {
             ${top.missingSkills && top.missingSkills.length ? `&bull; <em>Note: Missing ${top.missingSkills.map(m => m.skillName).join(', ')}</em>` : '&bull; <strong>Full skill requirements satisfied.</strong>'}`;
         }
     }
-    
+
     // Check if asking about missing skills or gaps or training
     if (q.includes('missing') || q.includes('gap') || q.includes('training') || q.includes('course') || q.includes('learn')) {
         const withGaps = candidates.filter(c => c.missingSkills && c.missingSkills.length > 0);
@@ -4931,373 +4919,373 @@ function renderStaffingAnalysisHtml(demand, candidates, topEmpProfile) {
 
 async function sendAgentQuestion() {
     const demandSelect = document.getElementById('ai-demand');
-    const demandId = demandSelect?.value || (aiCurrentDemand ? aiCurrentDemand.id : null);
-    const questionInput = document.getElementById('ai-question');
-    const question = questionInput?.value.trim();
-    const sendBtn = document.getElementById('ai-send-btn');
+            const demandId = demandSelect?.value || (aiCurrentDemand ? aiCurrentDemand.id : null);
+            const questionInput = document.getElementById('ai-question');
+            const question = questionInput?.value.trim();
+            const sendBtn = document.getElementById('ai-send-btn');
 
-    if (!demandId) {
-        showToast('Please select a project demand first', 'warning');
-        return;
-    }
-    if (!question) {
-        showToast('Please type a question for the AI Agent', 'warning');
-        questionInput?.focus();
-        return;
-    }
+            if (!demandId) {
+                showToast('Please select a project demand first', 'warning');
+                return;
+            }
+            if (!question) {
+                showToast('Please type a question for the AI Agent', 'warning');
+                questionInput?.focus();
+                return;
+            }
 
-    // Ensure floating window is open
-    toggleFloatingAiBot(true);
+            // Ensure floating window is open
+            toggleFloatingAiBot(true);
 
-    if (sendBtn) {
-        sendBtn.disabled = true;
-        sendBtn.innerHTML = `<span class="spinner" style="width:12px;height:12px;border-width:2px;display:inline-block;vertical-align:middle"></span>`;
-    }
+            if (sendBtn) {
+                sendBtn.disabled = true;
+                sendBtn.innerHTML = `<span class="spinner" style="width:12px;height:12px;border-width:2px;display:inline-block;vertical-align:middle"></span>`;
+            }
 
-    const messagesEl = document.getElementById('floatingAiMessages');
-    const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const messagesEl = document.getElementById('floatingAiMessages');
+            const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    if (messagesEl) {
-        // Append user message bubble
-        const userMsg = document.createElement('div');
-        userMsg.className = 'floating-ai-msg user';
-        userMsg.innerHTML = `
+            if (messagesEl) {
+                // Append user message bubble
+                const userMsg = document.createElement('div');
+                userMsg.className = 'floating-ai-msg user';
+                userMsg.innerHTML = `
             <div class="floating-ai-msg-bubble">${escapeHtml(question)}</div>
             <span class="floating-ai-msg-time">${timeNow}</span>
         `;
-        messagesEl.appendChild(userMsg);
+                messagesEl.appendChild(userMsg);
 
-        // Append loading bot bubble
-        const botLoading = document.createElement('div');
-        botLoading.className = 'floating-ai-msg bot';
-        botLoading.id = 'floatingAiLoadingMsg';
-        botLoading.innerHTML = `
+                // Append loading bot bubble
+                const botLoading = document.createElement('div');
+                botLoading.className = 'floating-ai-msg bot';
+                botLoading.id = 'floatingAiLoadingMsg';
+                botLoading.innerHTML = `
             <div class="floating-ai-msg-bubble" style="display:flex;align-items:center;gap:8px">
                 <span class="spinner" style="width:14px;height:14px;border-width:2px;display:inline-block"></span>
                 <span>Reasoning over verified employee catalog...</span>
             </div>
         `;
-        messagesEl.appendChild(botLoading);
-        messagesEl.scrollTop = messagesEl.scrollHeight;
-    }
+                messagesEl.appendChild(botLoading);
+                messagesEl.scrollTop = messagesEl.scrollHeight;
+            }
 
-    const headingEl = document.getElementById('aiCopilotResponseHeading');
-    const answerEl = document.getElementById('aiCopilotAnswerText');
-    if (headingEl) headingEl.textContent = `Analyzing: "${question}"...`;
-    if (answerEl) {
-        answerEl.innerHTML = `<div class="loading-overlay" style="padding:14px"><div class="spinner"></div><span>Reasoning over verified employee catalog...</span></div>`;
-    }
+            const headingEl = document.getElementById('aiCopilotResponseHeading');
+            const answerEl = document.getElementById('aiCopilotAnswerText');
+            if (headingEl) headingEl.textContent = `Analyzing: "${question}"...`;
+            if (answerEl) {
+                answerEl.innerHTML = `<div class="loading-overlay" style="padding:14px"><div class="spinner"></div><span>Reasoning over verified employee catalog...</span></div>`;
+            }
 
-    try {
-        const [res, demand] = await Promise.all([
-            apiFetch('/ai/staffing-advice', 'POST', { demandId: parseInt(demandId, 10), question }),
-            demandId ? apiFetch(`/demands/${demandId}`).catch(() => null) : Promise.resolve(null)
-        ]);
-        aiCurrentCandidates = res.candidates || [];
+            try {
+                const [res, demand] = await Promise.all([
+                    apiFetch('/ai/staffing-advice', 'POST', { demandId: parseInt(demandId, 10), question }),
+                    demandId ? apiFetch(`/demands/${demandId}`).catch(() => null) : Promise.resolve(null)
+                ]);
+                aiCurrentCandidates = res.candidates || [];
 
-        const demandText = demandSelect?.options[demandSelect.selectedIndex]?.text || (demand ? `${demand.projectName} - ${demand.role}` : `Demand #${demandId}`);
-        const directAnswer = generateTargetedAgentAnswer(question, res.candidates || [], demandText);
+                const demandText = demandSelect?.options[demandSelect.selectedIndex]?.text || (demand ? `${demand.projectName} - ${demand.role}` : `Demand #${demandId}`);
+                const directAnswer = generateTargetedAgentAnswer(question, res.candidates || [], demandText);
 
-        const botLoading = document.getElementById('floatingAiLoadingMsg');
-        if (botLoading) {
-            botLoading.innerHTML = `
+                const botLoading = document.getElementById('floatingAiLoadingMsg');
+                if (botLoading) {
+                    botLoading.innerHTML = `
                 <div class="floating-ai-msg-bubble">
                     <div style="font-size:11px;font-weight:700;color:var(--text-accent);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Advisor Assessment</div>
                     <div style="font-size:13px;line-height:1.55;color:var(--text-primary)">${directAnswer}</div>
                 </div>
                 <span class="floating-ai-msg-time">${timeNow}</span>
             `;
-            botLoading.removeAttribute('id');
-        }
+                    botLoading.removeAttribute('id');
+                }
 
-        if (headingEl) {
-            headingEl.innerHTML = `Q: "${escapeHtml(question)}"`;
-        }
-        if (answerEl) {
-            answerEl.innerHTML = directAnswer;
-        }
+                if (headingEl) {
+                    headingEl.innerHTML = `Q: "${escapeHtml(question)}"`;
+                }
+                if (answerEl) {
+                    answerEl.innerHTML = directAnswer;
+                }
 
-        if (questionInput) questionInput.value = '';
-        if (messagesEl) messagesEl.scrollTop = messagesEl.scrollHeight;
-        showToast('AI Advisor responded!');
-    } catch (err) {
-        showToast(err.message, 'error');
-        const botLoading = document.getElementById('floatingAiLoadingMsg');
-        if (botLoading) {
-            botLoading.innerHTML = `
+                if (questionInput) questionInput.value = '';
+                if (messagesEl) messagesEl.scrollTop = messagesEl.scrollHeight;
+                showToast('AI Advisor responded!');
+            } catch (err) {
+                showToast(err.message, 'error');
+                const botLoading = document.getElementById('floatingAiLoadingMsg');
+                if (botLoading) {
+                    botLoading.innerHTML = `
                 <div class="floating-ai-msg-bubble" style="border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.08)">
                     <span style="color:var(--accent-danger)">Error: ${escapeHtml(err.message)}</span>
                 </div>
                 <span class="floating-ai-msg-time">${timeNow}</span>
             `;
-            botLoading.removeAttribute('id');
-        }
-        if (answerEl) {
-            answerEl.innerHTML = `<span style="color:var(--accent-danger)">Error: ${escapeHtml(err.message)}</span>`;
-        }
-    } finally {
-        if (sendBtn) {
-            sendBtn.disabled = false;
-            sendBtn.innerHTML = `
+                    botLoading.removeAttribute('id');
+                }
+                if (answerEl) {
+                    answerEl.innerHTML = `<span style="color:var(--accent-danger)">Error: ${escapeHtml(err.message)}</span>`;
+                }
+            } finally {
+                if (sendBtn) {
+                    sendBtn.disabled = false;
+                    sendBtn.innerHTML = `
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="22" y1="2" x2="11" y2="13"></line>
                     <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                 </svg>`;
+                }
+            }
         }
-    }
-}
 
-function renderAgentGovernanceAccordion(res) {
-    return '';
-}
+        function renderAgentGovernanceAccordion(res) {
+            return '';
+        }
 
-async function runAgent() {
-    const demandSelect = document.getElementById('ai-demand');
-    const demandId = demandSelect?.value;
-    const runBtn = document.getElementById('ai-run-btn');
-    if (!demandId) { showToast('Please select a demand', 'warning'); return; }
+        async function runAgent() {
+            const demandSelect = document.getElementById('ai-demand');
+            const demandId = demandSelect?.value;
+            const runBtn = document.getElementById('ai-run-btn');
+            if (!demandId) { showToast('Please select a demand', 'warning'); return; }
 
-    if (runBtn) {
-        runBtn.disabled = true;
-        runBtn.innerHTML = `<span class="spinner" style="width:12px;height:12px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:6px"></span> Analyzing...`;
-    }
+            if (runBtn) {
+                runBtn.disabled = true;
+                runBtn.innerHTML = `<span class="spinner" style="width:12px;height:12px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:6px"></span> Analyzing...`;
+            }
 
-    const workspaceEl = document.getElementById('aiCandidateWorkspace');
-    if (workspaceEl) {
-        workspaceEl.innerHTML = '<div class="loading-overlay" style="padding:48px"><div class="spinner"></div><span>Ranking available candidates against demand...</span></div>';
-    }
+            const workspaceEl = document.getElementById('aiCandidateWorkspace');
+            if (workspaceEl) {
+                workspaceEl.innerHTML = '<div class="loading-overlay" style="padding:48px"><div class="spinner"></div><span>Ranking available candidates against demand...</span></div>';
+            }
 
-    try {
-        const [res, demand] = await Promise.all([
-            apiFetch('/ai/staffing-advice', 'POST', { demandId: parseInt(demandId, 10), question: '' }),
-            apiFetch(`/demands/${demandId}`)
-        ]);
-        aiCurrentCandidates = res.candidates || [];
-        aiCurrentDemand = demand;
+            try {
+                const [res, demand] = await Promise.all([
+                    apiFetch('/ai/staffing-advice', 'POST', { demandId: parseInt(demandId, 10), question: '' }),
+                    apiFetch(`/demands/${demandId}`)
+                ]);
+                aiCurrentCandidates = res.candidates || [];
+                aiCurrentDemand = demand;
 
-        // Update Top Demand Meta tags
-        const metaEl = document.getElementById('aiDemandMeta');
-        if (metaEl && demand) {
-            const priorityClass = demand.priority ? demand.priority.toLowerCase() : 'medium';
-            const skillsChips = (demand.requiredSkills || []).map(s => 
-                `<span class="rs-skill-pill target-matched" style="font-size:11px;padding:2px 7px">${escapeHtml(s.name || s.skillName)}</span>`
-            ).join(' ');
+                // Update Top Demand Meta tags
+                const metaEl = document.getElementById('aiDemandMeta');
+                if (metaEl && demand) {
+                    const priorityClass = demand.priority ? demand.priority.toLowerCase() : 'medium';
+                    const skillsChips = (demand.requiredSkills || []).map(s =>
+                        `<span class="rs-skill-pill target-matched" style="font-size:11px;padding:2px 7px">${escapeHtml(s.name || s.skillName)}</span>`
+                    ).join(' ');
 
-            metaEl.innerHTML = `
+                    metaEl.innerHTML = `
                 <span class="badge badge-active" style="font-size:12px;padding:4px 10px">${IC.loc} ${escapeHtml(demand.location || 'Hyderabad')}</span>
                 <span class="badge badge-active" style="font-size:12px;padding:4px 10px">${demand.allocationPercent || 80}% Capacity</span>
                 <span class="badge badge-${priorityClass}" style="font-size:12px;padding:4px 10px">${escapeHtml(demand.priority || 'Open')}</span>
                 ${skillsChips ? `<div style="display:flex;align-items:center;gap:4px;margin-left:6px">${skillsChips}</div>` : ''}
             `;
-        }
+                }
 
-        // Sync Floating AI Bot Context
-        const contextEl = document.getElementById('floatingAiContextDemand');
-        if (contextEl && demand) {
-            contextEl.textContent = `${demand.projectName} - ${demand.role}`;
-        }
+                // Sync Floating AI Bot Context
+                const contextEl = document.getElementById('floatingAiContextDemand');
+                if (contextEl && demand) {
+                    contextEl.textContent = `${demand.projectName} - ${demand.role}`;
+                }
 
-        let topEmpProfile = null;
-        if (res.candidates && res.candidates.length > 0) {
-            try {
-                topEmpProfile = await apiFetch(`/employees/${res.candidates[0].employeeId}`);
-            } catch {}
-        }
+                let topEmpProfile = null;
+                if (res.candidates && res.candidates.length > 0) {
+                    try {
+                        topEmpProfile = await apiFetch(`/employees/${res.candidates[0].employeeId}`);
+                    } catch { }
+                }
 
-        const staffingAnalysisHtml = renderStaffingAnalysisHtml(demand, res.candidates || [], topEmpProfile);
+                const staffingAnalysisHtml = renderStaffingAnalysisHtml(demand, res.candidates || [], topEmpProfile);
 
-        if (workspaceEl) {
-            workspaceEl.innerHTML = `
+                if (workspaceEl) {
+                    workspaceEl.innerHTML = `
             <!-- CANDIDATE WORKSPACE: BEST CANDIDATE + GAPS + 2x2 RUNNER-UPS -->
             ${staffingAnalysisHtml}
 
             <!-- ALGORITHMIC AUDIT & GOVERNANCE DRAWER -->
             ${renderAgentGovernanceAccordion(res)}`;
-        }
+                }
 
-        // Set initial copilot advice summary
-        const headingEl = document.getElementById('aiCopilotResponseHeading');
-        const answerEl = document.getElementById('aiCopilotAnswerText');
-        if (headingEl) headingEl.textContent = 'Advisor Assessment';
-        if (answerEl && res.candidates && res.candidates.length > 0) {
-            const top = res.candidates[0];
-            const topScore = top.employeeName === 'Ram' ? 92 : Math.round(top.totalScore || 85);
-            answerEl.innerHTML = `
+                // Set initial copilot advice summary
+                const headingEl = document.getElementById('aiCopilotResponseHeading');
+                const answerEl = document.getElementById('aiCopilotAnswerText');
+                if (headingEl) headingEl.textContent = 'Advisor Assessment';
+                if (answerEl && res.candidates && res.candidates.length > 0) {
+                    const top = res.candidates[0];
+                    const topScore = top.employeeName === 'Ram' ? 92 : Math.round(top.totalScore || 85);
+                    answerEl.innerHTML = `
                 Staffing analysis complete for <strong>${escapeHtml(demand?.projectName || 'Project')}</strong>.<br><br>
                 Primary recommendation is <strong>${escapeHtml(top.employeeName)}</strong> with a <strong>${topScore}% match score</strong> and <strong>${top.availablePercent}% available capacity</strong>.<br><br>
                 <em>Click the quick chips or ask questions below to query candidate specifics or skill ramp-up requirements.</em>
             `;
+                }
+            } catch (err) {
+                if (workspaceEl) {
+                    workspaceEl.innerHTML = `<div class="empty-state"><div class="empty-title">Error: ${escapeHtml(err.message)}</div></div>`;
+                }
+            } finally {
+                if (runBtn) {
+                    runBtn.disabled = false;
+                    runBtn.innerHTML = `${IC.run} Run Match`;
+                }
+            }
         }
-    } catch (err) {
-        if (workspaceEl) {
-            workspaceEl.innerHTML = `<div class="empty-state"><div class="empty-title">Error: ${escapeHtml(err.message)}</div></div>`;
+
+        // ============================================================
+        // TALENTSYNC ACCESS PORTAL & AUTHENTICATION
+        // ============================================================
+
+        // ============================================================
+        // TALENTSYNC ACCESS PORTAL & TOGGLE WORKFLOW
+        // ============================================================
+
+        let portalActiveTab = 'employee'; // 'employee' or 'manager'
+        let portalSelectedEmpId = 1;
+
+        function switchPortalTab(tab) {
+            portalActiveTab = tab;
+            renderPortal();
         }
-    } finally {
-        if (runBtn) {
-            runBtn.disabled = false;
-            runBtn.innerHTML = `${IC.run} Run Match`;
+
+        function handleViewSwitch(val) {
+            if (val === 'employee') {
+                portalActiveTab = 'employee';
+                router.navigate('portal');
+            } else {
+                portalActiveTab = 'manager';
+                if (authState.isManager()) {
+                    router.navigate('dashboard');
+                } else {
+                    router.navigate('portal');
+                }
+            }
         }
-    }
-}
 
-// ============================================================
-// TALENTSYNC ACCESS PORTAL & AUTHENTICATION
-// ============================================================
+        function managerExit() {
+            authState.clearSession();
+            portalActiveTab = 'manager';
+            sessionStorage.setItem('ts_manual_logout', 'true');
+            router.navigate('portal');
+            showToast('Signed out. Please enter credentials to access Manager Portal.', 'info');
+        }
 
-// ============================================================
-// TALENTSYNC ACCESS PORTAL & TOGGLE WORKFLOW
-// ============================================================
-
-let portalActiveTab = 'employee'; // 'employee' or 'manager'
-let portalSelectedEmpId = 1;
-
-function switchPortalTab(tab) {
-    portalActiveTab = tab;
-    renderPortal();
-}
-
-function handleViewSwitch(val) {
-    if (val === 'employee') {
-        portalActiveTab = 'employee';
-        router.navigate('portal');
-    } else {
-        portalActiveTab = 'manager';
-        if (authState.isManager()) {
-            router.navigate('dashboard');
-        } else {
+        function exitToManagerLogin() {
+            portalActiveTab = 'manager';
             router.navigate('portal');
         }
-    }
-}
 
-function managerExit() {
-    authState.clearSession();
-    portalActiveTab = 'manager';
-    sessionStorage.setItem('ts_manual_logout', 'true');
-    router.navigate('portal');
-    showToast('Signed out. Please enter credentials to access Manager Portal.', 'info');
-}
+        async function doManagerLogin() {
+            sessionStorage.removeItem('ts_manual_logout');
+            const userEl = document.getElementById('mgrLoginEmail');
+            const passEl = document.getElementById('mgrLoginPassword');
+            const username = (userEl && userEl.value.trim()) ? userEl.value.trim() : 'manager';
+            const password = (passEl && passEl.value) ? passEl.value : 'admin123';
 
-function exitToManagerLogin() {
-    portalActiveTab = 'manager';
-    router.navigate('portal');
-}
-
-async function doManagerLogin() {
-    sessionStorage.removeItem('ts_manual_logout');
-    const userEl = document.getElementById('mgrLoginEmail');
-    const passEl = document.getElementById('mgrLoginPassword');
-    const username = (userEl && userEl.value.trim()) ? userEl.value.trim() : 'manager';
-    const password = (passEl && passEl.value) ? passEl.value : 'admin123';
-
-    try {
-        const res = await apiFetch('/auth/manager-login', 'POST', { username, password });
-        authState.setSession(res.token, res.role, res.user);
-        showToast('Manager authenticated successfully.', 'success');
-        router.navigate('dashboard');
-    } catch (err) {
-        // Smooth demo fallback
-        try {
-            const fallbackRes = await apiFetch('/auth/manager-login', 'POST', { username: 'manager', password: 'admin123' });
-            authState.setSession(fallbackRes.token, fallbackRes.role, fallbackRes.user);
-            showToast('Manager authenticated successfully.', 'success');
-            router.navigate('dashboard');
-        } catch (e) {
-            authState.setSession('mgr-demo-token', 'ROLE_MANAGER', { username: 'manager', role: 'ROLE_MANAGER' });
-            router.navigate('dashboard');
+            try {
+                const res = await apiFetch('/auth/manager-login', 'POST', { username, password });
+                authState.setSession(res.token, res.role, res.user);
+                showToast('Manager authenticated successfully.', 'success');
+                router.navigate('dashboard');
+            } catch (err) {
+                // Smooth demo fallback
+                try {
+                    const fallbackRes = await apiFetch('/auth/manager-login', 'POST', { username: 'manager', password: 'admin123' });
+                    authState.setSession(fallbackRes.token, fallbackRes.role, fallbackRes.user);
+                    showToast('Manager authenticated successfully.', 'success');
+                    router.navigate('dashboard');
+                } catch (e) {
+                    authState.setSession('mgr-demo-token', 'ROLE_MANAGER', { username: 'manager', role: 'ROLE_MANAGER' });
+                    router.navigate('dashboard');
+                }
+            }
         }
-    }
-}
 
-async function onPortalEmployeeChange(empId) {
-    portalSelectedEmpId = parseInt(empId);
-    showLoading();
-    try {
-        const [emp, skills] = await Promise.all([
-            apiFetch(`/employees/${portalSelectedEmpId}`),
-            apiFetch('/skills')
-        ]);
-        ssState.masterSkills = skills || [];
-        loadProfileIntoSsState(emp);
-        renderPortal();
-    } catch (err) {
-        renderPortal();
-    }
-}
-
-function loadProfileIntoSsState(profile) {
-    ssState.profile = {
-        id: profile.id,
-        employeeCode: profile.employeeCode || '',
-        name: profile.name || '',
-        email: profile.email || '',
-        department: profile.department || '',
-        location: profile.location || 'Hyderabad',
-        currentRole: profile.currentRole || 'Software Engineer',
-        yearsOfExperience: profile.yearsOfExperience !== null && profile.yearsOfExperience !== undefined ? profile.yearsOfExperience : 5,
-        skills: (profile.skills || []).map(s => ({
-            skillId: s.skillId,
-            skillName: s.skillName,
-            category: s.category || '',
-            proficiencyLevel: s.proficiencyLevel || 3,
-            isLearning: s.evidence === 'Currently Learning' || s.isLearning === true,
-            evidence: s.evidence || '',
-            lastValidatedAt: s.lastValidatedAt || ''
-        })),
-        certifications: (profile.certifications || []).map(c => ({
-            name: c.name || '',
-            issuingOrganization: c.issuingOrganization || '',
-            issueDate: c.issueDate || '',
-            expiryDate: c.expiryDate || ''
-        })),
-        currentProject: profile.currentProject || '',
-        projectRole: profile.projectRole || '',
-        projectStartDate: profile.projectStartDate || '',
-        projectEndDate: profile.projectEndDate || '',
-        projectCompletionPercent: profile.projectCompletionPercent !== null && profile.projectCompletionPercent !== undefined ? profile.projectCompletionPercent : 50,
-        availabilityStatus: profile.availabilityStatus || 'AVAILABLE_FOR_NEW_PROJECT',
-        expectedAvailabilityDate: profile.expectedAvailabilityDate || ''
-    };
-    ssState.submitSuccess = false;
-    ssState.isSaving = false;
-    ssState.errorMessage = null;
-}
-
-async function renderPortal() {
-    // If on Employee tab, ensure employee data is ready
-    if (portalActiveTab === 'employee' && !ssState.profile) {
-        showLoading();
-        try {
-            const [emp, skills] = await Promise.all([
-                apiFetch(`/employees/${portalSelectedEmpId}`),
-                apiFetch('/skills')
-            ]);
-            ssState.masterSkills = skills || [];
-            loadProfileIntoSsState(emp);
-        } catch (err) {
-            console.warn('Fallback loading profile:', err);
+        async function onPortalEmployeeChange(empId) {
+            portalSelectedEmpId = parseInt(empId);
+            showLoading();
+            try {
+                const [emp, skills] = await Promise.all([
+                    apiFetch(`/employees/${portalSelectedEmpId}`),
+                    apiFetch('/skills')
+                ]);
+                ssState.masterSkills = skills || [];
+                loadProfileIntoSsState(emp);
+                renderPortal();
+            } catch (err) {
+                renderPortal();
+            }
         }
-    }
 
-    if (portalActiveTab === 'employee') {
-        // Only the employee form is visible; everything else fades off
-        setPageContent(`
+        function loadProfileIntoSsState(profile) {
+            ssState.profile = {
+                id: profile.id,
+                employeeCode: profile.employeeCode || '',
+                name: profile.name || '',
+                email: profile.email || '',
+                department: profile.department || '',
+                location: profile.location || 'Hyderabad',
+                currentRole: profile.currentRole || 'Software Engineer',
+                yearsOfExperience: profile.yearsOfExperience !== null && profile.yearsOfExperience !== undefined ? profile.yearsOfExperience : 5,
+                skills: (profile.skills || []).map(s => ({
+                    skillId: s.skillId,
+                    skillName: s.skillName,
+                    category: s.category || '',
+                    proficiencyLevel: s.proficiencyLevel || 3,
+                    isLearning: s.evidence === 'Currently Learning' || s.isLearning === true,
+                    evidence: s.evidence || '',
+                    lastValidatedAt: s.lastValidatedAt || ''
+                })),
+                certifications: (profile.certifications || []).map(c => ({
+                    name: c.name || '',
+                    issuingOrganization: c.issuingOrganization || '',
+                    issueDate: c.issueDate || '',
+                    expiryDate: c.expiryDate || ''
+                })),
+                currentProject: profile.currentProject || '',
+                projectRole: profile.projectRole || '',
+                projectStartDate: profile.projectStartDate || '',
+                projectEndDate: profile.projectEndDate || '',
+                projectCompletionPercent: profile.projectCompletionPercent !== null && profile.projectCompletionPercent !== undefined ? profile.projectCompletionPercent : 50,
+                availabilityStatus: profile.availabilityStatus || 'AVAILABLE_FOR_NEW_PROJECT',
+                expectedAvailabilityDate: profile.expectedAvailabilityDate || ''
+            };
+            ssState.submitSuccess = false;
+            ssState.isSaving = false;
+            ssState.errorMessage = null;
+        }
+
+        async function renderPortal() {
+            // If on Employee tab, ensure employee data is ready
+            if (portalActiveTab === 'employee' && !ssState.profile) {
+                showLoading();
+                try {
+                    const [emp, skills] = await Promise.all([
+                        apiFetch(`/employees/${portalSelectedEmpId}`),
+                        apiFetch('/skills')
+                    ]);
+                    ssState.masterSkills = skills || [];
+                    loadProfileIntoSsState(emp);
+                } catch (err) {
+                    console.warn('Fallback loading profile:', err);
+                }
+            }
+
+            if (portalActiveTab === 'employee') {
+                // Only the employee form is visible; everything else fades off
+                setPageContent(`
         <div class="portal-container" style="max-width:1060px;margin:12px auto;animation:fadeIn 0.25s ease">
             ${renderPortalEmployeeView()}
         </div>
         `);
-    } else {
-        // Dedicated Manager Login card
-        setPageContent(`
+            } else {
+                // Dedicated Manager Login card
+                setPageContent(`
         <div class="portal-container" style="max-width:480px;margin:60px auto;animation:fadeIn 0.25s ease">
             ${renderPortalManagerView()}
         </div>
         `);
-    }
-}
+            }
+        }
 
-function renderPortalManagerView() {
-    return `
+        function renderPortalManagerView() {
+            return `
     <div class="portal-white-card manager-card">
         <div style="text-align:center;margin-bottom:24px">
             <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#fef3c7,#fde68a);color:#b45309;display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px;box-shadow:0 4px 12px rgba(245,158,11,0.2)">
@@ -5318,10 +5306,11 @@ function renderPortalManagerView() {
                 <label class="pwc-label">Password</label>
                 <input type="password" id="mgrLoginPassword" class="pwc-input" placeholder="Enter password" autocomplete="off" value="">
             </div>
-            <div style="display:flex;align-items:center;font-size:12px;color:#64748b">
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#64748b">
                 <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
                     <input type="checkbox" checked style="accent-color:#d97706"> Remember session
                 </label>
+                <span style="color:#d97706;font-weight:600;cursor:pointer">Enterprise SSO</span>
             </div>
             <button type="submit" id="btnManagerLogin" style="width:100%;padding:14px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#ffffff;border:none;border-radius:10px;font-size:15px;font-weight:700;box-shadow:0 4px 14px rgba(245,158,11,0.35);cursor:pointer;margin-top:6px;display:inline-flex;align-items:center;justify-content:center;gap:8px">
                 Sign In to Manager Dashboard &rarr;
@@ -5329,13 +5318,13 @@ function renderPortalManagerView() {
         </form>
     </div>
     `;
-}
+        }
 
-function renderPortalEmployeeView() {
-    const p = ssState.profile || {};
-    const skillsList = p.skills || [];
+        function renderPortalEmployeeView() {
+            const p = ssState.profile || {};
+            const skillsList = p.skills || [];
 
-    return `
+            return `
     <div class="portal-white-card" style="padding:22px 28px;max-width:1100px;margin:0 auto">
         <!-- HEADER -->
         <div class="pwc-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #e2e8f0">
@@ -5505,208 +5494,208 @@ function renderPortalEmployeeView() {
         </form>
     </div>
     `;
-}
+        }
 
-async function ssSubmitProfileDirect() {
-    const p = ssState.profile;
-    if (!p) return;
+        async function ssSubmitProfileDirect() {
+            const p = ssState.profile;
+            if (!p) return;
 
-    if (!p.name || !p.name.trim()) {
-        showToast('Full Name is required.', 'error');
-        const el = document.getElementById('ss-name');
-        if (el) el.focus();
-        return;
-    }
-    if (!p.email || !p.email.trim() || !p.email.includes('@')) {
-        showToast('A valid corporate email is required.', 'error');
-        const el = document.getElementById('ss-email');
-        if (el) el.focus();
-        return;
-    }
-    if (!p.department || !p.department.trim()) {
-        showToast('Department is required.', 'error');
-        const el = document.getElementById('ss-dept');
-        if (el) el.focus();
-        return;
-    }
-    if (!p.currentRole || !p.currentRole.trim()) {
-        showToast('Current Role is required.', 'error');
-        const el = document.getElementById('ss-role');
-        if (el) el.focus();
-        return;
-    }
+            if (!p.name || !p.name.trim()) {
+                showToast('Full Name is required.', 'error');
+                const el = document.getElementById('ss-name');
+                if (el) el.focus();
+                return;
+            }
+            if (!p.email || !p.email.trim() || !p.email.includes('@')) {
+                showToast('A valid corporate email is required.', 'error');
+                const el = document.getElementById('ss-email');
+                if (el) el.focus();
+                return;
+            }
+            if (!p.department || !p.department.trim()) {
+                showToast('Department is required.', 'error');
+                const el = document.getElementById('ss-dept');
+                if (el) el.focus();
+                return;
+            }
+            if (!p.currentRole || !p.currentRole.trim()) {
+                showToast('Current Role is required.', 'error');
+                const el = document.getElementById('ss-role');
+                if (el) el.focus();
+                return;
+            }
 
-    ssState.isSaving = true;
-    ssState.submitSuccess = false;
-    ssState.errorMessage = null;
+            ssState.isSaving = true;
+            ssState.submitSuccess = false;
+            ssState.errorMessage = null;
 
-    const btn = document.getElementById('btnSubmitProfile');
-    if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = `<div class="spinner" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:8px"></div> Saving profile...`;
-    }
+            const btn = document.getElementById('btnSubmitProfile');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<div class="spinner" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:8px"></div> Saving profile...`;
+            }
 
-    try {
-        // Resolve any skills that do not have a skillId yet
-        for (const s of (p.skills || [])) {
-            if (!s.skillId) {
-                const matched = (ssState.masterSkills || []).find(ms => ms.name.toLowerCase() === s.skillName.toLowerCase());
-                if (matched) {
-                    s.skillId = matched.id;
-                } else {
-                    try {
-                        const newSkill = await apiFetch('/skills', 'POST', {
-                            name: s.skillName,
-                            category: s.category || 'Technical',
-                            description: 'Added via employee self-service'
-                        });
-                        if (newSkill && newSkill.id) {
-                            s.skillId = newSkill.id;
-                            ssState.masterSkills.push(newSkill);
+            try {
+                // Resolve any skills that do not have a skillId yet
+                for (const s of (p.skills || [])) {
+                    if (!s.skillId) {
+                        const matched = (ssState.masterSkills || []).find(ms => ms.name.toLowerCase() === s.skillName.toLowerCase());
+                        if (matched) {
+                            s.skillId = matched.id;
+                        } else {
+                            try {
+                                const newSkill = await apiFetch('/skills', 'POST', {
+                                    name: s.skillName,
+                                    category: s.category || 'Technical',
+                                    description: 'Added via employee self-service'
+                                });
+                                if (newSkill && newSkill.id) {
+                                    s.skillId = newSkill.id;
+                                    ssState.masterSkills.push(newSkill);
+                                }
+                            } catch (skErr) {
+                                console.warn('Skill resolution attempt:', skErr);
+                                try {
+                                    const refreshed = await apiFetch('/skills');
+                                    ssState.masterSkills = refreshed || [];
+                                    const refMatch = ssState.masterSkills.find(ms => ms.name.toLowerCase() === s.skillName.toLowerCase());
+                                    if (refMatch) s.skillId = refMatch.id;
+                                } catch (e2) { }
+                            }
                         }
-                    } catch (skErr) {
-                        console.warn('Skill resolution attempt:', skErr);
-                        try {
-                            const refreshed = await apiFetch('/skills');
-                            ssState.masterSkills = refreshed || [];
-                            const refMatch = ssState.masterSkills.find(ms => ms.name.toLowerCase() === s.skillName.toLowerCase());
-                            if (refMatch) s.skillId = refMatch.id;
-                        } catch (e2) {}
                     }
                 }
+
+                const payload = {
+                    currentRole: p.currentRole.trim(),
+                    yearsOfExperience: p.yearsOfExperience !== undefined && p.yearsOfExperience !== null ? p.yearsOfExperience : 5,
+                    location: (p.location || 'Hyderabad').trim(),
+                    department: p.department.trim(),
+                    email: p.email.trim(),
+                    skills: (p.skills || []).filter(s => s.skillId).map(s => ({
+                        skillId: s.skillId,
+                        proficiencyLevel: Math.max(1, Math.min(5, parseInt(s.proficiencyLevel) || 3)),
+                        evidence: s.isLearning ? 'Currently Learning' : (s.evidence || 'Self-reported'),
+                        lastValidatedAt: s.lastValidatedAt || new Date().toISOString().split('T')[0]
+                    })),
+                    availabilityStatus: p.availabilityStatus || 'AVAILABLE_FOR_NEW_PROJECT',
+                    expectedAvailabilityDate: p.expectedAvailabilityDate || null
+                };
+
+                // Authenticate with employee session if needed
+                try {
+                    const loginRes = await apiFetch('/auth/employee-login', 'POST', {
+                        employeeCode: p.employeeCode,
+                        email: p.email
+                    });
+                    if (loginRes && loginRes.token) {
+                        authState.setSession(loginRes.token, loginRes.role, loginRes.user);
+                    }
+                } catch (authErr) {
+                    console.warn('Employee login notice:', authErr);
+                }
+
+                await apiFetch('/self-service/profile', 'PUT', payload);
+
+                ssState.isSaving = false;
+                ssState.submitSuccess = true;
+                ssState.errorMessage = null;
+                showToast('Profile updated successfully.', 'success');
+                renderPortal();
+            } catch (err) {
+                console.error('Save profile error:', err);
+                ssState.isSaving = false;
+                ssState.submitSuccess = false;
+                ssState.errorMessage = (err && err.message) ? err.message : 'Unable to update profile. Please verify your details.';
+                showToast(ssState.errorMessage, 'error');
+                renderPortal();
             }
         }
 
-        const payload = {
-            currentRole: p.currentRole.trim(),
-            yearsOfExperience: p.yearsOfExperience !== undefined && p.yearsOfExperience !== null ? p.yearsOfExperience : 5,
-            location: (p.location || 'Hyderabad').trim(),
-            department: p.department.trim(),
-            email: p.email.trim(),
-            skills: (p.skills || []).filter(s => s.skillId).map(s => ({
-                skillId: s.skillId,
-                proficiencyLevel: Math.max(1, Math.min(5, parseInt(s.proficiencyLevel) || 3)),
-                evidence: s.isLearning ? 'Currently Learning' : (s.evidence || 'Self-reported'),
-                lastValidatedAt: s.lastValidatedAt || new Date().toISOString().split('T')[0]
-            })),
-            availabilityStatus: p.availabilityStatus || 'AVAILABLE_FOR_NEW_PROJECT',
-            expectedAvailabilityDate: p.expectedAvailabilityDate || null
+        // ============================================================
+        // EMPLOYEE SELF-SERVICE WORKFLOW
+        // ============================================================
+        let ssState = {
+            currentStep: 1,
+            masterSkills: [],
+            profile: null,
+            isSaving: false,
+            submitSuccess: false,
+            errorMessage: null
         };
 
-        // Authenticate with employee session if needed
-        try {
-            const loginRes = await apiFetch('/auth/employee-login', 'POST', {
-                employeeCode: p.employeeCode,
-                email: p.email
-            });
-            if (loginRes && loginRes.token) {
-                authState.setSession(loginRes.token, loginRes.role, loginRes.user);
+        const PROFICIENCY_SCALE = [
+            { level: 1, label: 'Beginner', desc: 'Fundamental conceptual awareness and basic execution' },
+            { level: 2, label: 'Intermediate', desc: 'Independent delivery and practical production experience' },
+            { level: 3, label: 'Advanced', desc: 'Deep technical proficiency, architecture, and team leadership' }
+        ];
+
+        async function renderSelfService() {
+            if (!authState.isAuthenticated()) {
+                router.navigate('portal');
+                return;
             }
-        } catch (authErr) {
-            console.warn('Employee login notice:', authErr);
+
+            showLoading();
+            try {
+                const [profile, skills] = await Promise.all([
+                    apiFetch('/self-service/profile'),
+                    apiFetch('/skills')
+                ]);
+
+                ssState.masterSkills = skills || [];
+                ssState.profile = {
+                    id: profile.id,
+                    employeeCode: profile.employeeCode || '',
+                    name: profile.name || '',
+                    email: profile.email || '',
+                    department: profile.department || '',
+                    currentRole: profile.currentRole || '',
+                    yearsOfExperience: profile.yearsOfExperience !== null && profile.yearsOfExperience !== undefined ? profile.yearsOfExperience : 0,
+                    skills: (profile.skills || []).map(s => ({
+                        skillId: s.skillId,
+                        skillName: s.skillName,
+                        category: s.category || '',
+                        proficiencyLevel: s.proficiencyLevel || 3,
+                        evidence: s.evidence || '',
+                        lastValidatedAt: s.lastValidatedAt || ''
+                    })),
+                    certifications: (profile.certifications || []).map(c => ({
+                        name: c.name || '',
+                        issuingOrganization: c.issuingOrganization || '',
+                        issueDate: c.issueDate || '',
+                        expiryDate: c.expiryDate || ''
+                    })),
+                    currentProject: profile.currentProject || '',
+                    projectRole: profile.projectRole || '',
+                    projectStartDate: profile.projectStartDate || '',
+                    projectEndDate: profile.projectEndDate || '',
+                    projectCompletionPercent: profile.projectCompletionPercent !== null && profile.projectCompletionPercent !== undefined ? profile.projectCompletionPercent : 50,
+                    availabilityStatus: profile.availabilityStatus || 'PARTIALLY_AVAILABLE',
+                    expectedAvailabilityDate: profile.expectedAvailabilityDate || ''
+                };
+                ssState.currentStep = 1;
+                ssState.submitSuccess = false;
+                ssState.isSaving = false;
+                ssState.errorMessage = null;
+
+                renderSelfServiceContainer();
+            } catch (err) {
+                showApiError(err);
+            }
         }
 
-        await apiFetch('/self-service/profile', 'PUT', payload);
+        function renderSelfServiceContainer() {
+            const steps = [
+                { num: 1, label: 'Profile' },
+                { num: 2, label: 'Skills' },
+                { num: 3, label: 'Certifications' },
+                { num: 4, label: 'Project' },
+                { num: 5, label: 'Availability' },
+                { num: 6, label: 'Review & Submit' }
+            ];
 
-        ssState.isSaving = false;
-        ssState.submitSuccess = true;
-        ssState.errorMessage = null;
-        showToast('Profile updated successfully.', 'success');
-        renderPortal();
-    } catch (err) {
-        console.error('Save profile error:', err);
-        ssState.isSaving = false;
-        ssState.submitSuccess = false;
-        ssState.errorMessage = (err && err.message) ? err.message : 'Unable to update profile. Please verify your details.';
-        showToast(ssState.errorMessage, 'error');
-        renderPortal();
-    }
-}
-
-// ============================================================
-// EMPLOYEE SELF-SERVICE WORKFLOW
-// ============================================================
-let ssState = {
-    currentStep: 1,
-    masterSkills: [],
-    profile: null,
-    isSaving: false,
-    submitSuccess: false,
-    errorMessage: null
-};
-
-const PROFICIENCY_SCALE = [
-    { level: 1, label: 'Beginner', desc: 'Fundamental conceptual awareness and basic execution' },
-    { level: 2, label: 'Intermediate', desc: 'Independent delivery and practical production experience' },
-    { level: 3, label: 'Advanced', desc: 'Deep technical proficiency, architecture, and team leadership' }
-];
-
-async function renderSelfService() {
-    if (!authState.isAuthenticated()) {
-        router.navigate('portal');
-        return;
-    }
-
-    showLoading();
-    try {
-        const [profile, skills] = await Promise.all([
-            apiFetch('/self-service/profile'),
-            apiFetch('/skills')
-        ]);
-
-        ssState.masterSkills = skills || [];
-        ssState.profile = {
-            id: profile.id,
-            employeeCode: profile.employeeCode || '',
-            name: profile.name || '',
-            email: profile.email || '',
-            department: profile.department || '',
-            currentRole: profile.currentRole || '',
-            yearsOfExperience: profile.yearsOfExperience !== null && profile.yearsOfExperience !== undefined ? profile.yearsOfExperience : 0,
-            skills: (profile.skills || []).map(s => ({
-                skillId: s.skillId,
-                skillName: s.skillName,
-                category: s.category || '',
-                proficiencyLevel: s.proficiencyLevel || 3,
-                evidence: s.evidence || '',
-                lastValidatedAt: s.lastValidatedAt || ''
-            })),
-            certifications: (profile.certifications || []).map(c => ({
-                name: c.name || '',
-                issuingOrganization: c.issuingOrganization || '',
-                issueDate: c.issueDate || '',
-                expiryDate: c.expiryDate || ''
-            })),
-            currentProject: profile.currentProject || '',
-            projectRole: profile.projectRole || '',
-            projectStartDate: profile.projectStartDate || '',
-            projectEndDate: profile.projectEndDate || '',
-            projectCompletionPercent: profile.projectCompletionPercent !== null && profile.projectCompletionPercent !== undefined ? profile.projectCompletionPercent : 50,
-            availabilityStatus: profile.availabilityStatus || 'PARTIALLY_AVAILABLE',
-            expectedAvailabilityDate: profile.expectedAvailabilityDate || ''
-        };
-        ssState.currentStep = 1;
-        ssState.submitSuccess = false;
-        ssState.isSaving = false;
-        ssState.errorMessage = null;
-
-        renderSelfServiceContainer();
-    } catch (err) {
-        showApiError(err);
-    }
-}
-
-function renderSelfServiceContainer() {
-    const steps = [
-        { num: 1, label: 'Profile' },
-        { num: 2, label: 'Skills' },
-        { num: 3, label: 'Certifications' },
-        { num: 4, label: 'Project' },
-        { num: 5, label: 'Availability' },
-        { num: 6, label: 'Review & Submit' }
-    ];
-
-    setPageContent(`
+            setPageContent(`
     <div class="self-service-wrapper">
         <!-- HEADER -->
         <div class="ss-header">
@@ -5746,13 +5735,13 @@ function renderSelfServiceContainer() {
         </div>
     </div>
     `);
-}
+        }
 
-function renderActiveStepContent() {
-    const p = ssState.profile;
+        function renderActiveStepContent() {
+            const p = ssState.profile;
 
-    if (ssState.submitSuccess) {
-        return `
+            if (ssState.submitSuccess) {
+                return `
         <div class="ss-success-banner">
             <div class="ss-success-icon">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
@@ -5773,7 +5762,7 @@ function renderActiveStepContent() {
                 <div>&bull; Active Skills: <strong>${p.skills.length} skills recorded</strong></div>
                 <div>&bull; Certifications: <strong>${p.certifications.length} verified</strong></div>
                 <div>&bull; Project: <strong>${escapeHtml(p.currentProject || 'Unallocated')} (${p.projectCompletionPercent}% Complete)</strong></div>
-                <div>&bull; Availability: <strong>${p.availabilityStatus.replace(/_/g,' ')}</strong></div>
+                <div>&bull; Availability: <strong>${p.availabilityStatus.replace(/_/g, ' ')}</strong></div>
             </div>
         </div>
 
@@ -5782,11 +5771,11 @@ function renderActiveStepContent() {
             <button class="btn btn-primary" onclick="testViewInManager()">Sign In as Manager to Verify &rarr;</button>
         </div>
         `;
-    }
+            }
 
-    switch (ssState.currentStep) {
-        case 1:
-            return `
+            switch (ssState.currentStep) {
+                case 1:
+                    return `
             <div class="ss-card-header">
                 <h2 class="ss-card-title">Section 1 — Employee Information</h2>
                 <p class="ss-card-subtitle">Verify your primary corporate identity, job role, and aggregate industry experience.</p>
@@ -5822,8 +5811,8 @@ function renderActiveStepContent() {
                 <button class="btn btn-primary" onclick="ssNextStep()">Continue to Skills &rarr;</button>
             </div>`;
 
-        case 2:
-            return `
+                case 2:
+                    return `
             <div class="ss-card-header">
                 <h2 class="ss-card-title">Section 2 — Skills &amp; Proficiency</h2>
                 <p class="ss-card-subtitle">
@@ -5898,8 +5887,8 @@ function renderActiveStepContent() {
                 <button class="btn btn-primary" onclick="ssNextStep()">Continue to Certifications &rarr;</button>
             </div>`;
 
-        case 3:
-            return `
+                case 3:
+                    return `
             <div class="ss-card-header">
                 <h2 class="ss-card-title">Section 3 — Certifications</h2>
                 <p class="ss-card-subtitle">Add verified certifications to substantiate your competency for project staffing requirements.</p>
@@ -5965,8 +5954,8 @@ function renderActiveStepContent() {
                 <button class="btn btn-primary" onclick="ssNextStep()">Continue to Current Project &rarr;</button>
             </div>`;
 
-        case 4:
-            return `
+                case 4:
+                    return `
             <div class="ss-card-header">
                 <h2 class="ss-card-title">Section 4 — Current Project</h2>
                 <p class="ss-card-subtitle">Maintain your current assignment details, delivery role, and projected completion percentage.</p>
@@ -6013,8 +6002,8 @@ function renderActiveStepContent() {
                 <button class="btn btn-primary" onclick="ssNextStep()">Continue to Availability &rarr;</button>
             </div>`;
 
-        case 5:
-            return `
+                case 5:
+                    return `
             <div class="ss-card-header">
                 <h2 class="ss-card-title">Section 5 — Availability</h2>
                 <p class="ss-card-subtitle">Signal your readiness for new project demands to the SkillMatch allocation engine.</p>
@@ -6061,8 +6050,8 @@ function renderActiveStepContent() {
                 <button class="btn btn-primary" onclick="ssNextStep()">Review Profile &rarr;</button>
             </div>`;
 
-        case 6:
-            return `
+                case 6:
+                    return `
             <div class="ss-card-header">
                 <h2 class="ss-card-title">Section 6 — Review &amp; Submit</h2>
                 <p class="ss-card-subtitle">Review your updated workforce profile summary before submitting to the staffing engine.</p>
@@ -6118,7 +6107,7 @@ function renderActiveStepContent() {
                     </div>
                     <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-sm);padding:18px">
                         <div style="font-size:13px;font-weight:700;color:var(--text-accent);margin-bottom:8px">5. Staffing Availability</div>
-                        <div style="font-size:13px">Status: <strong>${p.availabilityStatus.replace(/_/g,' ')}</strong></div>
+                        <div style="font-size:13px">Status: <strong>${p.availabilityStatus.replace(/_/g, ' ')}</strong></div>
                         <div style="font-size:12.5px;color:var(--text-secondary);margin-top:4px">Available From: <strong>${p.expectedAvailabilityDate || 'Immediate'}</strong></div>
                     </div>
                 </div>
@@ -6137,409 +6126,409 @@ function renderActiveStepContent() {
                 </button>
             </div>`;
 
-        default:
-            return '';
-    }
-}
-
-function ssGoToStep(step) {
-    if (ssState.isSaving) return;
-    if (step > ssState.currentStep && !ssValidateStep(ssState.currentStep)) return;
-    ssState.currentStep = step;
-    renderSelfServiceContainer();
-}
-
-function ssNextStep() {
-    if (!ssValidateStep(ssState.currentStep)) return;
-    if (ssState.currentStep < 6) {
-        ssState.currentStep++;
-        renderSelfServiceContainer();
-    }
-}
-
-function ssPrevStep() {
-    if (ssState.currentStep > 1) {
-        ssState.currentStep--;
-        renderSelfServiceContainer();
-    }
-}
-
-function ssValidateStep(step) {
-    const p = ssState.profile;
-    if (step === 1) {
-        if (!p.name || !p.name.trim()) { showToast('Full Name is required.', 'error'); return false; }
-        if (!p.email || !p.email.includes('@')) { showToast('A valid corporate email is required.', 'error'); return false; }
-        if (!p.department || !p.department.trim()) { showToast('Department is required.', 'error'); return false; }
-        if (!p.currentRole || !p.currentRole.trim()) { showToast('Current Role is required.', 'error'); return false; }
-        if (p.yearsOfExperience < 0 || p.yearsOfExperience > 50) { showToast('Years of Experience must be between 0 and 50.', 'error'); return false; }
-    }
-    if (step === 4) {
-        if (p.projectCompletionPercent < 0 || p.projectCompletionPercent > 100) {
-            showToast('Completion percentage must be between 0 and 100%.', 'error');
-            return false;
+                default:
+                    return '';
+            }
         }
-        if (p.projectStartDate && p.projectEndDate && p.projectStartDate > p.projectEndDate) {
-            showToast('Start Date cannot be after Expected Completion Date.', 'error');
-            return false;
+
+        function ssGoToStep(step) {
+            if (ssState.isSaving) return;
+            if (step > ssState.currentStep && !ssValidateStep(ssState.currentStep)) return;
+            ssState.currentStep = step;
+            renderSelfServiceContainer();
         }
-    }
-    if (step === 5) {
-        if (!p.availabilityStatus) {
-            showToast('Please select your availability status.', 'error');
-            return false;
+
+        function ssNextStep() {
+            if (!ssValidateStep(ssState.currentStep)) return;
+            if (ssState.currentStep < 6) {
+                ssState.currentStep++;
+                renderSelfServiceContainer();
+            }
         }
-    }
-    return true;
-}
 
-function ssHandleAddSkill() {
-    const input = document.getElementById('ss-new-skill-input') || document.getElementById('ss-new-skill-id');
-    const levelSelect = document.getElementById('ss-new-skill-level');
-    const learningCheckbox = document.getElementById('ss-new-skill-learning');
-    if (!input || !levelSelect) return;
-
-    const rawVal = (input.value || '').trim();
-    if (!rawVal) {
-        showToast('Please select or enter a skill name.', 'warning');
-        return;
-    }
-
-    let skillName = rawVal;
-    let skillId = null;
-    let category = 'Technical';
-
-    // If numeric ID from legacy select
-    const asNum = parseInt(rawVal);
-    const msById = !isNaN(asNum) ? (ssState.masterSkills || []).find(ms => ms.id === asNum) : null;
-    if (msById) {
-        skillId = msById.id;
-        skillName = msById.name;
-        category = msById.category || 'Technical';
-    } else {
-        const msByName = (ssState.masterSkills || []).find(ms => ms.name.toLowerCase() === rawVal.toLowerCase());
-        if (msByName) {
-            skillId = msByName.id;
-            skillName = msByName.name;
-            category = msByName.category || 'Technical';
+        function ssPrevStep() {
+            if (ssState.currentStep > 1) {
+                ssState.currentStep--;
+                renderSelfServiceContainer();
+            }
         }
-    }
 
-    const level = parseInt(levelSelect.value) || 3;
-    const isLearning = learningCheckbox ? learningCheckbox.checked : false;
-
-    if (!ssState.profile.skills) ssState.profile.skills = [];
-
-    // Check if already in list
-    const existing = ssState.profile.skills.find(
-        s => (skillId && s.skillId === skillId) || (s.skillName && s.skillName.toLowerCase() === skillName.toLowerCase())
-    );
-
-    if (existing) {
-        existing.proficiencyLevel = level;
-        existing.isLearning = isLearning;
-        existing.evidence = isLearning ? 'Currently Learning' : (existing.evidence || 'Self-reported');
-        showToast(`Updated ${existing.skillName} (Level ${level}${isLearning ? ' · Currently Learning' : ''})`, 'success');
-    } else {
-        ssState.profile.skills.push({
-            skillId: skillId,
-            skillName: skillName,
-            category: category,
-            proficiencyLevel: level,
-            isLearning: isLearning,
-            evidence: isLearning ? 'Currently Learning' : 'Self-reported',
-            lastValidatedAt: new Date().toISOString().split('T')[0]
-        });
-        showToast(`Added ${skillName} (Level ${level}${isLearning ? ' · Currently Learning' : ''})`, 'success');
-    }
-
-    if (input.tagName === 'INPUT') input.value = '';
-    if (learningCheckbox) learningCheckbox.checked = false;
-
-    if (portalActiveTab === 'employee') {
-        renderPortal();
-    } else if (document.getElementById('ssCardContainer')) {
-        renderSelfServiceContainer();
-    }
-}
-
-function ssRemoveSkill(index) {
-    if (ssState.profile && ssState.profile.skills) {
-        const removed = ssState.profile.skills.splice(index, 1);
-        if (removed.length > 0) {
-            showToast(`Removed skill: ${removed[0].skillName}`, 'info');
+        function ssValidateStep(step) {
+            const p = ssState.profile;
+            if (step === 1) {
+                if (!p.name || !p.name.trim()) { showToast('Full Name is required.', 'error'); return false; }
+                if (!p.email || !p.email.includes('@')) { showToast('A valid corporate email is required.', 'error'); return false; }
+                if (!p.department || !p.department.trim()) { showToast('Department is required.', 'error'); return false; }
+                if (!p.currentRole || !p.currentRole.trim()) { showToast('Current Role is required.', 'error'); return false; }
+                if (p.yearsOfExperience < 0 || p.yearsOfExperience > 50) { showToast('Years of Experience must be between 0 and 50.', 'error'); return false; }
+            }
+            if (step === 4) {
+                if (p.projectCompletionPercent < 0 || p.projectCompletionPercent > 100) {
+                    showToast('Completion percentage must be between 0 and 100%.', 'error');
+                    return false;
+                }
+                if (p.projectStartDate && p.projectEndDate && p.projectStartDate > p.projectEndDate) {
+                    showToast('Start Date cannot be after Expected Completion Date.', 'error');
+                    return false;
+                }
+            }
+            if (step === 5) {
+                if (!p.availabilityStatus) {
+                    showToast('Please select your availability status.', 'error');
+                    return false;
+                }
+            }
+            return true;
         }
-    }
-    if (portalActiveTab === 'employee') {
-        renderPortal();
-    } else if (document.getElementById('ssCardContainer')) {
-        renderSelfServiceContainer();
-    }
-}
 
-function ssUpdateSkillProficiency(index, newLevel) {
-    if (ssState.profile && ssState.profile.skills && ssState.profile.skills[index]) {
-        ssState.profile.skills[index].proficiencyLevel = parseInt(newLevel);
-    }
-}
+        function ssHandleAddSkill() {
+            const input = document.getElementById('ss-new-skill-input') || document.getElementById('ss-new-skill-id');
+            const levelSelect = document.getElementById('ss-new-skill-level');
+            const learningCheckbox = document.getElementById('ss-new-skill-learning');
+            if (!input || !levelSelect) return;
 
-function ssHandleAddCert() {
-    const nameEl = document.getElementById('ss-cert-name');
-    const orgEl = document.getElementById('ss-cert-org');
-    const issueEl = document.getElementById('ss-cert-issue');
-    const expEl = document.getElementById('ss-cert-expiry');
+            const rawVal = (input.value || '').trim();
+            if (!rawVal) {
+                showToast('Please select or enter a skill name.', 'warning');
+                return;
+            }
 
-    if (!nameEl || !nameEl.value.trim()) {
-        showToast('Certification Name is required.', 'error');
-        return;
-    }
+            let skillName = rawVal;
+            let skillId = null;
+            let category = 'Technical';
 
-    ssState.profile.certifications.push({
-        name: nameEl.value.trim(),
-        issuingOrganization: orgEl ? orgEl.value.trim() : '',
-        issueDate: issueEl ? issueEl.value : null,
-        expiryDate: expEl ? expEl.value : null
-    });
-    showToast(`Added certification: ${nameEl.value.trim()}`, 'success');
-    renderSelfServiceContainer();
-}
+            // If numeric ID from legacy select
+            const asNum = parseInt(rawVal);
+            const msById = !isNaN(asNum) ? (ssState.masterSkills || []).find(ms => ms.id === asNum) : null;
+            if (msById) {
+                skillId = msById.id;
+                skillName = msById.name;
+                category = msById.category || 'Technical';
+            } else {
+                const msByName = (ssState.masterSkills || []).find(ms => ms.name.toLowerCase() === rawVal.toLowerCase());
+                if (msByName) {
+                    skillId = msByName.id;
+                    skillName = msByName.name;
+                    category = msByName.category || 'Technical';
+                }
+            }
 
-function ssRemoveCertification(index) {
-    ssState.profile.certifications.splice(index, 1);
-    renderSelfServiceContainer();
-}
+            const level = parseInt(levelSelect.value) || 3;
+            const isLearning = learningCheckbox ? learningCheckbox.checked : false;
 
-function ssSelectAvailability(status) {
-    if (!ssState.profile) return;
-    ssState.profile.availabilityStatus = status;
-    if (portalActiveTab === 'employee') {
-        renderPortal();
-    } else if (document.getElementById('ssCardContainer')) {
-        renderSelfServiceContainer();
-    }
-}
+            if (!ssState.profile.skills) ssState.profile.skills = [];
 
-function ssUpdateCompletionSlider(val) {
-    const num = Math.min(100, Math.max(0, parseInt(val) || 0));
-    ssState.profile.projectCompletionPercent = num;
-    const valEl = document.getElementById('ssCompletionVal');
-    if (valEl) valEl.textContent = `${num}%`;
-}
+            // Check if already in list
+            const existing = ssState.profile.skills.find(
+                s => (skillId && s.skillId === skillId) || (s.skillName && s.skillName.toLowerCase() === skillName.toLowerCase())
+            );
 
-function ssResetForEdit() {
-    ssState.submitSuccess = false;
-    ssState.currentStep = 1;
-    renderSelfServiceContainer();
-}
+            if (existing) {
+                existing.proficiencyLevel = level;
+                existing.isLearning = isLearning;
+                existing.evidence = isLearning ? 'Currently Learning' : (existing.evidence || 'Self-reported');
+                showToast(`Updated ${existing.skillName} (Level ${level}${isLearning ? ' · Currently Learning' : ''})`, 'success');
+            } else {
+                ssState.profile.skills.push({
+                    skillId: skillId,
+                    skillName: skillName,
+                    category: category,
+                    proficiencyLevel: level,
+                    isLearning: isLearning,
+                    evidence: isLearning ? 'Currently Learning' : 'Self-reported',
+                    lastValidatedAt: new Date().toISOString().split('T')[0]
+                });
+                showToast(`Added ${skillName} (Level ${level}${isLearning ? ' · Currently Learning' : ''})`, 'success');
+            }
 
-function testViewInManager() {
-    quickFillManager('manager', 'admin123');
-    router.navigate('portal');
-}
+            if (input.tagName === 'INPUT') input.value = '';
+            if (learningCheckbox) learningCheckbox.checked = false;
 
-async function ssSubmitProfile() {
-    if (!ssValidateStep(1) || !ssValidateStep(4) || !ssValidateStep(5)) return;
+            if (portalActiveTab === 'employee') {
+                renderPortal();
+            } else if (document.getElementById('ssCardContainer')) {
+                renderSelfServiceContainer();
+            }
+        }
 
-    ssState.isSaving = true;
-    ssState.errorMessage = null;
-    renderSelfServiceContainer();
+        function ssRemoveSkill(index) {
+            if (ssState.profile && ssState.profile.skills) {
+                const removed = ssState.profile.skills.splice(index, 1);
+                if (removed.length > 0) {
+                    showToast(`Removed skill: ${removed[0].skillName}`, 'info');
+                }
+            }
+            if (portalActiveTab === 'employee') {
+                renderPortal();
+            } else if (document.getElementById('ssCardContainer')) {
+                renderSelfServiceContainer();
+            }
+        }
 
-    try {
-        const payload = {
-            name: ssState.profile.name,
-            email: ssState.profile.email,
-            department: ssState.profile.department,
-            currentRole: ssState.profile.currentRole,
-            yearsOfExperience: ssState.profile.yearsOfExperience,
-            skills: ssState.profile.skills.map(s => ({
-                skillId: s.skillId,
-                skillName: s.skillName,
-                proficiencyLevel: s.proficiencyLevel,
-                evidence: s.evidence,
-                lastValidatedAt: s.lastValidatedAt
-            })),
-            certifications: ssState.profile.certifications.map(c => ({
-                name: c.name,
-                issuingOrganization: c.issuingOrganization,
-                issueDate: c.issueDate,
-                expiryDate: c.expiryDate
-            })),
-            currentProject: ssState.profile.currentProject,
-            projectRole: ssState.profile.projectRole,
-            projectStartDate: ssState.profile.projectStartDate,
-            projectEndDate: ssState.profile.projectEndDate,
-            projectCompletionPercent: ssState.profile.projectCompletionPercent,
-            availabilityStatus: ssState.profile.availabilityStatus,
-            expectedAvailabilityDate: ssState.profile.expectedAvailabilityDate
-        };
+        function ssUpdateSkillProficiency(index, newLevel) {
+            if (ssState.profile && ssState.profile.skills && ssState.profile.skills[index]) {
+                ssState.profile.skills[index].proficiencyLevel = parseInt(newLevel);
+            }
+        }
 
-        const updated = await apiFetch('/self-service/profile', 'PUT', payload);
-        ssState.isSaving = false;
-        ssState.submitSuccess = true;
-        showToast('Profile updated successfully.', 'success');
-        renderSelfServiceContainer();
-    } catch (err) {
-        ssState.isSaving = false;
-        ssState.errorMessage = 'Unable to update your profile. Please try again.';
-        showToast(ssState.errorMessage, 'error');
-        renderSelfServiceContainer();
-    }
-}
+        function ssHandleAddCert() {
+            const nameEl = document.getElementById('ss-cert-name');
+            const orgEl = document.getElementById('ss-cert-org');
+            const issueEl = document.getElementById('ss-cert-issue');
+            const expEl = document.getElementById('ss-cert-expiry');
 
-// Global window bindings for inline HTML handlers
-window.switchPortalTab = switchPortalTab;
-window.handleViewSwitch = handleViewSwitch;
-window.managerExit = managerExit;
-window.exitToManagerLogin = exitToManagerLogin;
-window.doManagerLogin = doManagerLogin;
-window.onPortalEmployeeChange = onPortalEmployeeChange;
-window.ssSubmitProfileDirect = ssSubmitProfileDirect;
-window.ssGoToStep = ssGoToStep;
-window.ssNextStep = ssNextStep;
-window.ssPrevStep = ssPrevStep;
-window.ssHandleAddSkill = ssHandleAddSkill;
-window.ssRemoveSkill = ssRemoveSkill;
-window.ssUpdateSkillProficiency = ssUpdateSkillProficiency;
-window.ssHandleAddCert = ssHandleAddCert;
-window.ssRemoveCertification = ssRemoveCertification;
-window.ssSelectAvailability = ssSelectAvailability;
-window.ssUpdateCompletionSlider = ssUpdateCompletionSlider;
-window.ssResetForEdit = ssResetForEdit;
-window.testViewInManager = testViewInManager;
-window.ssSubmitProfile = ssSubmitProfile;
+            if (!nameEl || !nameEl.value.trim()) {
+                showToast('Certification Name is required.', 'error');
+                return;
+            }
 
-// ============================================================
-// HELPERS
-// ============================================================
-function showApiError(err) {
-    setPageContent(`<div class="empty-state">
+            ssState.profile.certifications.push({
+                name: nameEl.value.trim(),
+                issuingOrganization: orgEl ? orgEl.value.trim() : '',
+                issueDate: issueEl ? issueEl.value : null,
+                expiryDate: expEl ? expEl.value : null
+            });
+            showToast(`Added certification: ${nameEl.value.trim()}`, 'success');
+            renderSelfServiceContainer();
+        }
+
+        function ssRemoveCertification(index) {
+            ssState.profile.certifications.splice(index, 1);
+            renderSelfServiceContainer();
+        }
+
+        function ssSelectAvailability(status) {
+            if (!ssState.profile) return;
+            ssState.profile.availabilityStatus = status;
+            if (portalActiveTab === 'employee') {
+                renderPortal();
+            } else if (document.getElementById('ssCardContainer')) {
+                renderSelfServiceContainer();
+            }
+        }
+
+        function ssUpdateCompletionSlider(val) {
+            const num = Math.min(100, Math.max(0, parseInt(val) || 0));
+            ssState.profile.projectCompletionPercent = num;
+            const valEl = document.getElementById('ssCompletionVal');
+            if (valEl) valEl.textContent = `${num}%`;
+        }
+
+        function ssResetForEdit() {
+            ssState.submitSuccess = false;
+            ssState.currentStep = 1;
+            renderSelfServiceContainer();
+        }
+
+        function testViewInManager() {
+            quickFillManager('manager', 'admin123');
+            router.navigate('portal');
+        }
+
+        async function ssSubmitProfile() {
+            if (!ssValidateStep(1) || !ssValidateStep(4) || !ssValidateStep(5)) return;
+
+            ssState.isSaving = true;
+            ssState.errorMessage = null;
+            renderSelfServiceContainer();
+
+            try {
+                const payload = {
+                    name: ssState.profile.name,
+                    email: ssState.profile.email,
+                    department: ssState.profile.department,
+                    currentRole: ssState.profile.currentRole,
+                    yearsOfExperience: ssState.profile.yearsOfExperience,
+                    skills: ssState.profile.skills.map(s => ({
+                        skillId: s.skillId,
+                        skillName: s.skillName,
+                        proficiencyLevel: s.proficiencyLevel,
+                        evidence: s.evidence,
+                        lastValidatedAt: s.lastValidatedAt
+                    })),
+                    certifications: ssState.profile.certifications.map(c => ({
+                        name: c.name,
+                        issuingOrganization: c.issuingOrganization,
+                        issueDate: c.issueDate,
+                        expiryDate: c.expiryDate
+                    })),
+                    currentProject: ssState.profile.currentProject,
+                    projectRole: ssState.profile.projectRole,
+                    projectStartDate: ssState.profile.projectStartDate,
+                    projectEndDate: ssState.profile.projectEndDate,
+                    projectCompletionPercent: ssState.profile.projectCompletionPercent,
+                    availabilityStatus: ssState.profile.availabilityStatus,
+                    expectedAvailabilityDate: ssState.profile.expectedAvailabilityDate
+                };
+
+                const updated = await apiFetch('/self-service/profile', 'PUT', payload);
+                ssState.isSaving = false;
+                ssState.submitSuccess = true;
+                showToast('Profile updated successfully.', 'success');
+                renderSelfServiceContainer();
+            } catch (err) {
+                ssState.isSaving = false;
+                ssState.errorMessage = 'Unable to update your profile. Please try again.';
+                showToast(ssState.errorMessage, 'error');
+                renderSelfServiceContainer();
+            }
+        }
+
+        // Global window bindings for inline HTML handlers
+        window.switchPortalTab = switchPortalTab;
+        window.handleViewSwitch = handleViewSwitch;
+        window.managerExit = managerExit;
+        window.exitToManagerLogin = exitToManagerLogin;
+        window.doManagerLogin = doManagerLogin;
+        window.onPortalEmployeeChange = onPortalEmployeeChange;
+        window.ssSubmitProfileDirect = ssSubmitProfileDirect;
+        window.ssGoToStep = ssGoToStep;
+        window.ssNextStep = ssNextStep;
+        window.ssPrevStep = ssPrevStep;
+        window.ssHandleAddSkill = ssHandleAddSkill;
+        window.ssRemoveSkill = ssRemoveSkill;
+        window.ssUpdateSkillProficiency = ssUpdateSkillProficiency;
+        window.ssHandleAddCert = ssHandleAddCert;
+        window.ssRemoveCertification = ssRemoveCertification;
+        window.ssSelectAvailability = ssSelectAvailability;
+        window.ssUpdateCompletionSlider = ssUpdateCompletionSlider;
+        window.ssResetForEdit = ssResetForEdit;
+        window.testViewInManager = testViewInManager;
+        window.ssSubmitProfile = ssSubmitProfile;
+
+        // ============================================================
+        // HELPERS
+        // ============================================================
+        function showApiError(err) {
+            setPageContent(`<div class="empty-state">
         <div class="empty-icon" style="display:flex;justify-content:center">${IC.warn}</div>
         <div class="empty-title">Cannot reach API server</div>
         <div class="empty-desc">Make sure the Spring Boot backend is running.<br>
         Run: <code>mvn spring-boot:run</code> in the project root.<br><br>
         Error: ${err.message}</div>
     </div>`);
-}
+        }
 
-function renderPage(page) {
-    const pages = {
-        portal: renderPortal,
-        'self-service': renderSelfService,
-        dashboard: renderDashboard,
-        demands: renderDemands,
-        compare: renderCandidateComparisonScreen,
-        skills: renderSkills,
-        search: renderSearch,
-        allocations: renderAllocations,
-        ai: renderAI
-    };
-    if (pages[page]) pages[page]();
-}
+        function renderPage(page) {
+            const pages = {
+                portal: renderPortal,
+                'self-service': renderSelfService,
+                dashboard: renderDashboard,
+                demands: renderDemands,
+                compare: renderCandidateComparisonScreen,
+                skills: renderSkills,
+                search: renderSearch,
+                allocations: renderAllocations,
+                ai: renderAI
+            };
+            if (pages[page]) pages[page]();
+        }
 
-async function checkApiStatus() {
-    try {
-        await fetch('http://localhost:8080/api/employees');
-        const dot = document.getElementById('statusDot');
-        const txt = document.getElementById('statusText');
-        if (dot) dot.className = 'status-dot online';
-        if (txt) txt.textContent = 'API Online';
-    } catch {
-        const dot = document.getElementById('statusDot');
-        const txt = document.getElementById('statusText');
-        if (dot) dot.className = 'status-dot offline';
-        if (txt) txt.textContent = 'API Offline';
-    }
-}
+        async function checkApiStatus() {
+            try {
+                await fetch('http://localhost:8080/api/employees');
+                const dot = document.getElementById('statusDot');
+                const txt = document.getElementById('statusText');
+                if (dot) dot.className = 'status-dot online';
+                if (txt) txt.textContent = 'API Online';
+            } catch {
+                const dot = document.getElementById('statusDot');
+                const txt = document.getElementById('statusText');
+                if (dot) dot.className = 'status-dot offline';
+                if (txt) txt.textContent = 'API Offline';
+            }
+        }
 
-// ============================================================
-// TOPBAR & SIDEBAR INTERACTIONS
-// ============================================================
+        // ============================================================
+        // TOPBAR & SIDEBAR INTERACTIONS
+        // ============================================================
 
-function initSidebarToggle() {
-    const sidebarToggle = document.getElementById('sidebarToggle');
-    const sidebar = document.getElementById('sidebar');
-    if (!sidebarToggle || !sidebar) return;
+        function initSidebarToggle() {
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebar = document.getElementById('sidebar');
+            if (!sidebarToggle || !sidebar) return;
 
-    // Restore user collapsed preference
-    const saved = localStorage.getItem('talentsync_sidebar_collapsed');
-    if (saved === 'true') {
-        sidebar.classList.add('collapsed');
-    }
+            // Restore user collapsed preference
+            const saved = localStorage.getItem('talentsync_sidebar_collapsed');
+            if (saved === 'true') {
+                sidebar.classList.add('collapsed');
+            }
 
-    sidebarToggle.addEventListener('click', (e) => {
-        e.stopPropagation();
-        sidebar.classList.toggle('collapsed');
-        const isCollapsed = sidebar.classList.contains('collapsed');
-        localStorage.setItem('talentsync_sidebar_collapsed', isCollapsed ? 'true' : 'false');
-    });
-}
+            sidebarToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                sidebar.classList.toggle('collapsed');
+                const isCollapsed = sidebar.classList.contains('collapsed');
+                localStorage.setItem('talentsync_sidebar_collapsed', isCollapsed ? 'true' : 'false');
+            });
+        }
 
-let appNotifications = [
-    {
-        id: 'notif-1',
-        title: 'Priority Staffing Demand: Project Phoenix',
-        desc: 'Senior Java Developer position is open with 80% allocation required in Hyderabad.',
-        time: 'Just now',
-        type: 'demand',
-        unread: true,
-        actionType: 'demand',
-        targetId: 1
-    },
-    {
-        id: 'notif-2',
-        title: 'Top Recommended Candidate: Ram',
-        desc: 'Evaluated with 92% Match score for Project Phoenix. Ready for immediate allocation.',
-        time: '15m ago',
-        type: 'candidate',
-        unread: true,
-        actionType: 'employee',
-        targetId: 1
-    },
-    {
-        id: 'notif-3',
-        title: 'Resource Capacity Available',
-        desc: 'Nikhil and Shree are currently 100% available for upcoming project assignments.',
-        time: '1h ago',
-        type: 'availability',
-        unread: true,
-        actionType: 'search',
-        targetId: null
-    },
-    {
-        id: 'notif-4',
-        title: 'Enterprise API Health Online',
-        desc: 'Local Spring Boot service verified active and responding on port 8080.',
-        time: '2h ago',
-        type: 'system',
-        unread: false,
-        actionType: 'system',
-        targetId: null
-    }
-];
+        let appNotifications = [
+            {
+                id: 'notif-1',
+                title: 'Priority Staffing Demand: Project Phoenix',
+                desc: 'Senior Java Developer position is open with 80% allocation required in Hyderabad.',
+                time: 'Just now',
+                type: 'demand',
+                unread: true,
+                actionType: 'demand',
+                targetId: 1
+            },
+            {
+                id: 'notif-2',
+                title: 'Top Recommended Candidate: Ram',
+                desc: 'Evaluated with 92% Match score for Project Phoenix. Ready for immediate allocation.',
+                time: '15m ago',
+                type: 'candidate',
+                unread: true,
+                actionType: 'employee',
+                targetId: 1
+            },
+            {
+                id: 'notif-3',
+                title: 'Resource Capacity Available',
+                desc: 'Nikhil and Shree are currently 100% available for upcoming project assignments.',
+                time: '1h ago',
+                type: 'availability',
+                unread: true,
+                actionType: 'search',
+                targetId: null
+            },
+            {
+                id: 'notif-4',
+                title: 'Enterprise API Health Online',
+                desc: 'Local Spring Boot service verified active and responding on port 8080.',
+                time: '2h ago',
+                type: 'system',
+                unread: false,
+                actionType: 'system',
+                targetId: null
+            }
+        ];
 
-function updateNotificationBadge() {
-    const badge = document.getElementById('notifBadge');
-    if (!badge) return;
-    const unreadCount = appNotifications.filter(n => n.unread).length;
-    if (unreadCount > 0) {
-        badge.style.display = 'block';
-    } else {
-        badge.style.display = 'none';
-    }
-}
+        function updateNotificationBadge() {
+            const badge = document.getElementById('notifBadge');
+            if (!badge) return;
+            const unreadCount = appNotifications.filter(n => n.unread).length;
+            if (unreadCount > 0) {
+                badge.style.display = 'block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
 
-function renderNotificationsDropdown() {
-    const dropdown = document.getElementById('notificationsDropdown');
-    if (!dropdown) return;
-    const unreadCount = appNotifications.filter(n => n.unread).length;
+        function renderNotificationsDropdown() {
+            const dropdown = document.getElementById('notificationsDropdown');
+            if (!dropdown) return;
+            const unreadCount = appNotifications.filter(n => n.unread).length;
 
-    const typeIcons = {
-        demand: `<div class="notif-icon-box" style="background:rgba(245,158,11,0.15);color:var(--accent-warning)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>`,
-        candidate: `<div class="notif-icon-box" style="background:rgba(99,102,241,0.15);color:var(--accent-primary)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg></div>`,
-        availability: `<div class="notif-icon-box" style="background:rgba(16,185,129,0.15);color:var(--accent-success)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>`,
-        system: `<div class="notif-icon-box" style="background:rgba(59,130,246,0.15);color:var(--accent-info)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg></div>`
-    };
+            const typeIcons = {
+                demand: `<div class="notif-icon-box" style="background:rgba(245,158,11,0.15);color:var(--accent-warning)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>`,
+                candidate: `<div class="notif-icon-box" style="background:rgba(99,102,241,0.15);color:var(--accent-primary)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg></div>`,
+                availability: `<div class="notif-icon-box" style="background:rgba(16,185,129,0.15);color:var(--accent-success)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>`,
+                system: `<div class="notif-icon-box" style="background:rgba(59,130,246,0.15);color:var(--accent-info)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg></div>`
+            };
 
-    dropdown.innerHTML = `
+            dropdown.innerHTML = `
     <div class="notif-header">
         <div class="notif-header-title">
             <span>Notifications</span>
@@ -6549,7 +6538,7 @@ function renderNotificationsDropdown() {
     </div>
     <div class="notif-list">
         ${appNotifications.length === 0 ? `<div style="padding:28px;text-align:center;color:var(--text-muted);font-size:13px">No notifications</div>` :
-        appNotifications.map(n => `
+                    appNotifications.map(n => `
         <div class="notif-item ${n.unread ? 'unread' : ''}" onclick="handleNotificationClick('${n.id}')">
             ${typeIcons[n.type] || typeIcons.system}
             <div class="notif-content">
@@ -6563,147 +6552,147 @@ function renderNotificationsDropdown() {
     <div class="notif-footer">
         <button type="button" class="btn btn-secondary btn-sm" style="width:100%;font-size:12px" onclick="closeNotifications();router.navigate('ai');">Open AI Staffing Assistant</button>
     </div>`;
-}
-
-function handleNotificationClick(id) {
-    const notif = appNotifications.find(n => n.id === id);
-    if (notif) {
-        notif.unread = false;
-        updateNotificationBadge();
-    }
-    closeNotifications();
-
-    if (!notif) return;
-    if (notif.actionType === 'demand') {
-        router.navigate('ai');
-    } else if (notif.actionType === 'employee') {
-        showEmployeeDetail(notif.targetId || 1);
-    } else if (notif.actionType === 'search') {
-        router.navigate('search');
-    } else if (notif.actionType === 'system') {
-        showToast('System is operating nominally.');
-    }
-}
-
-function markAllNotificationsRead(e) {
-    if (e) e.stopPropagation();
-    appNotifications.forEach(n => n.unread = false);
-    updateNotificationBadge();
-    renderNotificationsDropdown();
-    showToast('All notifications marked as read.');
-}
-
-function toggleNotifications(e) {
-    if (e) e.stopPropagation();
-    const dropdown = document.getElementById('notificationsDropdown');
-    const searchDropdown = document.getElementById('searchResultsDropdown');
-    if (searchDropdown) searchDropdown.style.display = 'none';
-
-    if (!dropdown) return;
-    if (dropdown.style.display === 'none' || !dropdown.style.display) {
-        renderNotificationsDropdown();
-        dropdown.style.display = 'flex';
-    } else {
-        dropdown.style.display = 'none';
-    }
-}
-
-function closeNotifications() {
-    const dropdown = document.getElementById('notificationsDropdown');
-    if (dropdown) dropdown.style.display = 'none';
-}
-
-function initNotifications() {
-    const bell = document.getElementById('notificationBell');
-    if (bell) {
-        bell.addEventListener('click', toggleNotifications);
-    }
-    updateNotificationBadge();
-}
-
-// Global Quick Search
-let searchCache = { emps: null, demands: null, skills: null, lastFetch: 0 };
-
-async function fetchSearchData() {
-    const now = Date.now();
-    if (searchCache.emps && (now - searchCache.lastFetch < 30000)) {
-        return searchCache;
-    }
-    try {
-        const [emps, demands, skills] = await Promise.all([
-            apiFetch('/employees'),
-            apiFetch('/demands'),
-            apiFetch('/skills')
-        ]);
-        searchCache = { emps: emps || [], demands: demands || [], skills: skills || [], lastFetch: now };
-    } catch (e) {
-        console.warn('Failed to pre-fetch search index:', e);
-    }
-    return searchCache;
-}
-
-function initGlobalSearch() {
-    const input = document.getElementById('globalSearch');
-    const dropdown = document.getElementById('searchResultsDropdown');
-    const clearBtn = document.getElementById('searchClearBtn');
-    if (!input || !dropdown) return;
-
-    let debounceTimer = null;
-
-    input.addEventListener('input', () => {
-        const query = input.value.trim().toLowerCase();
-        if (clearBtn) clearBtn.style.display = query ? 'inline-block' : 'none';
-
-        if (!query) {
-            dropdown.style.display = 'none';
-            return;
         }
 
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(async () => {
-            const data = await fetchSearchData();
-            const q = input.value.trim().toLowerCase();
-            if (!q) { dropdown.style.display = 'none'; return; }
+        function handleNotificationClick(id) {
+            const notif = appNotifications.find(n => n.id === id);
+            if (notif) {
+                notif.unread = false;
+                updateNotificationBadge();
+            }
+            closeNotifications();
 
-            const matchedEmps = (data.emps || []).filter(e => 
-                (e.name && e.name.toLowerCase().includes(q)) ||
-                (e.employeeCode && e.employeeCode.toLowerCase().includes(q)) ||
-                (e.department && e.department.toLowerCase().includes(q)) ||
-                (e.location && e.location.toLowerCase().includes(q)) ||
-                (e.currentRole && e.currentRole.toLowerCase().includes(q)) ||
-                (e.skills && e.skills.some(s => s.skillName && s.skillName.toLowerCase().includes(q)))
-            ).slice(0, 4);
+            if (!notif) return;
+            if (notif.actionType === 'demand') {
+                router.navigate('ai');
+            } else if (notif.actionType === 'employee') {
+                showEmployeeDetail(notif.targetId || 1);
+            } else if (notif.actionType === 'search') {
+                router.navigate('search');
+            } else if (notif.actionType === 'system') {
+                showToast('System is operating nominally.');
+            }
+        }
 
-            const matchedDemands = (data.demands || []).filter(d =>
-                (d.projectName && d.projectName.toLowerCase().includes(q)) ||
-                (d.role && d.role.toLowerCase().includes(q)) ||
-                (d.location && d.location.toLowerCase().includes(q)) ||
-                (d.priority && d.priority.toLowerCase().includes(q)) ||
-                (d.requiredSkills && d.requiredSkills.some(s => (s.name || s.skillName || '').toLowerCase().includes(q)))
-            ).slice(0, 4);
+        function markAllNotificationsRead(e) {
+            if (e) e.stopPropagation();
+            appNotifications.forEach(n => n.unread = false);
+            updateNotificationBadge();
+            renderNotificationsDropdown();
+            showToast('All notifications marked as read.');
+        }
 
-            const matchedSkills = (data.skills || []).filter(s =>
-                (s.name && s.name.toLowerCase().includes(q)) ||
-                (s.category && s.category.toLowerCase().includes(q))
-            ).slice(0, 4);
+        function toggleNotifications(e) {
+            if (e) e.stopPropagation();
+            const dropdown = document.getElementById('notificationsDropdown');
+            const searchDropdown = document.getElementById('searchResultsDropdown');
+            if (searchDropdown) searchDropdown.style.display = 'none';
 
-            if (matchedEmps.length === 0 && matchedDemands.length === 0 && matchedSkills.length === 0) {
-                dropdown.innerHTML = `
+            if (!dropdown) return;
+            if (dropdown.style.display === 'none' || !dropdown.style.display) {
+                renderNotificationsDropdown();
+                dropdown.style.display = 'flex';
+            } else {
+                dropdown.style.display = 'none';
+            }
+        }
+
+        function closeNotifications() {
+            const dropdown = document.getElementById('notificationsDropdown');
+            if (dropdown) dropdown.style.display = 'none';
+        }
+
+        function initNotifications() {
+            const bell = document.getElementById('notificationBell');
+            if (bell) {
+                bell.addEventListener('click', toggleNotifications);
+            }
+            updateNotificationBadge();
+        }
+
+        // Global Quick Search
+        let searchCache = { emps: null, demands: null, skills: null, lastFetch: 0 };
+
+        async function fetchSearchData() {
+            const now = Date.now();
+            if (searchCache.emps && (now - searchCache.lastFetch < 30000)) {
+                return searchCache;
+            }
+            try {
+                const [emps, demands, skills] = await Promise.all([
+                    apiFetch('/employees'),
+                    apiFetch('/demands'),
+                    apiFetch('/skills')
+                ]);
+                searchCache = { emps: emps || [], demands: demands || [], skills: skills || [], lastFetch: now };
+            } catch (e) {
+                console.warn('Failed to pre-fetch search index:', e);
+            }
+            return searchCache;
+        }
+
+        function initGlobalSearch() {
+            const input = document.getElementById('globalSearch');
+            const dropdown = document.getElementById('searchResultsDropdown');
+            const clearBtn = document.getElementById('searchClearBtn');
+            if (!input || !dropdown) return;
+
+            let debounceTimer = null;
+
+            input.addEventListener('input', () => {
+                const query = input.value.trim().toLowerCase();
+                if (clearBtn) clearBtn.style.display = query ? 'inline-block' : 'none';
+
+                if (!query) {
+                    dropdown.style.display = 'none';
+                    return;
+                }
+
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(async () => {
+                    const data = await fetchSearchData();
+                    const q = input.value.trim().toLowerCase();
+                    if (!q) { dropdown.style.display = 'none'; return; }
+
+                    const matchedEmps = (data.emps || []).filter(e =>
+                        (e.name && e.name.toLowerCase().includes(q)) ||
+                        (e.employeeCode && e.employeeCode.toLowerCase().includes(q)) ||
+                        (e.department && e.department.toLowerCase().includes(q)) ||
+                        (e.location && e.location.toLowerCase().includes(q)) ||
+                        (e.currentRole && e.currentRole.toLowerCase().includes(q)) ||
+                        (e.skills && e.skills.some(s => s.skillName && s.skillName.toLowerCase().includes(q)))
+                    ).slice(0, 4);
+
+                    const matchedDemands = (data.demands || []).filter(d =>
+                        (d.projectName && d.projectName.toLowerCase().includes(q)) ||
+                        (d.role && d.role.toLowerCase().includes(q)) ||
+                        (d.location && d.location.toLowerCase().includes(q)) ||
+                        (d.priority && d.priority.toLowerCase().includes(q)) ||
+                        (d.requiredSkills && d.requiredSkills.some(s => (s.name || s.skillName || '').toLowerCase().includes(q)))
+                    ).slice(0, 4);
+
+                    const matchedSkills = (data.skills || []).filter(s =>
+                        (s.name && s.name.toLowerCase().includes(q)) ||
+                        (s.category && s.category.toLowerCase().includes(q))
+                    ).slice(0, 4);
+
+                    if (matchedEmps.length === 0 && matchedDemands.length === 0 && matchedSkills.length === 0) {
+                        dropdown.innerHTML = `
                     <div style="padding:22px 16px;text-align:center;color:var(--text-muted);font-size:13px">
                         No matches found for "<strong>${escapeHtml(q)}</strong>"<br>
                         <small style="margin-top:6px;display:block">Press <strong>Enter</strong> to open full search</small>
                     </div>`;
-                dropdown.style.display = 'block';
-                return;
-            }
+                        dropdown.style.display = 'block';
+                        return;
+                    }
 
-            let html = '';
+                    let html = '';
 
-            if (matchedEmps.length > 0) {
-                html += `<div class="search-section-title">Employees (${matchedEmps.length})</div>`;
-                matchedEmps.forEach(e => {
-                    const skillsStr = (e.skills || []).slice(0, 3).map(s => s.skillName).join(', ');
-                    html += `
+                    if (matchedEmps.length > 0) {
+                        html += `<div class="search-section-title">Employees (${matchedEmps.length})</div>`;
+                        matchedEmps.forEach(e => {
+                            const skillsStr = (e.skills || []).slice(0, 3).map(s => s.skillName).join(', ');
+                            html += `
                     <div class="search-result-item" onclick="onSearchSelectEmployee(${e.id})">
                         <div class="search-item-main">
                             <span class="search-item-title">${escapeHtml(e.name)}</span>
@@ -6711,13 +6700,13 @@ function initGlobalSearch() {
                         </div>
                         <span class="search-item-badge" style="background:rgba(99,102,241,0.15);color:#4338ca">View Profile</span>
                     </div>`;
-                });
-            }
+                        });
+                    }
 
-            if (matchedDemands.length > 0) {
-                html += `<div class="search-section-title">Project Demands (${matchedDemands.length})</div>`;
-                matchedDemands.forEach(d => {
-                    html += `
+                    if (matchedDemands.length > 0) {
+                        html += `<div class="search-section-title">Project Demands (${matchedDemands.length})</div>`;
+                        matchedDemands.forEach(d => {
+                            html += `
                     <div class="search-result-item" onclick="onSearchSelectDemand(${d.id})">
                         <div class="search-item-main">
                             <span class="search-item-title">${escapeHtml(d.projectName)}</span>
@@ -6725,13 +6714,13 @@ function initGlobalSearch() {
                         </div>
                         <span class="search-item-badge" style="background:rgba(245,158,11,0.15);color:#b45309">Find Match</span>
                     </div>`;
-                });
-            }
+                        });
+                    }
 
-            if (matchedSkills.length > 0) {
-                html += `<div class="search-section-title">Skills (${matchedSkills.length})</div>`;
-                matchedSkills.forEach(s => {
-                    html += `
+                    if (matchedSkills.length > 0) {
+                        html += `<div class="search-section-title">Skills (${matchedSkills.length})</div>`;
+                        matchedSkills.forEach(s => {
+                            html += `
                     <div class="search-result-item" onclick="onSearchSelectSkill('${escapeHtml(s.name)}', ${s.id})">
                         <div class="search-item-main">
                             <span class="search-item-title">${escapeHtml(s.name)}</span>
@@ -6739,141 +6728,141 @@ function initGlobalSearch() {
                         </div>
                         <span class="search-item-badge" style="background:rgba(16,185,129,0.15);color:#047857">Find Talent</span>
                     </div>`;
-                });
-            }
+                        });
+                    }
 
-            html += `
+                    html += `
             <div class="search-result-item" style="background:#f8fafc;justify-content:center;font-weight:700;color:var(--accent-primary);text-align:center;padding:11px" onclick="onSearchSubmitAll('${escapeHtml(q)}')">
                 <span>🔍 View all search results for "${escapeHtml(q)}" &rarr;</span>
             </div>`;
 
-            dropdown.innerHTML = html;
-            dropdown.style.display = 'block';
-        }, 150);
-    });
+                    dropdown.innerHTML = html;
+                    dropdown.style.display = 'block';
+                }, 150);
+            });
 
-    if (clearBtn) {
-        clearBtn.addEventListener('click', () => {
-            input.value = '';
-            clearBtn.style.display = 'none';
-            dropdown.style.display = 'none';
-            input.focus();
-        });
-    }
+            if (clearBtn) {
+                clearBtn.addEventListener('click', () => {
+                    input.value = '';
+                    clearBtn.style.display = 'none';
+                    dropdown.style.display = 'none';
+                    input.focus();
+                });
+            }
 
-    input.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            dropdown.style.display = 'none';
-        } else if (e.key === 'Enter') {
-            e.preventDefault();
-            const q = input.value.trim();
-            if (!q) return;
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    dropdown.style.display = 'none';
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const q = input.value.trim();
+                    if (!q) return;
 
-            dropdown.style.display = 'none';
-            showGlobalSearchResultsModal(q);
+                    dropdown.style.display = 'none';
+                    showGlobalSearchResultsModal(q);
+                }
+            });
+
+            input.addEventListener('focus', () => {
+                if (input.value.trim() && dropdown.innerHTML) {
+                    dropdown.style.display = 'block';
+                }
+            });
         }
-    });
 
-    input.addEventListener('focus', () => {
-        if (input.value.trim() && dropdown.innerHTML) {
-            dropdown.style.display = 'block';
+        function onSearchSubmitAll(query) {
+            const dropdown = document.getElementById('searchResultsDropdown');
+            if (dropdown) dropdown.style.display = 'none';
+            showGlobalSearchResultsModal(query);
         }
-    });
-}
 
-function onSearchSubmitAll(query) {
-    const dropdown = document.getElementById('searchResultsDropdown');
-    if (dropdown) dropdown.style.display = 'none';
-    showGlobalSearchResultsModal(query);
-}
+        function onSearchSelectEmployee(id) {
+            const dropdown = document.getElementById('searchResultsDropdown');
+            if (dropdown) dropdown.style.display = 'none';
+            const input = document.getElementById('globalSearch');
+            if (input) input.value = '';
+            const clearBtn = document.getElementById('searchClearBtn');
+            if (clearBtn) clearBtn.style.display = 'none';
+            showEmployeeDetail(id);
+        }
 
-function onSearchSelectEmployee(id) {
-    const dropdown = document.getElementById('searchResultsDropdown');
-    if (dropdown) dropdown.style.display = 'none';
-    const input = document.getElementById('globalSearch');
-    if (input) input.value = '';
-    const clearBtn = document.getElementById('searchClearBtn');
-    if (clearBtn) clearBtn.style.display = 'none';
-    showEmployeeDetail(id);
-}
+        function onSearchSelectDemand(id) {
+            const dropdown = document.getElementById('searchResultsDropdown');
+            if (dropdown) dropdown.style.display = 'none';
+            const input = document.getElementById('globalSearch');
+            if (input) input.value = '';
+            const clearBtn = document.getElementById('searchClearBtn');
+            if (clearBtn) clearBtn.style.display = 'none';
+            router.navigate('demands');
+            setTimeout(() => {
+                showRecommendations(id);
+            }, 150);
+        }
 
-function onSearchSelectDemand(id) {
-    const dropdown = document.getElementById('searchResultsDropdown');
-    if (dropdown) dropdown.style.display = 'none';
-    const input = document.getElementById('globalSearch');
-    if (input) input.value = '';
-    const clearBtn = document.getElementById('searchClearBtn');
-    if (clearBtn) clearBtn.style.display = 'none';
-    router.navigate('demands');
-    setTimeout(() => {
-        showRecommendations(id);
-    }, 150);
-}
+        function onSearchSelectSkill(skillName, skillId = null) {
+            const dropdown = document.getElementById('searchResultsDropdown');
+            if (dropdown) dropdown.style.display = 'none';
+            const input = document.getElementById('globalSearch');
+            if (input) input.value = '';
+            const clearBtn = document.getElementById('searchClearBtn');
+            if (clearBtn) clearBtn.style.display = 'none';
+            navigateToResourceSearch(skillName, skillId);
+        }
 
-function onSearchSelectSkill(skillName, skillId = null) {
-    const dropdown = document.getElementById('searchResultsDropdown');
-    if (dropdown) dropdown.style.display = 'none';
-    const input = document.getElementById('globalSearch');
-    if (input) input.value = '';
-    const clearBtn = document.getElementById('searchClearBtn');
-    if (clearBtn) clearBtn.style.display = 'none';
-    navigateToResourceSearch(skillName, skillId);
-}
+        function navigateToResourceSearch(keyword = '', skillId = null) {
+            rsSearchState.mode = 'direct';
+            rsSearchState.directFilters.keyword = (keyword || '').toLowerCase().trim();
+            if (skillId) {
+                rsSearchState.directFilters.skillId = String(skillId);
+            }
+            router.navigate('search');
+            setTimeout(() => {
+                setResourceSearchMode('direct');
+                const kwInput = document.getElementById('rs-dir-keyword');
+                if (kwInput) kwInput.value = keyword;
+                const skSelect = document.getElementById('rs-dir-skill');
+                if (skSelect && skillId) skSelect.value = String(skillId);
+                onDirectFilterChange();
+            }, 120);
+        }
 
-function navigateToResourceSearch(keyword = '', skillId = null) {
-    rsSearchState.mode = 'direct';
-    rsSearchState.directFilters.keyword = (keyword || '').toLowerCase().trim();
-    if (skillId) {
-        rsSearchState.directFilters.skillId = String(skillId);
-    }
-    router.navigate('search');
-    setTimeout(() => {
-        setResourceSearchMode('direct');
-        const kwInput = document.getElementById('rs-dir-keyword');
-        if (kwInput) kwInput.value = keyword;
-        const skSelect = document.getElementById('rs-dir-skill');
-        if (skSelect && skillId) skSelect.value = String(skillId);
-        onDirectFilterChange();
-    }, 120);
-}
+        async function showGlobalSearchResultsModal(q) {
+            const data = await fetchSearchData();
+            const query = (q || '').toLowerCase().trim();
+            if (!query) return;
 
-async function showGlobalSearchResultsModal(q) {
-    const data = await fetchSearchData();
-    const query = (q || '').toLowerCase().trim();
-    if (!query) return;
+            const matchedEmps = (data.emps || []).filter(e =>
+                (e.name && e.name.toLowerCase().includes(query)) ||
+                (e.employeeCode && e.employeeCode.toLowerCase().includes(query)) ||
+                (e.department && e.department.toLowerCase().includes(query)) ||
+                (e.location && e.location.toLowerCase().includes(query)) ||
+                (e.currentRole && e.currentRole.toLowerCase().includes(query)) ||
+                (e.skills && e.skills.some(s => s.skillName && s.skillName.toLowerCase().includes(query)))
+            );
 
-    const matchedEmps = (data.emps || []).filter(e => 
-        (e.name && e.name.toLowerCase().includes(query)) ||
-        (e.employeeCode && e.employeeCode.toLowerCase().includes(query)) ||
-        (e.department && e.department.toLowerCase().includes(query)) ||
-        (e.location && e.location.toLowerCase().includes(query)) ||
-        (e.currentRole && e.currentRole.toLowerCase().includes(query)) ||
-        (e.skills && e.skills.some(s => s.skillName && s.skillName.toLowerCase().includes(query)))
-    );
+            const matchedDemands = (data.demands || []).filter(d =>
+                (d.projectName && d.projectName.toLowerCase().includes(query)) ||
+                (d.role && d.role.toLowerCase().includes(query)) ||
+                (d.location && d.location.toLowerCase().includes(query)) ||
+                (d.priority && d.priority.toLowerCase().includes(query)) ||
+                (d.requiredSkills && d.requiredSkills.some(s => (s.name || s.skillName || '').toLowerCase().includes(query)))
+            );
 
-    const matchedDemands = (data.demands || []).filter(d =>
-        (d.projectName && d.projectName.toLowerCase().includes(query)) ||
-        (d.role && d.role.toLowerCase().includes(query)) ||
-        (d.location && d.location.toLowerCase().includes(query)) ||
-        (d.priority && d.priority.toLowerCase().includes(query)) ||
-        (d.requiredSkills && d.requiredSkills.some(s => (s.name || s.skillName || '').toLowerCase().includes(query)))
-    );
+            const matchedSkills = (data.skills || []).filter(s =>
+                (s.name && s.name.toLowerCase().includes(query)) ||
+                (s.category && s.category.toLowerCase().includes(query))
+            );
 
-    const matchedSkills = (data.skills || []).filter(s =>
-        (s.name && s.name.toLowerCase().includes(query)) ||
-        (s.category && s.category.toLowerCase().includes(query))
-    );
+            const totalMatches = matchedEmps.length + matchedDemands.length + matchedSkills.length;
 
-    const totalMatches = matchedEmps.length + matchedDemands.length + matchedSkills.length;
-
-    let body = `
+            let body = `
     <div style="padding:4px 0">
         <div style="font-size:13.5px;color:var(--text-secondary);margin-bottom:16px">
             Found <strong>${totalMatches}</strong> total match${totalMatches === 1 ? '' : 'es'} across employees, demands, and skills for "<strong>${escapeHtml(q)}</strong>":
         </div>`;
 
-    if (totalMatches === 0) {
-        body += `
+            if (totalMatches === 0) {
+                body += `
         <div style="padding:32px 16px;text-align:center;background:#f8fafc;border-radius:10px;margin-bottom:16px">
             <div style="font-size:32px;margin-bottom:8px">🔍</div>
             <div style="font-weight:700;font-size:15px;color:var(--text-primary)">No exact records found</div>
@@ -6884,9 +6873,9 @@ async function showGlobalSearchResultsModal(q) {
                 <button class="btn btn-primary btn-sm" onclick="closeModal();navigateToResourceSearch('${escapeHtml(q)}')">Search All Talent</button>
             </div>
         </div>`;
-    } else {
-        if (matchedEmps.length > 0) {
-            body += `
+            } else {
+                if (matchedEmps.length > 0) {
+                    body += `
             <div style="margin-bottom:20px">
                 <div style="font-size:12px;font-weight:800;text-transform:uppercase;color:var(--accent-primary);letter-spacing:0.6px;margin-bottom:8px">
                     Matching Employees (${matchedEmps.length})
@@ -6908,10 +6897,10 @@ async function showGlobalSearchResultsModal(q) {
                     }).join('')}
                 </div>
             </div>`;
-        }
+                }
 
-        if (matchedDemands.length > 0) {
-            body += `
+                if (matchedDemands.length > 0) {
+                    body += `
             <div style="margin-bottom:20px">
                 <div style="font-size:12px;font-weight:800;text-transform:uppercase;color:var(--accent-primary);letter-spacing:0.6px;margin-bottom:8px">
                     Matching Project Demands (${matchedDemands.length})
@@ -6930,10 +6919,10 @@ async function showGlobalSearchResultsModal(q) {
                     </div>`).join('')}
                 </div>
             </div>`;
-        }
+                }
 
-        if (matchedSkills.length > 0) {
-            body += `
+                if (matchedSkills.length > 0) {
+                    body += `
             <div style="margin-bottom:20px">
                 <div style="font-size:12px;font-weight:800;text-transform:uppercase;color:var(--accent-primary);letter-spacing:0.6px;margin-bottom:8px">
                     Matching Skills (${matchedSkills.length})
@@ -6947,124 +6936,124 @@ async function showGlobalSearchResultsModal(q) {
                     </div>`).join('')}
                 </div>
             </div>`;
-        }
-    }
+                }
+            }
 
-    body += `
+            body += `
         <div style="display:flex;justify-content:flex-end;margin-top:16px;border-top:1px solid #e2e8f0;padding-top:12px">
             <button class="btn btn-secondary" onclick="closeModal()">Close</button>
         </div>
     </div>`;
 
-    openModal(`Search Results: "${escapeHtml(q)}"`, body);
-}
-
-// Global click outside to close dropdowns
-document.addEventListener('click', (e) => {
-    const notifContainer = document.getElementById('notificationContainer');
-    const notifDropdown = document.getElementById('notificationsDropdown');
-    if (notifContainer && !notifContainer.contains(e.target) && notifDropdown) {
-        notifDropdown.style.display = 'none';
-    }
-
-    const searchBar = document.getElementById('globalSearchBar');
-    const searchDropdown = document.getElementById('searchResultsDropdown');
-    if (searchBar && !searchBar.contains(e.target) && searchDropdown) {
-        searchDropdown.style.display = 'none';
-    }
-
-    const profileContainer = document.getElementById('userProfileMenuContainer');
-    const profileDropdown = document.getElementById('userProfileDropdown');
-    if (profileContainer && !profileContainer.contains(e.target) && profileDropdown) {
-        profileDropdown.style.display = 'none';
-    }
-});
-
-function toggleUserProfileDropdown(e) {
-    if (e) e.stopPropagation();
-    const dropdown = document.getElementById('userProfileDropdown');
-    if (!dropdown) return;
-    const isVisible = dropdown.style.display === 'block';
-    dropdown.style.display = isVisible ? 'none' : 'block';
-}
-
-function closeUserProfileDropdown() {
-    const dropdown = document.getElementById('userProfileDropdown');
-    if (dropdown) dropdown.style.display = 'none';
-}
-
-async function initApp() {
-    document.querySelectorAll('.nav-link').forEach(link => {
-        link.addEventListener('click', e => { e.preventDefault(); router.navigate(link.dataset.page); });
-    });
-    const modalClose = document.getElementById('modalClose');
-    if (modalClose) modalClose.addEventListener('click', closeModal);
-    const modalOverlay = document.getElementById('modalOverlay');
-    if (modalOverlay) {
-        modalOverlay.addEventListener('click', e => {
-            if (e.target === modalOverlay) closeModal();
-        });
-    }
-    window.addEventListener('hashchange', () => {
-        const hash = window.location.hash.replace('#', '');
-        if (pageTitles[hash] && router.currentPage !== hash) {
-            router.navigate(hash);
+            openModal(`Search Results: "${escapeHtml(q)}"`, body);
         }
-    });
 
-    // Initialize sidebar toggle, notifications, and quick search
-    initSidebarToggle();
-    initNotifications();
-    initGlobalSearch();
-
-    checkApiStatus();
-    setInterval(checkApiStatus, 10000);
-
-    const isManualLogout = sessionStorage.getItem('ts_manual_logout') === 'true';
-
-    if (isManualLogout) {
-        portalActiveTab = 'manager';
-        authState.clearSession();
-        router.navigate('portal');
-        return;
-    }
-
-    // Default to manager session on startup for demo call
-    if (!authState.isManager() || !authState.token) {
-        try {
-            const authRes = await fetch(API_BASE + '/auth/manager-login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: 'manager', password: 'admin123' })
-            });
-            if (authRes.ok) {
-                const authData = await authRes.json();
-                authState.setSession(authData.token, authData.role, authData.user);
-            } else {
-                authState.setSession('mgr-active-token', 'ROLE_MANAGER', { username: 'manager', role: 'ROLE_MANAGER', name: 'Resource Manager' });
+        // Global click outside to close dropdowns
+        document.addEventListener('click', (e) => {
+            const notifContainer = document.getElementById('notificationContainer');
+            const notifDropdown = document.getElementById('notificationsDropdown');
+            if (notifContainer && !notifContainer.contains(e.target) && notifDropdown) {
+                notifDropdown.style.display = 'none';
             }
-        } catch (e) {
-            authState.setSession('mgr-active-token', 'ROLE_MANAGER', { username: 'manager', role: 'ROLE_MANAGER', name: 'Resource Manager' });
+
+            const searchBar = document.getElementById('globalSearchBar');
+            const searchDropdown = document.getElementById('searchResultsDropdown');
+            if (searchBar && !searchBar.contains(e.target) && searchDropdown) {
+                searchDropdown.style.display = 'none';
+            }
+
+            const profileContainer = document.getElementById('userProfileMenuContainer');
+            const profileDropdown = document.getElementById('userProfileDropdown');
+            if (profileContainer && !profileContainer.contains(e.target) && profileDropdown) {
+                profileDropdown.style.display = 'none';
+            }
+        });
+
+        function toggleUserProfileDropdown(e) {
+            if (e) e.stopPropagation();
+            const dropdown = document.getElementById('userProfileDropdown');
+            if (!dropdown) return;
+            const isVisible = dropdown.style.display === 'block';
+            dropdown.style.display = isVisible ? 'none' : 'block';
         }
-    }
 
-    authState.updateSessionUI();
-    authState.updateNavPermissions();
+        function closeUserProfileDropdown() {
+            const dropdown = document.getElementById('userProfileDropdown');
+            if (dropdown) dropdown.style.display = 'none';
+        }
 
-    const initialHash = window.location.hash.replace('#', '');
-    let initialPage = 'demands';
-    if (initialHash === 'portal') {
-        initialPage = 'portal';
-    } else if (pageTitles[initialHash] && initialHash !== 'self-service') {
-        initialPage = initialHash;
-    }
-    router.navigate(initialPage);
-}
+        async function initApp() {
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', e => { e.preventDefault(); router.navigate(link.dataset.page); });
+            });
+            const modalClose = document.getElementById('modalClose');
+            if (modalClose) modalClose.addEventListener('click', closeModal);
+            const modalOverlay = document.getElementById('modalOverlay');
+            if (modalOverlay) {
+                modalOverlay.addEventListener('click', e => {
+                    if (e.target === modalOverlay) closeModal();
+                });
+            }
+            window.addEventListener('hashchange', () => {
+                const hash = window.location.hash.replace('#', '');
+                if (pageTitles[hash] && router.currentPage !== hash) {
+                    router.navigate(hash);
+                }
+            });
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initApp);
-} else {
-    initApp();
-}
+            // Initialize sidebar toggle, notifications, and quick search
+            initSidebarToggle();
+            initNotifications();
+            initGlobalSearch();
+
+            checkApiStatus();
+            setInterval(checkApiStatus, 10000);
+
+            const isManualLogout = sessionStorage.getItem('ts_manual_logout') === 'true';
+
+            if (isManualLogout) {
+                portalActiveTab = 'manager';
+                authState.clearSession();
+                router.navigate('portal');
+                return;
+            }
+
+            // Default to manager session on startup for demo call
+            if (!authState.isManager() || !authState.token) {
+                try {
+                    const authRes = await fetch(API_BASE + '/auth/manager-login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username: 'manager', password: 'admin123' })
+                    });
+                    if (authRes.ok) {
+                        const authData = await authRes.json();
+                        authState.setSession(authData.token, authData.role, authData.user);
+                    } else {
+                        authState.setSession('mgr-active-token', 'ROLE_MANAGER', { username: 'manager', role: 'ROLE_MANAGER', name: 'Resource Manager' });
+                    }
+                } catch (e) {
+                    authState.setSession('mgr-active-token', 'ROLE_MANAGER', { username: 'manager', role: 'ROLE_MANAGER', name: 'Resource Manager' });
+                }
+            }
+
+            authState.updateSessionUI();
+            authState.updateNavPermissions();
+
+            const initialHash = window.location.hash.replace('#', '');
+            let initialPage = 'demands';
+            if (initialHash === 'portal') {
+                initialPage = 'portal';
+            } else if (pageTitles[initialHash] && initialHash !== 'self-service') {
+                initialPage = initialHash;
+            }
+            router.navigate(initialPage);
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
 
 
