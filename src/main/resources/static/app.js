@@ -5318,11 +5318,10 @@ function renderPortalManagerView() {
                 <label class="pwc-label">Password</label>
                 <input type="password" id="mgrLoginPassword" class="pwc-input" placeholder="Enter password" autocomplete="off" value="">
             </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#64748b">
+            <div style="display:flex;align-items:center;font-size:12px;color:#64748b">
                 <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
                     <input type="checkbox" checked style="accent-color:#d97706"> Remember session
                 </label>
-                <span style="color:#d97706;font-weight:600;cursor:pointer">Enterprise SSO</span>
             </div>
             <button type="submit" id="btnManagerLogin" style="width:100%;padding:14px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#ffffff;border:none;border-radius:10px;font-size:15px;font-weight:700;box-shadow:0 4px 14px rgba(245,158,11,0.35);cursor:pointer;margin-top:6px;display:inline-flex;align-items:center;justify-content:center;gap:8px">
                 Sign In to Manager Dashboard &rarr;
