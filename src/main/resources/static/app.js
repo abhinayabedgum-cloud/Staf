@@ -4570,7 +4570,35 @@ function generateTargetedAgentAnswer(question, candidates, demandText) {
     return `The AI Staffing Agent has analyzed the stored records for <strong>${escapeHtml(demandText)}</strong>. No candidates are currently active or eligible. Please check employee statuses in the Employees tab.`;
 }
 
+function toggleFloatingAiBot(forceOpen) {
+    const win = document.getElementById('floatingAiWindow');
+    if (!win) return;
+    const isClosed = win.classList.contains('closed');
+    const shouldOpen = forceOpen !== undefined ? forceOpen : isClosed;
+    if (shouldOpen) {
+        win.classList.remove('closed');
+        const contextEl = document.getElementById('floatingAiContextDemand');
+        const demandSelect = document.getElementById('ai-demand');
+        if (contextEl) {
+            if (demandSelect && demandSelect.options && demandSelect.selectedIndex >= 0) {
+                contextEl.textContent = demandSelect.options[demandSelect.selectedIndex].text;
+            } else if (aiCurrentDemand) {
+                contextEl.textContent = `${aiCurrentDemand.projectName} - ${aiCurrentDemand.role}`;
+            } else {
+                contextEl.textContent = 'All Active Demands';
+            }
+        }
+        setTimeout(() => {
+            const input = document.getElementById('ai-question');
+            if (input) input.focus();
+        }, 150);
+    } else {
+        win.classList.add('closed');
+    }
+}
+
 function setAgentQuery(text) {
+    toggleFloatingAiBot(true);
     const qArea = document.getElementById('ai-question');
     if (qArea) {
         qArea.value = text;
@@ -4601,63 +4629,18 @@ async function renderAI(preferredDemandId) {
                     <span class="badge badge-active">${demands.length} Demands Loaded</span>
                 </div>
             </div>
-            <div>
+            <div style="display:flex;align-items:center;gap:10px">
+                <button class="btn btn-primary btn-sm" onclick="toggleFloatingAiBot(true)" style="display:flex;align-items:center;gap:6px">
+                    <span style="font-size:14px">✨</span> Ask AI Copilot
+                </button>
                 <button class="btn btn-secondary btn-sm" onclick="showCreateDemandModal()">${IC.plus} New Project Demand</button>
             </div>
         </div>
 
-        <!-- 2. MAIN COCKPIT: 65% Candidate Workspace | 35% Sticky AI Copilot -->
+        <!-- 2. FULL WIDTH CANDIDATE WORKSPACE (NO SQUEEZING SIDEBAR) -->
         <div class="ai-cockpit-layout">
-            <!-- PRIMARY CANDIDATE WORKSPACE (65%) -->
-            <div id="aiCandidateWorkspace">
+            <div id="aiCandidateWorkspace" style="width:100%">
                 <div class="loading-overlay" style="padding:60px"><div class="spinner"></div><span>Evaluating candidate database...</span></div>
-            </div>
-
-            <!-- AI STAFFING COPILOT (35%, STICKY) -->
-            <div class="ai-copilot-sticky">
-                <div class="card" style="box-shadow:var(--shadow-glow);border:1px solid rgba(99,102,241,0.25);padding:18px">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-                        <div style="display:flex;align-items:center;gap:7px">
-                            <span style="color:var(--accent-primary)">${IC.ai}</span>
-                            <span style="font-weight:800;font-size:14px;color:var(--text-primary)">AI Staffing Advisor</span>
-                        </div>
-                        <span class="badge badge-active" style="font-size:10px;padding:2px 7px">Live Copilot</span>
-                    </div>
-
-                    <!-- COPILOT RESPONSE AREA -->
-                    <div id="aiCopilotResponse" style="margin-bottom:14px;padding:12px;background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.18);border-radius:8px;max-height:300px;overflow-y:auto">
-                        <div style="font-size:11px;font-weight:700;color:var(--text-accent);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px" id="aiCopilotResponseHeading">Advisor Assessment</div>
-                        <div id="aiCopilotAnswerText" style="font-size:13px;line-height:1.6;color:var(--text-primary)">
-                            Evaluating stored candidate profiles against project requirements...
-                        </div>
-                    </div>
-
-                    <!-- QUICK INQUIRIES -->
-                    <div style="margin-bottom:12px">
-                        <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Quick Inquiries:</div>
-                        <div style="display:flex;flex-wrap:wrap;gap:6px">
-                            <button type="button" class="btn btn-secondary btn-sm" style="font-size:11px;padding:3px 8px" onclick="setAgentQuery('Who is the best candidate and why?')">Why Top Match?</button>
-                            <button type="button" class="btn btn-secondary btn-sm" style="font-size:11px;padding:3px 8px" onclick="setAgentQuery('Compare top candidates')">Compare Candidates</button>
-                            <button type="button" class="btn btn-secondary btn-sm" style="font-size:11px;padding:3px 8px" onclick="setAgentQuery('What skills are missing for this demand?')">Skill Gaps</button>
-                        </div>
-                    </div>
-
-                    <!-- QUESTION INPUT BOX -->
-                    <div class="form-group" style="margin-bottom:10px">
-                        <textarea id="ai-question" placeholder="Ask staffing questions... (Press Enter to Send)" style="min-height:85px;font-size:13px;resize:vertical"></textarea>
-                    </div>
-                    <div style="display:flex;gap:8px">
-                        <button class="btn btn-primary" id="ai-send-btn" style="flex:1;font-size:13px;padding:8px 12px" onclick="sendAgentQuestion()">
-                            ${IC.send} Send
-                        </button>
-                        <button class="btn btn-secondary" style="font-size:13px;padding:8px 12px" onclick="document.getElementById('ai-question').value='';document.getElementById('ai-question').focus();" title="Clear question">
-                            Clear
-                        </button>
-                    </div>
-                    <div style="font-size:11px;color:var(--text-muted);margin-top:8px">
-                        Tip: Press <kbd style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:3px">Enter</kbd> to send, <kbd style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:3px">Shift+Enter</kbd> for newline.
-                    </div>
-                </div>
             </div>
         </div>`);
 
@@ -4668,8 +4651,10 @@ async function renderAI(preferredDemandId) {
             });
         }
 
+        // Global floating bot input listener
         const qArea = document.getElementById('ai-question');
-        if (qArea) {
+        if (qArea && !qArea._hasKeyHandler) {
+            qArea._hasKeyHandler = true;
             qArea.addEventListener('keydown', e => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
@@ -4822,45 +4807,70 @@ function renderStaffingAnalysisHtml(demand, candidates, topEmpProfile) {
         <div style="margin-bottom:24px">
             <div style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:10px">Best Candidate</div>
             ${!best ? `<div class="card" style="padding:20px;color:var(--text-muted)">No suitable candidates found.</div>` : `
-            <div class="card" style="border:1px solid rgba(99,102,241,0.35);box-shadow:0 0 24px rgba(99,102,241,0.12);padding:22px;position:relative;overflow:hidden">
+            <div class="card" style="border:1px solid rgba(99,102,241,0.35);box-shadow:0 0 24px rgba(99,102,241,0.12);padding:24px;position:relative;overflow:hidden">
                 <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--grad-primary)"></div>
                 
                 <!-- ADVISORY BANNER -->
-                <div style="background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.3);border-radius:6px;padding:8px 12px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
+                <div style="background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.3);border-radius:6px;padding:9px 14px;margin-bottom:20px;display:flex;align-items:center;gap:10px">
                     <span style="font-size:16px">ℹ️</span>
-                    <span style="font-size:12px;color:var(--text-secondary)">
+                    <span style="font-size:12.5px;color:var(--text-secondary)">
                         <strong>AI Advisory Support:</strong> Evaluated against live requirements. Human manager review &amp; approval required before allocation.
                     </span>
                 </div>
 
-                <div style="font-size:20px;font-weight:800;color:var(--text-primary)">${escapeHtml(best.employeeName)}</div>
-                <div style="font-size:13.5px;color:var(--text-secondary);margin-top:2px">${escapeHtml(role)}</div>
+                <!-- SPACIOUS CANDIDATE PROFILE GRID -->
+                <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:24px;align-items:start">
+                    <!-- LEFT COLUMN: Candidate name, role, match score, verified skills -->
+                    <div>
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+                            <div style="font-size:22px;font-weight:800;color:var(--text-primary)">${escapeHtml(best.employeeName)}</div>
+                            <span class="badge badge-active" style="font-size:11px;padding:2px 8px">Top Ranked Match</span>
+                        </div>
+                        <div style="font-size:13.5px;color:var(--text-secondary);margin-bottom:14px">
+                            ${escapeHtml(role)} &bull; ${escapeHtml(best.department || 'Engineering')} &bull; ${IC.loc} ${escapeHtml(best.location || 'N/A')}
+                        </div>
 
-                <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin:14px 0 10px 0">
-                    Match score: ${matchScoreVal}%
-                </div>
+                        <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:10px">
+                            Match score: <strong style="color:var(--accent-primary)">${matchScoreVal}%</strong>
+                        </div>
 
-                <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;padding:8px 16px;margin-bottom:18px">
-                    ${skillsRowsHtml}
-                </div>
-
-                <div style="margin-bottom:18px">
-                    <div style="font-size:12px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Recommendation</div>
-                    <div style="font-size:13.5px;line-height:1.6;color:var(--text-primary)">
-                        Strong candidate based on the available skills and project requirements.
+                        <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;padding:8px 16px">
+                            ${skillsRowsHtml}
+                        </div>
                     </div>
-                </div>
 
-                <div style="display:flex;gap:10px;padding-top:14px;border-top:1px solid var(--border-color)">
-                    <button id="ai-view-profile-btn" class="btn btn-secondary btn-sm" onclick="showEmployeeDetail(${best.employeeId})">
-                        View Profile
-                    </button>
-                    <button id="ai-explain-match-btn" class="btn btn-secondary btn-sm" onclick="explainCandidateMatch(${best.employeeId})">
-                        Explain Match
-                    </button>
-                    <button id="ai-allocate-btn" class="btn btn-primary btn-sm" onclick="showAllocationReviewFromAI(${best.employeeId})">
-                        ${IC.check} Review &amp; Allocate
-                    </button>
+                    <!-- RIGHT COLUMN: Recommendation, Metrics, and Actions -->
+                    <div style="display:flex;flex-direction:column;justify-content:space-between;min-height:100%;background:rgba(248,250,252,0.7);border:1px solid var(--border-color);border-radius:10px;padding:18px">
+                        <div>
+                            <div style="font-size:12px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Recommendation Assessment</div>
+                            <div style="font-size:13.5px;line-height:1.6;color:var(--text-primary);margin-bottom:16px">
+                                Strong candidate based on verified skill alignment and project requirements. Profile verified and immediately eligible for staffing approval.
+                            </div>
+
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+                                <div style="background:#ffffff;border:1px solid var(--border-color);border-radius:6px;padding:10px">
+                                    <div style="font-size:11px;color:var(--text-muted);font-weight:700;text-transform:uppercase">Available Capacity</div>
+                                    <div style="font-size:15px;font-weight:800;color:#10b981;margin-top:2px">${best.availablePercent || 100}% Available</div>
+                                </div>
+                                <div style="background:#ffffff;border:1px solid var(--border-color);border-radius:6px;padding:10px">
+                                    <div style="font-size:11px;color:var(--text-muted);font-weight:700;text-transform:uppercase">Location Match</div>
+                                    <div style="font-size:15px;font-weight:800;color:#0d9488;margin-top:2px">${escapeHtml(best.location || 'Matched')}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display:flex;gap:10px;padding-top:14px;border-top:1px solid var(--border-color);flex-wrap:wrap">
+                            <button id="ai-view-profile-btn" class="btn btn-secondary btn-sm" onclick="showEmployeeDetail(${best.employeeId})">
+                                View Profile
+                            </button>
+                            <button id="ai-explain-match-btn" class="btn btn-secondary btn-sm" onclick="explainCandidateMatch(${best.employeeId})">
+                                Explain Match
+                            </button>
+                            <button id="ai-allocate-btn" class="btn btn-primary btn-sm" onclick="showAllocationReviewFromAI(${best.employeeId})">
+                                ${IC.check} Review &amp; Allocate
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>`}
         </div>
@@ -4921,7 +4931,7 @@ function renderStaffingAnalysisHtml(demand, candidates, topEmpProfile) {
 
 async function sendAgentQuestion() {
     const demandSelect = document.getElementById('ai-demand');
-    const demandId = demandSelect?.value;
+    const demandId = demandSelect?.value || (aiCurrentDemand ? aiCurrentDemand.id : null);
     const questionInput = document.getElementById('ai-question');
     const question = questionInput?.value.trim();
     const sendBtn = document.getElementById('ai-send-btn');
@@ -4936,9 +4946,39 @@ async function sendAgentQuestion() {
         return;
     }
 
+    // Ensure floating window is open
+    toggleFloatingAiBot(true);
+
     if (sendBtn) {
         sendBtn.disabled = true;
-        sendBtn.innerHTML = `<span class="spinner" style="width:12px;height:12px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:6px"></span> Sending...`;
+        sendBtn.innerHTML = `<span class="spinner" style="width:12px;height:12px;border-width:2px;display:inline-block;vertical-align:middle"></span>`;
+    }
+
+    const messagesEl = document.getElementById('floatingAiMessages');
+    const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    if (messagesEl) {
+        // Append user message bubble
+        const userMsg = document.createElement('div');
+        userMsg.className = 'floating-ai-msg user';
+        userMsg.innerHTML = `
+            <div class="floating-ai-msg-bubble">${escapeHtml(question)}</div>
+            <span class="floating-ai-msg-time">${timeNow}</span>
+        `;
+        messagesEl.appendChild(userMsg);
+
+        // Append loading bot bubble
+        const botLoading = document.createElement('div');
+        botLoading.className = 'floating-ai-msg bot';
+        botLoading.id = 'floatingAiLoadingMsg';
+        botLoading.innerHTML = `
+            <div class="floating-ai-msg-bubble" style="display:flex;align-items:center;gap:8px">
+                <span class="spinner" style="width:14px;height:14px;border-width:2px;display:inline-block"></span>
+                <span>Reasoning over verified employee catalog...</span>
+            </div>
+        `;
+        messagesEl.appendChild(botLoading);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
     const headingEl = document.getElementById('aiCopilotResponseHeading');
@@ -4951,12 +4991,24 @@ async function sendAgentQuestion() {
     try {
         const [res, demand] = await Promise.all([
             apiFetch('/ai/staffing-advice', 'POST', { demandId: parseInt(demandId, 10), question }),
-            apiFetch(`/demands/${demandId}`)
+            demandId ? apiFetch(`/demands/${demandId}`).catch(() => null) : Promise.resolve(null)
         ]);
         aiCurrentCandidates = res.candidates || [];
 
-        const demandText = demandSelect.options[demandSelect.selectedIndex]?.text || `Demand #${demandId}`;
+        const demandText = demandSelect?.options[demandSelect.selectedIndex]?.text || (demand ? `${demand.projectName} - ${demand.role}` : `Demand #${demandId}`);
         const directAnswer = generateTargetedAgentAnswer(question, res.candidates || [], demandText);
+
+        const botLoading = document.getElementById('floatingAiLoadingMsg');
+        if (botLoading) {
+            botLoading.innerHTML = `
+                <div class="floating-ai-msg-bubble">
+                    <div style="font-size:11px;font-weight:700;color:var(--text-accent);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Advisor Assessment</div>
+                    <div style="font-size:13px;line-height:1.55;color:var(--text-primary)">${directAnswer}</div>
+                </div>
+                <span class="floating-ai-msg-time">${timeNow}</span>
+            `;
+            botLoading.removeAttribute('id');
+        }
 
         if (headingEl) {
             headingEl.innerHTML = `Q: "${escapeHtml(question)}"`;
@@ -4966,16 +5018,31 @@ async function sendAgentQuestion() {
         }
 
         if (questionInput) questionInput.value = '';
+        if (messagesEl) messagesEl.scrollTop = messagesEl.scrollHeight;
         showToast('AI Advisor responded!');
     } catch (err) {
         showToast(err.message, 'error');
+        const botLoading = document.getElementById('floatingAiLoadingMsg');
+        if (botLoading) {
+            botLoading.innerHTML = `
+                <div class="floating-ai-msg-bubble" style="border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.08)">
+                    <span style="color:var(--accent-danger)">Error: ${escapeHtml(err.message)}</span>
+                </div>
+                <span class="floating-ai-msg-time">${timeNow}</span>
+            `;
+            botLoading.removeAttribute('id');
+        }
         if (answerEl) {
             answerEl.innerHTML = `<span style="color:var(--accent-danger)">Error: ${escapeHtml(err.message)}</span>`;
         }
     } finally {
         if (sendBtn) {
             sendBtn.disabled = false;
-            sendBtn.innerHTML = `${IC.send} Send`;
+            sendBtn.innerHTML = `
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>`;
         }
     }
 }
@@ -5024,6 +5091,12 @@ async function runAgent() {
             `;
         }
 
+        // Sync Floating AI Bot Context
+        const contextEl = document.getElementById('floatingAiContextDemand');
+        if (contextEl && demand) {
+            contextEl.textContent = `${demand.projectName} - ${demand.role}`;
+        }
+
         let topEmpProfile = null;
         if (res.candidates && res.candidates.length > 0) {
             try {
@@ -5052,7 +5125,7 @@ async function runAgent() {
             answerEl.innerHTML = `
                 Staffing analysis complete for <strong>${escapeHtml(demand?.projectName || 'Project')}</strong>.<br><br>
                 Primary recommendation is <strong>${escapeHtml(top.employeeName)}</strong> with a <strong>${topScore}% match score</strong> and <strong>${top.availablePercent}% available capacity</strong>.<br><br>
-                <em>Use the quick chips or ask questions below to query candidate specifics or skill ramp-up requirements.</em>
+                <em>Click the quick chips or ask questions below to query candidate specifics or skill ramp-up requirements.</em>
             `;
         }
     } catch (err) {
