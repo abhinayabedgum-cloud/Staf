@@ -3440,6 +3440,51 @@ function formatFriendlyDate(d) {
     }
 }
 
+function formatShortPeriod(periodStr, startDate, endDate) {
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    let s = startDate ? new Date(startDate) : null;
+    let e = endDate ? new Date(endDate) : null;
+
+    if ((!s || isNaN(s.getTime())) && typeof periodStr === 'string' && (periodStr.includes('→') || periodStr.includes('–') || periodStr.includes('-'))) {
+        const separator = periodStr.includes('→') ? '→' : (periodStr.includes('–') ? '–' : '-');
+        const parts = periodStr.split(separator);
+        if (parts.length >= 2) {
+            s = new Date(parts[0].trim());
+            e = new Date(parts[1].trim());
+        }
+    }
+
+    if (s && !isNaN(s.getTime()) && e && !isNaN(e.getTime())) {
+        const sM = months[s.getMonth()];
+        const sY = String(s.getFullYear()).slice(-2);
+        const eM = months[e.getMonth()];
+        const eY = String(e.getFullYear()).slice(-2);
+        if (sY === eY) {
+            return `${sM} – ${eM} '${eY}`;
+        }
+        return `${sM} '${sY} – ${eM} '${eY}`;
+    }
+
+    if (periodStr) {
+        return periodStr.replace(/20(\d\d)/g, "'$1").replace(/\s*→\s*/g, ' – ');
+    }
+    return '2026 – 2027';
+}
+
+function formatSimpleStatusBadge(status) {
+    const s = (status || '').toUpperCase();
+    if (s === 'APPROVED') {
+        return `<span style="display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0">Approved</span>`;
+    }
+    if (s === 'REJECTED') {
+        return `<span style="display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;background:#f8fafc;color:#64748b;border:1px solid #e2e8f0">Rejected</span>`;
+    }
+    if (s === 'CANCELLED') {
+        return `<span style="display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0">Cancelled</span>`;
+    }
+    return `<span style="display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;background:#fffbeb;color:#92400e;border:1px solid #fde68a">Pending</span>`;
+}
+
 let allocState = {
     statusFilter: 'ALL', // 'ALL' | 'APPROVED' | 'PENDING' | 'REJECTED'
     searchQuery: '',
@@ -3586,76 +3631,59 @@ async function renderAllocations(keepSearchFocus = false) {
 
         if (showPendingSection) {
             pendingSectionHtml = `
-            <!-- SECTION 1: PENDING ALLOCATIONS AWAITING MANAGER APPROVAL -->
-            <div class="card" style="margin-bottom:18px;border:1px solid rgba(245,158,11,0.35);border-top:3.5px solid #f59e0b;background:#ffffff;padding:0;box-shadow:0 2px 8px rgba(0,0,0,0.03)">
-                <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-bottom:1px solid var(--border-color);background:rgba(245,158,11,0.04)">
-                    <div style="display:flex;align-items:center;gap:8px">
-                        <span style="font-size:16px">⏳</span>
-                        <span style="font-size:13.5px;font-weight:700;color:var(--text-primary)">Pending Allocations Awaiting Manager Approval</span>
-                        <span class="badge" style="background:rgba(245,158,11,0.18);color:#d97706;border:1px solid rgba(245,158,11,0.4);font-size:11px;padding:2px 8px;font-weight:700;margin-left:6px">
-                            ${allPending.length} Action Needed
+            <!-- SECTION 1: PENDING APPROVALS -->
+            <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:18px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.02)">
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-bottom:1px solid #f1f5f9;background:#f8fafc">
+                    <div style="display:flex;align-items:center;gap:10px">
+                        <span style="font-size:13.5px;font-weight:700;color:#0f172a">Pending Manager Approvals</span>
+                        <span style="background:#fffbeb;color:#92400e;border:1px solid #fde68a;font-size:11px;padding:2px 8px;border-radius:6px;font-weight:700">
+                            ${allPending.length} pending
                         </span>
                     </div>
-                    <div style="font-size:12px;color:var(--text-secondary)">Requires Resource Manager authorization</div>
+                    <div style="font-size:12px;color:#64748b">Action required</div>
                 </div>
 
-                <div class="table-container">
-                    <table class="table-allocations">
+                <div class="table-container" style="padding:0">
+                    <table class="table-allocations-clean">
                         <thead>
                             <tr>
-                                <th style="width:19%">Resource / Employee</th>
-                                <th style="width:19%">Project Demand</th>
-                                <th style="width:16%">Period</th>
-                                <th style="width:11%">Capacity %</th>
-                                <th style="width:10%">Match Fit</th>
-                                <th style="width:9%">Status</th>
-                                <th style="width:16%;text-align:right">Actions</th>
+                                <th style="width:28%">Resource</th>
+                                <th style="width:28%">Project &amp; Role</th>
+                                <th style="width:20%">Period</th>
+                                <th style="width:10%">Capacity</th>
+                                <th style="width:14%;text-align:right">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             ${!allPending.length
-                    ? `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted)">
-                                    <div style="font-size:22px;margin-bottom:4px">✓</div>
-                                    <div style="font-weight:700;font-size:13.5px;color:var(--text-primary)">No Pending Allocations Awaiting Approval</div>
-                                    <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">All resource assignments are currently committed or reviewed.</div>
+                    ? `<tr><td colspan="5" style="text-align:center;padding:32px;color:#64748b">
+                                    <div style="font-size:14px;font-weight:600;color:#0f172a">All clear &bull; No pending approvals</div>
+                                    <div style="font-size:12px;color:#94a3b8;margin-top:2px">All resource assignments are committed or reviewed.</div>
                                 </td></tr>`
                     : allPending.map(a => `
                                 <tr>
                                     <td>
-                                        <strong style="color:var(--text-primary);cursor:pointer;font-size:13px" onclick="showEmployeeDetail(${a.employeeId})">${escapeHtml(a.employeeName)}</strong>
-                                        <br><small style="color:var(--text-muted);font-size:11px">${escapeHtml(a.employeeCode || '')} &bull; ${escapeHtml(a.department || 'Engineering')}</small>
+                                        <div style="font-weight:600;color:#0f172a;cursor:pointer;font-size:13px" onclick="showEmployeeDetail(${a.employeeId})">${escapeHtml(a.employeeName)}</div>
+                                        <div style="color:#64748b;font-size:11.5px;margin-top:1px">${escapeHtml(a.employeeCode || '')} &bull; ${escapeHtml(a.department || 'Engineering')}</div>
                                     </td>
                                     <td>
-                                        <strong style="color:var(--text-primary);font-size:13px">${escapeHtml(a.projectName)}</strong>
-                                        <br><small style="color:var(--accent-primary);font-weight:600;font-size:11px">${escapeHtml(a.role || 'Staff')}</small>
+                                        <div style="font-weight:600;color:#0f172a;font-size:13px">${escapeHtml(a.projectName)}</div>
+                                        <div style="color:#0284c7;font-size:11.5px;margin-top:1px">${escapeHtml(a.role || 'Staff')}</div>
                                     </td>
-                                    <td style="font-size:12px;color:var(--text-secondary);white-space:nowrap">
-                                        ${escapeHtml(a.periodFormatted || (a.startDate + ' → ' + a.endDate))}
-                                    </td>
-                                    <td>
-                                        <div style="display:inline-flex;align-items:center;gap:6px">
-                                            <div style="width:36px;height:6px;border-radius:3px;background:rgba(0,0,0,0.08);overflow:hidden">
-                                                <div style="height:100%;width:${a.allocationPercent}%;background:#f59e0b"></div>
-                                            </div>
-                                            <span style="font-weight:700;color:var(--text-primary);font-size:12.5px">${a.allocationPercent}%</span>
-                                        </div>
+                                    <td style="font-size:12.5px;color:#475569;white-space:nowrap">
+                                        ${escapeHtml(formatShortPeriod(a.periodFormatted, a.startDate, a.endDate))}
                                     </td>
                                     <td>
-                                        <span class="badge" style="background:rgba(16,185,129,0.12);color:#059669;border:1px solid rgba(16,185,129,0.3);font-size:11px;font-weight:700;padding:2px 7px">
-                                            ${a.matchScore || 88}% Fit
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span class="badge" style="background:rgba(245,158,11,0.14);color:#d97706;border:1px solid rgba(245,158,11,0.35);font-size:11px;padding:3px 8px;font-weight:700">
-                                            PENDING APPROVAL
+                                        <span style="display:inline-block;padding:2px 8px;border-radius:6px;font-size:12px;font-weight:600;background:#f1f5f9;color:#0f172a">
+                                            ${a.allocationPercent}%
                                         </span>
                                     </td>
                                     <td style="text-align:right">
                                         <div style="display:inline-flex;gap:6px">
-                                            <button class="btn btn-primary btn-sm" onclick="showPendingApprovalReviewModal('${a.id}')" style="font-weight:700;padding:5px 12px;font-size:12px">
+                                            <button onclick="showPendingApprovalReviewModal('${a.id}')" style="background:#0f172a;color:#ffffff;border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s">
                                                 Review
                                             </button>
-                                            <button class="btn btn-secondary btn-sm" onclick="openRejectAllocationModal('${a.id}')" style="color:var(--accent-danger);border-color:rgba(239,68,68,0.3);padding:5px 10px;font-size:12px;font-weight:600">
+                                            <button onclick="openRejectAllocationModal('${a.id}')" style="background:#ffffff;color:#64748b;border:1px solid #cbd5e1;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:500;cursor:pointer;transition:all 0.15s">
                                                 Reject
                                             </button>
                                         </div>
@@ -3670,20 +3698,20 @@ async function renderAllocations(keepSearchFocus = false) {
 
         setPageContent(`
         <!-- PAGE HEADER -->
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
             <div>
-                <h1 style="font-size:17px;font-weight:800;color:var(--text-primary);letter-spacing:0.5px;text-transform:uppercase;margin:0 0 2px 0">
-                    ALLOCATIONS &amp; APPROVALS
+                <h1 style="font-size:18px;font-weight:800;color:#0f172a;letter-spacing:-0.2px;margin:0 0 2px 0">
+                    Allocations &amp; Approvals
                 </h1>
-                <div style="color:var(--text-secondary);font-size:12px">
-                    Manager-authorized commitment review &bull; Real-time capacity &amp; skill governance
+                <div style="color:#64748b;font-size:12px">
+                    Manager commitment review &bull; Real-time capacity governance
                 </div>
             </div>
-            <div style="display:flex;gap:10px">
-                <button class="btn btn-secondary btn-sm" onclick="router.navigate('search')" style="padding:6px 14px;font-size:12.5px">
-                    ${IC.search} Resource Search
+            <div style="display:flex;gap:8px">
+                <button class="btn btn-secondary btn-sm" onclick="router.navigate('search')" style="padding:6px 12px;font-size:12px">
+                    ${IC.search} Search
                 </button>
-                <button class="btn btn-primary btn-sm" onclick="showAllocateModal()" style="padding:6px 14px;font-size:12.5px">
+                <button class="btn btn-primary btn-sm" onclick="showAllocateModal()" style="padding:6px 12px;font-size:12px">
                     ${IC.plus} New Allocation
                 </button>
             </div>
@@ -3691,161 +3719,116 @@ async function renderAllocations(keepSearchFocus = false) {
 
         ${outcomeBannerHtml}
 
-        <!-- 4 INTERACTIVE SUMMARY FILTER CARDS (With Ample Breathing Room) -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(210px, 1fr));gap:14px;margin-bottom:18px">
-            <!-- 1. TOTAL ALLOCATIONS -->
-            <div class="alloc-stat-card ${allocState.statusFilter === 'ALL' ? 'active' : ''}" onclick="setAllocStatusFilter('ALL')" style="border-left:4px solid #6366f1;padding:12px 16px" title="Click to view all allocations">
-                <div style="display:flex;justify-content:space-between;align-items:center">
-                    <div>
-                        <div style="font-size:10.5px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.6px">TOTAL ALLOCATIONS</div>
-                        <div style="font-size:22px;font-weight:800;color:var(--text-primary);margin-top:2px;line-height:1.2">${totalCount}</div>
-                        <div style="font-size:11.5px;color:var(--text-secondary);margin-top:1px">All allocation requests</div>
-                    </div>
-                    <div style="font-size:18px;color:#6366f1;background:rgba(99,102,241,0.12);width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center">📋</div>
-                </div>
+        <!-- 4 CLEAN KPI CARDS (Minimal, Modern, Non-Colorful) -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:12px;margin-bottom:18px">
+            <div class="alloc-stat-clean ${allocState.statusFilter === 'ALL' ? 'active' : ''}" onclick="setAllocStatusFilter('ALL')">
+                <div class="alloc-stat-label">Total Requests</div>
+                <div class="alloc-stat-num">${totalCount}</div>
+                <div class="alloc-stat-sub">All submissions</div>
             </div>
 
-            <!-- 2. APPROVED -->
-            <div class="alloc-stat-card ${allocState.statusFilter === 'APPROVED' ? 'active' : ''}" onclick="setAllocStatusFilter('APPROVED')" style="border-left:4px solid #10b981;padding:12px 16px" title="Click to filter by Approved">
-                <div style="display:flex;justify-content:space-between;align-items:center">
-                    <div>
-                        <div style="font-size:10.5px;font-weight:800;color:#10b981;text-transform:uppercase;letter-spacing:0.6px">APPROVED</div>
-                        <div style="font-size:22px;font-weight:800;color:var(--text-primary);margin-top:2px;line-height:1.2">${approvedCount}</div>
-                        <div style="font-size:11.5px;color:var(--text-secondary);margin-top:1px">Active commitments</div>
-                    </div>
-                    <div style="font-size:18px;color:#10b981;background:rgba(16,185,129,0.12);width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center">✓</div>
-                </div>
+            <div class="alloc-stat-clean ${allocState.statusFilter === 'APPROVED' ? 'active' : ''}" onclick="setAllocStatusFilter('APPROVED')">
+                <div class="alloc-stat-label">Approved</div>
+                <div class="alloc-stat-num">${approvedCount}</div>
+                <div class="alloc-stat-sub">Active commitments</div>
             </div>
 
-            <!-- 3. PENDING APPROVAL -->
-            <div class="alloc-stat-card ${allocState.statusFilter === 'PENDING' ? 'active' : ''}" onclick="setAllocStatusFilter('PENDING')" style="border-left:4px solid #f59e0b;padding:12px 16px" title="Click to filter by Pending Approval">
-                <div style="display:flex;justify-content:space-between;align-items:center">
-                    <div>
-                        <div style="font-size:10.5px;font-weight:800;color:#f59e0b;text-transform:uppercase;letter-spacing:0.6px">PENDING APPROVAL</div>
-                        <div style="font-size:22px;font-weight:800;color:var(--text-primary);margin-top:2px;line-height:1.2">${pendingCount}</div>
-                        <div style="font-size:11.5px;color:var(--text-secondary);margin-top:1px">Requires manager action</div>
-                    </div>
-                    <div style="font-size:18px;color:#f59e0b;background:rgba(245,158,11,0.12);width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center">⏳</div>
-                </div>
+            <div class="alloc-stat-clean ${allocState.statusFilter === 'PENDING' ? 'active' : ''}" onclick="setAllocStatusFilter('PENDING')">
+                <div class="alloc-stat-label">Pending Approval</div>
+                <div class="alloc-stat-num">${pendingCount}</div>
+                <div class="alloc-stat-sub">Needs action</div>
             </div>
 
-            <!-- 4. REJECTED -->
-            <div class="alloc-stat-card ${allocState.statusFilter === 'REJECTED' ? 'active' : ''}" onclick="setAllocStatusFilter('REJECTED')" style="border-left:4px solid #ef4444;padding:12px 16px" title="Click to filter by Rejected">
-                <div style="display:flex;justify-content:space-between;align-items:center">
-                    <div>
-                        <div style="font-size:10.5px;font-weight:800;color:#ef4444;text-transform:uppercase;letter-spacing:0.6px">REJECTED</div>
-                        <div style="font-size:22px;font-weight:800;color:var(--text-primary);margin-top:2px;line-height:1.2">${rejectedCount}</div>
-                        <div style="font-size:11.5px;color:var(--text-secondary);margin-top:1px">Declined requests</div>
-                    </div>
-                    <div style="font-size:18px;color:#ef4444;background:rgba(239,68,68,0.12);width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center">✕</div>
-                </div>
+            <div class="alloc-stat-clean ${allocState.statusFilter === 'REJECTED' ? 'active' : ''}" onclick="setAllocStatusFilter('REJECTED')">
+                <div class="alloc-stat-label">Rejected</div>
+                <div class="alloc-stat-num">${rejectedCount}</div>
+                <div class="alloc-stat-sub">Declined</div>
             </div>
         </div>
 
         ${pendingSectionHtml}
 
         <!-- SECTION 2: COMMITTED ALLOCATIONS & AUDIT LOG -->
-        <div class="card" style="border:1px solid var(--border-color);border-top:3.5px solid #6366f1;background:#ffffff;padding:0;box-shadow:0 2px 8px rgba(0,0,0,0.03)">
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-bottom:1px solid var(--border-color);background:rgba(255,255,255,0.02)">
-                <div style="display:flex;align-items:center;gap:8px">
-                    <span style="font-size:16px">📋</span>
-                    <span style="font-size:13.5px;font-weight:700;color:var(--text-primary)">Committed Allocations &amp; Audit Log</span>
-                    <span class="badge" style="background:rgba(99,102,241,0.12);color:var(--text-accent);border:1px solid rgba(99,102,241,0.25);font-size:11px;padding:2px 8px;font-weight:700;margin-left:6px">
-                        ${auditLogAllocations.length} Records (${allocState.statusFilter === 'ALL' ? 'Audit Log' : allocState.statusFilter})
+        <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.02)">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-bottom:1px solid #f1f5f9;background:#f8fafc">
+                <div style="display:flex;align-items:center;gap:10px">
+                    <span style="font-size:13.5px;font-weight:700;color:#0f172a">Allocations &amp; Audit Log</span>
+                    <span style="background:#f1f5f9;color:#475569;font-size:11px;padding:2px 8px;border-radius:6px;font-weight:600">
+                        ${auditLogAllocations.length} records
                     </span>
                 </div>
-                <div style="min-width:260px">
-                    <input type="text" id="allocSearchInput" class="form-input" placeholder="Search employee, project, role..." value="${escapeHtml(allocState.searchQuery)}" oninput="setAllocSearchQuery(this.value)" style="width:100%;padding:6px 12px;font-size:12px;border-radius:6px;background:#ffffff;border:1px solid var(--border-color);color:var(--text-primary)">
+                <div style="min-width:240px">
+                    <input type="text" id="allocSearchInput" placeholder="Filter allocations..." value="${escapeHtml(allocState.searchQuery)}" oninput="setAllocSearchQuery(this.value)" style="width:100%;padding:5px 12px;font-size:12px;border-radius:6px;background:#ffffff;border:1px solid #cbd5e1;color:#0f172a;outline:none">
                 </div>
             </div>
-            <div class="table-container">
-                <table class="table-allocations">
+            <div class="table-container" style="padding:0">
+                <table class="table-allocations-clean">
                     <thead>
                         <tr>
-                            <th style="width:16%">Employee</th>
-                            <th style="width:20%">Project &amp; Role</th>
-                            <th style="width:16%">Period</th>
-                            <th style="width:12%">Committed %</th>
-                            <th style="width:11%">Status</th>
-                            <th style="width:13%">Approved By</th>
-                            <th style="width:12%;text-align:right">Actions</th>
+                            <th style="width:24%">Employee</th>
+                            <th style="width:28%">Project &amp; Role</th>
+                            <th style="width:20%">Period</th>
+                            <th style="width:11%">Committed</th>
+                            <th style="width:10%">Status</th>
+                            <th style="width:7%;text-align:right">Actions</th>
                         </tr>
                     </thead>
                     <tbody>${!auditLogAllocations.length
-                ? `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted)">
-                            <div style="font-size:22px;margin-bottom:4px">📋</div>
-                            <div style="font-weight:700;font-size:13.5px;color:var(--text-primary)">No allocations match your filter</div>
-                            <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">Try clearing search or switching status filter above.</div>
+                ? `<tr><td colspan="6" style="text-align:center;padding:32px;color:#64748b">
+                            <div style="font-size:14px;font-weight:600;color:#0f172a">No allocations found</div>
+                            <div style="font-size:12px;color:#94a3b8;margin-top:2px">Try clearing search or switching filter above.</div>
                         </td></tr>`
                 : auditLogAllocations.map(a => {
                     const isPending = a.status === 'PENDING APPROVAL';
                     const isApproved = a.status === 'APPROVED';
-                    const isRejected = a.status === 'REJECTED';
                     const isCancelled = a.status === 'CANCELLED';
-
-                    let decisionByHtml = '';
-                    if (isPending) {
-                        decisionByHtml = `<span style="color:var(--text-muted);font-weight:600">—</span>`;
-                    } else if (isApproved) {
-                        decisionByHtml = `<strong style="color:var(--text-primary);font-size:12.5px">${escapeHtml(a.approvedBy || a.decisionBy || 'Resource Manager')}</strong>${a.approvedAtFormatted ? `<br><small style="color:var(--text-muted);font-size:11px">${escapeHtml(a.approvedAtFormatted)}</small>` : ''}`;
-                    } else if (isRejected) {
-                        decisionByHtml = `<strong style="color:var(--text-primary);font-size:12.5px">${escapeHtml(a.rejectedBy || a.decisionBy || 'Resource Manager')}</strong>${a.rejectedAtFormatted ? `<br><small style="color:var(--text-muted);font-size:11px">${escapeHtml(a.rejectedAtFormatted)}</small>` : ''}`;
-                    } else if (isCancelled) {
-                        decisionByHtml = `<strong style="color:var(--text-secondary);font-size:12.5px">${escapeHtml(a.cancelledBy || a.decisionBy || 'Resource Manager')}</strong>${a.cancelledAtFormatted ? `<br><small style="color:var(--text-muted);font-size:11px">${escapeHtml(a.cancelledAtFormatted)}</small>` : ''}`;
-                    }
 
                     let actionsHtml = '';
                     if (isPending) {
                         actionsHtml = `
-                                    <button class="btn btn-primary btn-sm" onclick="showPendingApprovalReviewModal('${a.id}')" style="font-weight:700;padding:4px 12px;font-size:11.5px">
+                                    <button onclick="showPendingApprovalReviewModal('${a.id}')" style="background:#0f172a;color:#ffffff;border:none;border-radius:6px;padding:4px 10px;font-size:11.5px;font-weight:600;cursor:pointer">
                                         Review
                                     </button>
                                 `;
                     } else if (isApproved) {
                         actionsHtml = `
                                     <div style="display:inline-flex;gap:6px">
-                                        <button class="btn btn-secondary btn-sm" onclick="showAllocationViewDetailsModal('${a.id}')" style="padding:4px 10px;font-size:11.5px">
+                                        <button onclick="showAllocationViewDetailsModal('${a.id}')" style="background:#ffffff;color:#475569;border:1px solid #cbd5e1;border-radius:6px;padding:4px 8px;font-size:11.5px;font-weight:500;cursor:pointer">
                                             View
                                         </button>
-                                        <button class="btn btn-secondary btn-sm" onclick="openCancelAllocationModal('${a.id}')" style="color:var(--accent-danger);border-color:rgba(239,68,68,0.3);padding:4px 10px;font-size:11.5px">
+                                        <button onclick="openCancelAllocationModal('${a.id}')" style="background:#ffffff;color:#dc2626;border:1px solid #fecaca;border-radius:6px;padding:4px 8px;font-size:11.5px;font-weight:500;cursor:pointer">
                                             Cancel
                                         </button>
                                     </div>
                                 `;
                     } else {
                         actionsHtml = `
-                                    <button class="btn btn-secondary btn-sm" onclick="showAllocationViewDetailsModal('${a.id}')" style="padding:4px 10px;font-size:11.5px">
+                                    <button onclick="showAllocationViewDetailsModal('${a.id}')" style="background:#ffffff;color:#475569;border:1px solid #cbd5e1;border-radius:6px;padding:4px 8px;font-size:11.5px;font-weight:500;cursor:pointer">
                                         View
                                     </button>
                                 `;
                     }
 
                     return `
-                            <tr style="${isCancelled ? 'opacity:0.65' : ''}">
+                            <tr style="${isCancelled ? 'opacity:0.6' : ''}">
                                 <td>
-                                    <strong style="color:var(--text-primary);cursor:pointer;font-size:13px" onclick="showEmployeeDetail(${a.employeeId})">${escapeHtml(a.employeeName)}</strong>
-                                    <br><small style="color:var(--text-muted);font-size:11px">${escapeHtml(a.employeeCode || '')}</small>
+                                    <div style="font-weight:600;color:#0f172a;cursor:pointer;font-size:13px" onclick="showEmployeeDetail(${a.employeeId})">${escapeHtml(a.employeeName)}</div>
+                                    <div style="color:#64748b;font-size:11.5px;margin-top:1px">${escapeHtml(a.employeeCode || '')}</div>
                                 </td>
                                 <td>
-                                    <strong style="color:var(--text-primary);font-size:13px">${escapeHtml(a.projectName)}</strong>
-                                    <br><small style="color:var(--accent-primary);font-size:11px">${escapeHtml(a.role || 'Staff')}</small>
+                                    <div style="font-weight:600;color:#0f172a;font-size:13px">${escapeHtml(a.projectName)}</div>
+                                    <div style="color:#0284c7;font-size:11.5px;margin-top:1px">${escapeHtml(a.role || 'Staff')}</div>
                                 </td>
-                                <td style="font-size:12px;color:var(--text-secondary);white-space:nowrap">
-                                    ${escapeHtml(a.periodFormatted || (a.startDate + ' → ' + a.endDate))}
-                                </td>
-                                <td>
-                                    <div style="display:inline-flex;align-items:center;gap:6px">
-                                        <div style="width:36px;height:6px;border-radius:3px;background:rgba(0,0,0,0.08);overflow:hidden">
-                                            <div style="height:100%;width:${a.allocationPercent}%;background:var(--accent-primary)"></div>
-                                        </div>
-                                        <span style="font-weight:700;color:var(--text-primary);font-size:12.5px">${a.allocationPercent}%</span>
-                                    </div>
+                                <td style="font-size:12.5px;color:#475569;white-space:nowrap">
+                                    ${escapeHtml(formatShortPeriod(a.periodFormatted, a.startDate, a.endDate))}
                                 </td>
                                 <td>
-                                    ${badgeHtml(a.status, a.status.toLowerCase().replace(/[\s_]/g, '-'))}
+                                    <span style="display:inline-block;padding:2px 8px;border-radius:6px;font-size:12px;font-weight:600;background:#f1f5f9;color:#0f172a">
+                                        ${a.allocationPercent}%
+                                    </span>
                                 </td>
                                 <td>
-                                    ${decisionByHtml}
+                                    ${formatSimpleStatusBadge(a.status)}
                                 </td>
                                 <td style="text-align:right">
                                     ${actionsHtml}

@@ -3290,3 +3290,72 @@ body.portal-mode .page-content {
 }
 .table-allocations tr:hover { background: rgba(5, 150, 105, 0.025); }
 .table-allocations tr:last-child td { border-bottom: none; }
+
+/* Allocations Clean Modern Styles (Simple, No Clutter) */
+.alloc-stat-clean {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 14px 18px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+.alloc-stat-clean:hover {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+}
+.alloc-stat-clean.active {
+    border-color: #0f172a;
+    box-shadow: 0 0 0 1.5px #0f172a;
+}
+.alloc-stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+.alloc-stat-num {
+    font-size: 24px;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.1;
+    margin-bottom: 3px;
+}
+.alloc-stat-sub {
+    font-size: 11.5px;
+    color: #94a3b8;
+}
+
+.table-allocations-clean {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    table-layout: auto;
+}
+.table-allocations-clean th {
+    padding: 12px 16px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
+    text-align: left;
+    white-space: nowrap;
+}
+.table-allocations-clean td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+    color: #334155;
+}
+.table-allocations-clean tr:hover {
+    background: #f8fafc;
+}
+.table-allocations-clean tr:last-child td {
+    border-bottom: none;
+}
