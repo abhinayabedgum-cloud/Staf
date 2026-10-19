@@ -84,6 +84,17 @@ erDiagram
         datetime updated_at
     }
 
+    TRAINING_RECOMMENDATION {
+        bigint id PK
+        bigint employee_id FK
+        bigint skill_id FK
+        varchar reason
+        varchar learning_path
+        varchar related_demand_role
+        varchar status
+        datetime created_at
+    }
+
     AUDIT_LOG {
         bigint id PK
         varchar actor_id
@@ -171,6 +182,18 @@ erDiagram
 | `approved_at` | TIMESTAMP | NOT NULL | Timestamp of confirmation |
 | `cancelled_at` | TIMESTAMP | NULL | Timestamp if cancelled |
 | `cancellation_reason`| VARCHAR(255) | NULL | Logged reason for cancellation |
+
+### 3.6 `training_recommendations`
+| Column | Type | Constraints | Description |
+|---|---|---|---|
+| `id` | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique recommendation ID |
+| `employee_id` | BIGINT | FK -> employees(id), NOT NULL | Target employee requiring upskilling |
+| `skill_id` | BIGINT | FK -> skills(id), NOT NULL | Skill recommended for development |
+| `reason` | VARCHAR(1000) | NOT NULL | Rationale for recommendation / skill gap |
+| `learning_path` | VARCHAR(1000) | NULL | Suggested certification or course path |
+| `related_demand_role` | VARCHAR(200) | NULL | Target demand role motivating training |
+| `status` | VARCHAR(20) | NOT NULL | `RECOMMENDED`, `IN_PROGRESS`, `COMPLETED`, `REJECTED` |
+| `created_at` | TIMESTAMP | NOT NULL | Timestamp when recommendation generated |
 
 ---
 
