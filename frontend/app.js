@@ -724,7 +724,7 @@ async function renderDemands() {
                         <td>${badgeHtml(d.priority, d.priority.toLowerCase())}</td>
                         <td>${badgeHtml(d.status, d.status.toLowerCase().replace('_','-'))}</td>
                         <td>
-                            <button class="btn btn-secondary btn-sm" onclick="showRecommendations(${d.id})" title="View all matching candidates">${IC.ai} Find Matches</button>
+                            <button class="btn btn-secondary btn-sm" onclick="showRecommendations(${d.id})" title="View all matching candidates">${IC.ai} Find Match</button>
                         </td>
                     </tr>`).join('')}
                 </tbody>
@@ -6598,7 +6598,7 @@ function initGlobalSearch() {
                             <span class="search-item-title">${escapeHtml(d.projectName)}</span>
                             <span class="search-item-sub">${escapeHtml(d.role)} &bull; ${escapeHtml(d.location || 'Remote')} &bull; ${d.allocationPercent || 80}% needed</span>
                         </div>
-                        <span class="search-item-badge" style="background:rgba(245,158,11,0.15);color:#b45309">Find Matches</span>
+                        <span class="search-item-badge" style="background:rgba(245,158,11,0.15);color:#b45309">Find Match</span>
                     </div>`;
                 });
             }
@@ -6799,7 +6799,7 @@ async function showGlobalSearchResultsModal(q) {
                             <span style="font-size:12px;color:var(--text-muted);margin-left:6px">${escapeHtml(d.role)} &bull; ${escapeHtml(d.location || 'Remote')} &bull; ${d.allocationPercent}% Needed</span>
                         </div>
                         <div style="display:flex;gap:6px">
-                            <button class="btn btn-secondary btn-sm" onclick="closeModal();router.navigate('demands');showRecommendations(${d.id})">Find Matches</button>
+                            <button class="btn btn-secondary btn-sm" onclick="closeModal();router.navigate('demands');showRecommendations(${d.id})">Find Match</button>
                             <button class="btn btn-primary btn-sm" onclick="closeModal();renderCandidateComparisonScreen(${d.id})">Compare</button>
                         </div>
                     </div>`).join('')}
