@@ -2299,7 +2299,7 @@ async function renderSearch(preferredDemandId) {
                 <div style="display:flex;align-items:center;gap:12px">
                     <div class="rs-search-input-box">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                        <input type="text" placeholder="Search candidates..." oninput="onResourceQueryChange(this.value)">
+                        <input type="text" id="rs-candidate-search" placeholder="Search candidates..." value="${escapeHtml(rsSearchState.searchQuery || '')}" oninput="onResourceQueryChange(this.value)">
                     </div>
 
                     <div class="rs-view-toggle">
@@ -2328,7 +2328,7 @@ async function renderSearch(preferredDemandId) {
                 <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:12px;margin-bottom:14px">
                     <div>
                         <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px">Search Keyword</label>
-                        <input type="text" id="rs-dir-keyword" class="form-control" placeholder="Name, code, title..." oninput="onDirectFilterChange()">
+                        <input type="text" id="rs-dir-keyword" class="form-control" placeholder="Name, code, title..." value="${escapeHtml(rsSearchState.directFilters.keyword || '')}" oninput="onDirectFilterChange()">
                     </div>
                     <div>
                         <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px">Specific Skill</label>
@@ -6502,6 +6502,7 @@ function initGlobalSearch() {
                 (e.employeeCode && e.employeeCode.toLowerCase().includes(q)) ||
                 (e.department && e.department.toLowerCase().includes(q)) ||
                 (e.location && e.location.toLowerCase().includes(q)) ||
+                (e.currentRole && e.currentRole.toLowerCase().includes(q)) ||
                 (e.skills && e.skills.some(s => s.skillName && s.skillName.toLowerCase().includes(q)))
             ).slice(0, 4);
 
@@ -6514,11 +6515,16 @@ function initGlobalSearch() {
             ).slice(0, 4);
 
             const matchedSkills = (data.skills || []).filter(s =>
-                s.name && s.name.toLowerCase().includes(q)
+                (s.name && s.name.toLowerCase().includes(q)) ||
+                (s.category && s.category.toLowerCase().includes(q))
             ).slice(0, 4);
 
             if (matchedEmps.length === 0 && matchedDemands.length === 0 && matchedSkills.length === 0) {
-                dropdown.innerHTML = `<div style="padding:22px 16px;text-align:center;color:var(--text-muted);font-size:13px">No matches found for "<strong>${escapeHtml(q)}</strong>"</div>`;
+                dropdown.innerHTML = `
+                    <div style="padding:22px 16px;text-align:center;color:var(--text-muted);font-size:13px">
+                        No matches found for "<strong>${escapeHtml(q)}</strong>"<br>
+                        <small style="margin-top:6px;display:block">Press <strong>Enter</strong> to open full search</small>
+                    </div>`;
                 dropdown.style.display = 'block';
                 return;
             }
@@ -6533,9 +6539,9 @@ function initGlobalSearch() {
                     <div class="search-result-item" onclick="onSearchSelectEmployee(${e.id})">
                         <div class="search-item-main">
                             <span class="search-item-title">${escapeHtml(e.name)}</span>
-                            <span class="search-item-sub">${escapeHtml(e.employeeCode)} &bull; ${escapeHtml(e.department || 'Engineering')} &bull; ${escapeHtml(e.location || 'N/A')}${skillsStr ? ' &bull; ' + escapeHtml(skillsStr) : ''}</span>
+                            <span class="search-item-sub">${escapeHtml(e.employeeCode)} &bull; ${escapeHtml(e.department || 'Engineering')} &bull; ${escapeHtml(e.location || 'Remote')}${skillsStr ? ' &bull; ' + escapeHtml(skillsStr) : ''}</span>
                         </div>
-                        <span class="search-item-badge" style="background:rgba(99,102,241,0.15);color:#a5b4fc">View Profile</span>
+                        <span class="search-item-badge" style="background:rgba(99,102,241,0.15);color:#4338ca">View Profile</span>
                     </div>`;
                 });
             }
@@ -6549,7 +6555,7 @@ function initGlobalSearch() {
                             <span class="search-item-title">${escapeHtml(d.projectName)}</span>
                             <span class="search-item-sub">${escapeHtml(d.role)} &bull; ${escapeHtml(d.location || 'Remote')} &bull; ${d.allocationPercent || 80}% needed</span>
                         </div>
-                        <span class="search-item-badge" style="background:rgba(245,158,11,0.15);color:#fbbf24">${escapeHtml(d.priority || 'Open')}</span>
+                        <span class="search-item-badge" style="background:rgba(245,158,11,0.15);color:#b45309">Find Matches</span>
                     </div>`;
                 });
             }
@@ -6558,15 +6564,20 @@ function initGlobalSearch() {
                 html += `<div class="search-section-title">Skills (${matchedSkills.length})</div>`;
                 matchedSkills.forEach(s => {
                     html += `
-                    <div class="search-result-item" onclick="onSearchSelectSkill('${escapeHtml(s.name)}')">
+                    <div class="search-result-item" onclick="onSearchSelectSkill('${escapeHtml(s.name)}', ${s.id})">
                         <div class="search-item-main">
                             <span class="search-item-title">${escapeHtml(s.name)}</span>
                             <span class="search-item-sub">Category: ${escapeHtml(s.category || 'Technical')}</span>
                         </div>
-                        <span class="search-item-badge" style="background:rgba(16,185,129,0.15);color:#34d399">Find People</span>
+                        <span class="search-item-badge" style="background:rgba(16,185,129,0.15);color:#047857">Find Talent</span>
                     </div>`;
                 });
             }
+
+            html += `
+            <div class="search-result-item" style="background:#f8fafc;justify-content:center;font-weight:700;color:var(--accent-primary);text-align:center;padding:11px" onclick="onSearchSubmitAll('${escapeHtml(q)}')">
+                <span>🔍 View all search results for "${escapeHtml(q)}" &rarr;</span>
+            </div>`;
 
             dropdown.innerHTML = html;
             dropdown.style.display = 'block';
@@ -6586,21 +6597,12 @@ function initGlobalSearch() {
         if (e.key === 'Escape') {
             dropdown.style.display = 'none';
         } else if (e.key === 'Enter') {
-            const firstItem = dropdown.querySelector('.search-result-item');
-            if (firstItem && dropdown.style.display !== 'none') {
-                firstItem.click();
-            } else if (input.value.trim()) {
-                const q = input.value.trim();
-                dropdown.style.display = 'none';
-                router.navigate('search');
-                setTimeout(() => {
-                    const rsInput = document.getElementById('rsQuery');
-                    if (rsInput) {
-                        rsInput.value = q;
-                        doResourceSearch();
-                    }
-                }, 100);
-            }
+            e.preventDefault();
+            const q = input.value.trim();
+            if (!q) return;
+
+            dropdown.style.display = 'none';
+            showGlobalSearchResultsModal(q);
         }
     });
 
@@ -6609,6 +6611,12 @@ function initGlobalSearch() {
             dropdown.style.display = 'block';
         }
     });
+}
+
+function onSearchSubmitAll(query) {
+    const dropdown = document.getElementById('searchResultsDropdown');
+    if (dropdown) dropdown.style.display = 'none';
+    showGlobalSearchResultsModal(query);
 }
 
 function onSearchSelectEmployee(id) {
@@ -6628,31 +6636,159 @@ function onSearchSelectDemand(id) {
     if (input) input.value = '';
     const clearBtn = document.getElementById('searchClearBtn');
     if (clearBtn) clearBtn.style.display = 'none';
-    router.navigate('ai');
+    router.navigate('demands');
     setTimeout(() => {
-        const select = document.getElementById('ai-demand');
-        if (select) {
-            select.value = id;
-            runAgent();
-        }
+        showRecommendations(id);
     }, 150);
 }
 
-function onSearchSelectSkill(skillName) {
+function onSearchSelectSkill(skillName, skillId = null) {
     const dropdown = document.getElementById('searchResultsDropdown');
     if (dropdown) dropdown.style.display = 'none';
     const input = document.getElementById('globalSearch');
     if (input) input.value = '';
     const clearBtn = document.getElementById('searchClearBtn');
     if (clearBtn) clearBtn.style.display = 'none';
+    navigateToResourceSearch(skillName, skillId);
+}
+
+function navigateToResourceSearch(keyword = '', skillId = null) {
+    rsSearchState.mode = 'direct';
+    rsSearchState.directFilters.keyword = (keyword || '').toLowerCase().trim();
+    if (skillId) {
+        rsSearchState.directFilters.skillId = String(skillId);
+    }
     router.navigate('search');
     setTimeout(() => {
-        const rsInput = document.getElementById('rsQuery');
-        if (rsInput) {
-            rsInput.value = skillName;
-            doResourceSearch();
+        setResourceSearchMode('direct');
+        const kwInput = document.getElementById('rs-dir-keyword');
+        if (kwInput) kwInput.value = keyword;
+        const skSelect = document.getElementById('rs-dir-skill');
+        if (skSelect && skillId) skSelect.value = String(skillId);
+        onDirectFilterChange();
+    }, 120);
+}
+
+async function showGlobalSearchResultsModal(q) {
+    const data = await fetchSearchData();
+    const query = (q || '').toLowerCase().trim();
+    if (!query) return;
+
+    const matchedEmps = (data.emps || []).filter(e => 
+        (e.name && e.name.toLowerCase().includes(query)) ||
+        (e.employeeCode && e.employeeCode.toLowerCase().includes(query)) ||
+        (e.department && e.department.toLowerCase().includes(query)) ||
+        (e.location && e.location.toLowerCase().includes(query)) ||
+        (e.currentRole && e.currentRole.toLowerCase().includes(query)) ||
+        (e.skills && e.skills.some(s => s.skillName && s.skillName.toLowerCase().includes(query)))
+    );
+
+    const matchedDemands = (data.demands || []).filter(d =>
+        (d.projectName && d.projectName.toLowerCase().includes(query)) ||
+        (d.role && d.role.toLowerCase().includes(query)) ||
+        (d.location && d.location.toLowerCase().includes(query)) ||
+        (d.priority && d.priority.toLowerCase().includes(query)) ||
+        (d.requiredSkills && d.requiredSkills.some(s => (s.name || s.skillName || '').toLowerCase().includes(query)))
+    );
+
+    const matchedSkills = (data.skills || []).filter(s =>
+        (s.name && s.name.toLowerCase().includes(query)) ||
+        (s.category && s.category.toLowerCase().includes(query))
+    );
+
+    const totalMatches = matchedEmps.length + matchedDemands.length + matchedSkills.length;
+
+    let body = `
+    <div style="padding:4px 0">
+        <div style="font-size:13.5px;color:var(--text-secondary);margin-bottom:16px">
+            Found <strong>${totalMatches}</strong> total match${totalMatches === 1 ? '' : 'es'} across employees, demands, and skills for "<strong>${escapeHtml(q)}</strong>":
+        </div>`;
+
+    if (totalMatches === 0) {
+        body += `
+        <div style="padding:32px 16px;text-align:center;background:#f8fafc;border-radius:10px;margin-bottom:16px">
+            <div style="font-size:32px;margin-bottom:8px">🔍</div>
+            <div style="font-weight:700;font-size:15px;color:var(--text-primary)">No exact records found</div>
+            <div style="font-size:13px;color:var(--text-muted);margin:6px 0 16px">Try searching by staff name (e.g. Ram, Priya), skill (e.g. Java, AWS, Python), or project name.</div>
+            <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+                <button class="btn btn-secondary btn-sm" onclick="closeModal();router.navigate('skills')">Browse Skills Matrix</button>
+                <button class="btn btn-secondary btn-sm" onclick="closeModal();router.navigate('demands')">View Demands</button>
+                <button class="btn btn-primary btn-sm" onclick="closeModal();navigateToResourceSearch('${escapeHtml(q)}')">Search All Talent</button>
+            </div>
+        </div>`;
+    } else {
+        if (matchedEmps.length > 0) {
+            body += `
+            <div style="margin-bottom:20px">
+                <div style="font-size:12px;font-weight:800;text-transform:uppercase;color:var(--accent-primary);letter-spacing:0.6px;margin-bottom:8px">
+                    Matching Employees (${matchedEmps.length})
+                </div>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                    ${matchedEmps.slice(0, 5).map(e => {
+                        const skillsStr = (e.skills || []).map(s => s.skillName).join(', ');
+                        return `
+                        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px">
+                            <div>
+                                <strong style="color:var(--text-primary);font-size:14px">${escapeHtml(e.name)}</strong>
+                                <span style="font-size:12px;color:var(--text-muted);margin-left:6px">(${escapeHtml(e.employeeCode)}) &bull; ${escapeHtml(e.department || 'Engineering')} &bull; ${escapeHtml(e.location || 'Remote')}</span>
+                                ${skillsStr ? `<div style="font-size:12px;color:#64748b;margin-top:2px">Skills: ${escapeHtml(skillsStr)}</div>` : ''}
+                            </div>
+                            <div style="display:flex;gap:6px">
+                                <button class="btn btn-secondary btn-sm" onclick="closeModal();showEmployeeDetail(${e.id})">Profile</button>
+                            </div>
+                        </div>`;
+                    }).join('')}
+                </div>
+            </div>`;
         }
-    }, 150);
+
+        if (matchedDemands.length > 0) {
+            body += `
+            <div style="margin-bottom:20px">
+                <div style="font-size:12px;font-weight:800;text-transform:uppercase;color:var(--accent-primary);letter-spacing:0.6px;margin-bottom:8px">
+                    Matching Project Demands (${matchedDemands.length})
+                </div>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                    ${matchedDemands.slice(0, 5).map(d => `
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px">
+                        <div>
+                            <strong style="color:var(--text-primary);font-size:14px">${escapeHtml(d.projectName)}</strong>
+                            <span style="font-size:12px;color:var(--text-muted);margin-left:6px">${escapeHtml(d.role)} &bull; ${escapeHtml(d.location || 'Remote')} &bull; ${d.allocationPercent}% Needed</span>
+                        </div>
+                        <div style="display:flex;gap:6px">
+                            <button class="btn btn-secondary btn-sm" onclick="closeModal();router.navigate('demands');showRecommendations(${d.id})">Find Matches</button>
+                            <button class="btn btn-primary btn-sm" onclick="closeModal();renderCandidateComparisonScreen(${d.id})">Compare</button>
+                        </div>
+                    </div>`).join('')}
+                </div>
+            </div>`;
+        }
+
+        if (matchedSkills.length > 0) {
+            body += `
+            <div style="margin-bottom:20px">
+                <div style="font-size:12px;font-weight:800;text-transform:uppercase;color:var(--accent-primary);letter-spacing:0.6px;margin-bottom:8px">
+                    Matching Skills (${matchedSkills.length})
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:8px">
+                    ${matchedSkills.map(s => `
+                    <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 12px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:20px">
+                        <strong style="font-size:13px;color:#0f172a">${escapeHtml(s.name)}</strong>
+                        <span style="font-size:11px;color:#64748b">(${escapeHtml(s.category || 'Tech')})</span>
+                        <button class="btn btn-secondary btn-sm" style="padding:2px 8px;font-size:11px" onclick="closeModal();navigateToResourceSearch('${escapeHtml(s.name)}', ${s.id})">Search Talent</button>
+                    </div>`).join('')}
+                </div>
+            </div>`;
+        }
+    }
+
+    body += `
+        <div style="display:flex;justify-content:flex-end;margin-top:16px;border-top:1px solid #e2e8f0;padding-top:12px">
+            <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+        </div>
+    </div>`;
+
+    openModal(`Search Results: "${escapeHtml(q)}"`, body);
 }
 
 // Global click outside to close dropdowns
