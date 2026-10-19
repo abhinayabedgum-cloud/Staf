@@ -1157,10 +1157,9 @@ async function renderCandidateComparisonScreen(demandId = null) {
             apiFetch(`/demands/${compareScreenDemandId}/recommendations`, 'POST')
         ]);
 
-        const candidates = (recs || []).slice(0, 3);
-        const colCount = Math.max(1, candidates.length);
+        const candidates = (recs || []).slice(0, 5);
 
-        // Gather all required skill names for row-by-row matrix comparison
+        // Gather all required skill names for comparison
         const allRequiredSkillNames = [...new Set([
             ...(selectedDemand.requiredSkills || []).map(s => s.name || s.skillName),
             ...candidates.flatMap(c => [
@@ -1170,59 +1169,32 @@ async function renderCandidateComparisonScreen(demandId = null) {
         ])].filter(Boolean);
 
         setPageContent(`
-        <!-- HEADER & TOOLBAR -->
-        <div class="section-header" style="flex-wrap:wrap;gap:14px;margin-bottom:18px">
+        <!-- HEADER & DEMAND SELECTOR -->
+        <div class="section-header" style="flex-wrap:wrap;gap:12px;margin-bottom:16px">
             <div>
                 <span class="section-title">Candidate Comparison</span>
-                <div style="font-size:13px;color:var(--text-secondary);margin-top:2px">Feature-by-feature evaluation and ranking of candidates side-by-side.</div>
+                <div style="font-size:13px;color:var(--text-secondary);margin-top:2px">Compare qualified candidates against project demand criteria.</div>
             </div>
-            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-                <!-- VIEW MODE TOGGLE -->
-                <div class="cmp-view-toggle">
-                    <button class="cmp-toggle-btn ${compareViewMode === 'matrix' ? 'active' : ''}" id="cmp-btn-matrix" onclick="setCompareViewMode('matrix')">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                        Comparison Matrix
-                    </button>
-                    <button class="cmp-toggle-btn ${compareViewMode === 'cards' ? 'active' : ''}" id="cmp-btn-cards" onclick="setCompareViewMode('cards')">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                        Candidate Cards
-                    </button>
-                </div>
-
-                <div style="display:flex;align-items:center;gap:8px">
-                    <label style="font-size:12px;font-weight:700;color:var(--text-secondary);white-space:nowrap">Target Demand:</label>
-                    <select class="form-control" style="max-width:320px;padding:7px 12px;font-weight:600;font-size:13px;cursor:pointer" onchange="renderCandidateComparisonScreen(parseInt(this.value))">
-                        ${demands.map(d => `<option value="${d.id}" ${d.id === compareScreenDemandId ? 'selected' : ''}>${escapeHtml(d.projectName)} — ${escapeHtml(d.role)} (${d.allocationPercent}%)</option>`).join('')}
-                    </select>
-                </div>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <label style="font-size:12.5px;font-weight:700;color:var(--text-secondary);white-space:nowrap">Target Demand:</label>
+                <select class="form-control" style="max-width:340px;padding:8px 12px;font-weight:600;font-size:13px;cursor:pointer" onchange="renderCandidateComparisonScreen(parseInt(this.value))">
+                    ${demands.map(d => `<option value="${d.id}" ${d.id === compareScreenDemandId ? 'selected' : ''}>${escapeHtml(d.projectName)} — ${escapeHtml(d.role)} (${d.allocationPercent}%)</option>`).join('')}
+                </select>
             </div>
         </div>
 
-        <!-- DEMAND BENCHMARK RIBBON -->
-        <div style="background:linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);border:1px solid #e2e8f0;border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;box-shadow:0 1px 3px rgba(0,0,0,0.03)">
-            <div style="display:flex;align-items:center;gap:14px">
-                <div style="width:42px;height:42px;border-radius:10px;background:#ecfdf5;color:#059669;display:flex;align-items:center;justify-content:center;font-weight:800;border:1px solid #a7f3d0">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg>
-                </div>
-                <div>
-                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-                        <span style="font-size:16px;font-weight:800;color:#0f172a">${escapeHtml(selectedDemand.projectName)} &bull; ${escapeHtml(selectedDemand.role)}</span>
-                        ${badgeHtml(selectedDemand.priority, selectedDemand.priority.toLowerCase())}
-                        ${badgeHtml(selectedDemand.status, selectedDemand.status.toLowerCase().replace('_','-'))}
-                    </div>
-                    <div style="font-size:12.5px;color:#64748b;margin-top:4px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-                        <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;margin-right:2px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${escapeHtml(selectedDemand.location || 'Remote')}</span>
-                        <span>&bull;</span>
-                        <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;margin-right:2px"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${formatDateRange(selectedDemand.startDate, selectedDemand.endDate)}</span>
-                        <span>&bull;</span>
-                        <span>Required Allocation: <strong>${selectedDemand.allocationPercent}% Capacity</strong></span>
-                    </div>
-                </div>
+        <!-- DEMAND SUMMARY STRIP -->
+        <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 18px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;box-shadow:0 1px 3px rgba(0,0,0,0.02)">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <strong style="font-size:15px;color:#0f172a">${escapeHtml(selectedDemand.projectName)} &bull; ${escapeHtml(selectedDemand.role)}</strong>
+                ${badgeHtml(selectedDemand.priority, selectedDemand.priority.toLowerCase())}
+                ${badgeHtml(selectedDemand.status, selectedDemand.status.toLowerCase().replace('_','-'))}
+                <span style="font-size:12.5px;color:#64748b;margin-left:4px">
+                    ${IC.loc} ${escapeHtml(selectedDemand.location || 'Remote')} &bull; Timeline: ${formatDateRange(selectedDemand.startDate, selectedDemand.endDate)} &bull; Required: <strong>${selectedDemand.allocationPercent}% Capacity</strong>
+                </span>
             </div>
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-                <span style="font-size:12px;font-weight:700;color:#64748b">Benchmark Skills:</span>
-                ${allRequiredSkillNames.length === 0 ? '<span style="color:#64748b;font-size:12px">General Profile</span>' :
-                    allRequiredSkillNames.map(s => `<span class="demand-skill-tag" style="background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;padding:3px 9px;border-radius:12px;font-size:11.5px;font-weight:600">${escapeHtml(s)}</span>`).join('')}
+            <div style="font-size:12px;color:#64748b">
+                <strong>Benchmark Skills:</strong> ${allRequiredSkillNames.length === 0 ? 'General' : allRequiredSkillNames.map(s => `<span class="demand-skill-tag" style="background:#f1f5f9;color:#334155;border:1px solid #e2e8f0;padding:2px 7px;border-radius:10px;margin-left:4px;font-size:11px">${escapeHtml(s)}</span>`).join('')}
             </div>
         </div>
 
@@ -1233,243 +1205,103 @@ async function renderCandidateComparisonScreen(demandId = null) {
                 <div class="empty-desc">No active employees currently meet the skill or availability thresholds for this role.</div>
             </div>
         ` : `
-            <!-- 1. SIDE-BY-SIDE MATRIX VIEW (PRIMARY) -->
-            <div id="cmp-matrix-view" class="cmp-matrix-wrapper" style="display:${compareViewMode === 'matrix' ? 'block' : 'none'}">
-                <table class="cmp-table">
-                    <thead>
-                        <tr>
-                            <th class="cmp-criteria-col" style="vertical-align:bottom;padding:18px 16px">
-                                <span style="font-size:11px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.8px">
-                                    Comparison Criteria
-                                </span>
-                            </th>
+            <!-- SIMPLIFIED MINIMALIST TABLE -->
+            <div class="card" style="padding:0;overflow:hidden;border-radius:10px">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width:65px;text-align:center">Rank</th>
+                                <th>Candidate</th>
+                                <th>Location</th>
+                                <th style="text-align:center">Match Score</th>
+                                <th style="text-align:center">Availability</th>
+                                <th>Matching Skills</th>
+                                <th>Skill Gaps</th>
+                                <th style="text-align:right;min-width:180px">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
                             ${candidates.map((r, idx) => {
-                                const isWinner = idx === 0;
-                                return `
-                                <th class="cmp-cand-col ${isWinner ? 'is-winner cmp-header-winner' : ''}" style="padding:18px 16px">
-                                    ${isWinner ? `<div style="display:inline-block;background:#059669;color:#ffffff;font-size:11px;font-weight:800;padding:3px 12px;border-radius:20px;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px">★ Top Recommendation</div>` : `<div style="height:25px"></div>`}
-                                    <div style="display:flex;align-items:center;justify-content:center;gap:12px">
-                                        <div class="candidate-avatar" style="width:44px;height:44px;font-size:16px;border-radius:50%;background:${isWinner ? '#059669' : '#64748b'};color:#ffffff;display:flex;align-items:center;justify-content:center;font-weight:800">
-                                            ${escapeHtml(r.employeeName.charAt(0))}
-                                        </div>
-                                        <div style="text-align:left">
-                                            <a href="javascript:void(0)" onclick="showEmployeeDetail(${r.employeeId})" style="font-size:15px;font-weight:800;color:#0f172a;text-decoration:none;display:block">
-                                                ${escapeHtml(r.employeeName)}
-                                            </a>
-                                            <div style="font-size:11.5px;color:#64748b">${escapeHtml(r.employeeCode)} &bull; ${escapeHtml(r.department || 'Engineering')}</div>
-                                        </div>
-                                    </div>
-                                </th>`;
-                            }).join('')}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- MATCH FIT & SCORE -->
-                        <tr>
-                            <td class="cmp-criteria-col">Overall Match Fit</td>
-                            ${candidates.map((r, idx) => {
-                                const isWinner = idx === 0;
+                                const isTop = idx === 0;
                                 const score = Math.round(r.totalScore || 0);
                                 const isReady = r.meetsSkillRequirements && r.meetsAvailabilityRequirement;
-                                return `
-                                <td class="cmp-cand-col ${isWinner ? 'is-winner' : ''}">
-                                    <div style="display:inline-flex;align-items:center;gap:6px">
-                                        <span style="font-size:24px;font-weight:800;color:${isWinner ? '#059669' : score >= 60 ? '#0f172a' : '#64748b'}">${score}%</span>
-                                        <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px;${isReady ? 'background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0' : 'background:#fffbeb;color:#b45309;border:1px solid #fde68a'}">
-                                            ${isReady ? '✓ Ready to Allocate' : 'Partial Match'}
-                                        </span>
-                                    </div>
-                                    <div class="cmp-score-bar-bg">
-                                        <div class="cmp-score-bar-fill" style="width:${score}%;background:${isWinner ? '#059669' : score >= 60 ? '#f59e0b' : '#94a3b8'}"></div>
-                                    </div>
-                                </td>`;
-                            }).join('')}
-                        </tr>
-
-                        <!-- AVAILABLE CAPACITY -->
-                        <tr>
-                            <td class="cmp-criteria-col">Available Capacity</td>
-                            ${candidates.map((r, idx) => {
-                                const isWinner = idx === 0;
-                                const hasCapacity = r.availablePercent >= selectedDemand.allocationPercent;
-                                return `
-                                <td class="cmp-cand-col ${isWinner ? 'is-winner' : ''}">
-                                    <strong style="font-size:14px;color:#0f172a">${r.availablePercent}% Available</strong>
-                                    <div style="font-size:11.5px;color:${hasCapacity ? '#059669' : '#dc2626'};margin-top:2px;font-weight:600">
-                                        ${hasCapacity ? `✓ Covers ${selectedDemand.allocationPercent}% demand` : `⚠️ Deficit for ${selectedDemand.allocationPercent}% demand`}
-                                    </div>
-                                </td>`;
-                            }).join('')}
-                        </tr>
-
-                        <!-- LOCATION & PROXIMITY -->
-                        <tr>
-                            <td class="cmp-criteria-col">Location & Proximity</td>
-                            ${candidates.map((r, idx) => {
-                                const isWinner = idx === 0;
-                                return `
-                                <td class="cmp-cand-col ${isWinner ? 'is-winner' : ''}">
-                                    ${r.locationMatch ? `
-                                        <span style="display:inline-flex;align-items:center;gap:4px;color:#059669;font-weight:700;font-size:12.5px;background:#ecfdf5;padding:3px 10px;border-radius:12px;border:1px solid #a7f3d0">
-                                            ✓ ${escapeHtml(r.location)} (Exact Match)
-                                        </span>` : `
-                                        <span style="color:#64748b;font-size:12.5px">
-                                            ${escapeHtml(r.location || 'Remote')} <small style="color:#94a3b8">(Remote)</small>
-                                        </span>`}
-                                </td>`;
-                            }).join('')}
-                        </tr>
-
-                        <!-- SKILL-BY-SKILL ROWS -->
-                        ${allRequiredSkillNames.map(skillName => `
-                        <tr>
-                            <td class="cmp-criteria-col">
-                                <div style="display:flex;align-items:center;gap:6px">
-                                    <span style="font-weight:700;color:#0f172a">${escapeHtml(skillName)}</span>
-                                </div>
-                            </td>
-                            ${candidates.map((r, idx) => {
-                                const isWinner = idx === 0;
-                                const matchedSkill = (r.matchedSkills || []).find(s => s.skillName.toLowerCase() === skillName.toLowerCase());
-                                const isMissing = (r.missingSkills || []).some(s => s.skillName.toLowerCase() === skillName.toLowerCase());
-
-                                return `
-                                <td class="cmp-cand-col ${isWinner ? 'is-winner' : ''}">
-                                    ${matchedSkill ? `
-                                        <div style="display:inline-flex;flex-direction:column;align-items:center;gap:2px">
-                                            <span style="font-weight:700;color:#065f46;font-size:12px;padding:3px 9px;border-radius:6px;background:#ecfdf5;border:1px solid #a7f3d0">
-                                                Level ${Math.min(3, Math.max(1, matchedSkill.proficiencyLevel || 1))} (${getProfLabel(Math.min(3, Math.max(1, matchedSkill.proficiencyLevel || 1)))})
-                                            </span>
-                                            <span class="cmp-skill-stars" title="Proficiency rating">
-                                                ${'★'.repeat(Math.min(3, Math.max(1, matchedSkill.proficiencyLevel || 1)))}${'☆'.repeat(3 - Math.min(3, Math.max(1, matchedSkill.proficiencyLevel || 1)))}
-                                            </span>
-                                        </div>` : isMissing ? `
-                                        <div style="display:inline-flex;flex-direction:column;align-items:center;gap:2px">
-                                            <span style="font-weight:700;color:#991b1b;font-size:11.5px;padding:2px 8px;border-radius:6px;background:#fee2e2;border:1px solid #fecaca">
-                                                ❌ Skill Gap
-                                            </span>
-                                            <span style="font-size:10.5px;color:#dc2626">Training Needed</span>
-                                        </div>` : `
-                                        <span style="color:#94a3b8;font-size:12px">&mdash;</span>`}
-                                </td>`;
-                            }).join('')}
-                        </tr>`).join('')}
-
-                        <!-- SKILL GAPS & TRAINING -->
-                        <tr>
-                            <td class="cmp-criteria-col">Identified Skill Gaps</td>
-                            ${candidates.map((r, idx) => {
-                                const isWinner = idx === 0;
                                 const gaps = r.missingSkills || [];
+                                const matched = r.matchedSkills || [];
+
                                 return `
-                                <td class="cmp-cand-col ${isWinner ? 'is-winner' : ''}">
-                                    ${gaps.length === 0 ? `
-                                        <span style="color:#059669;font-weight:700;font-size:12.5px;display:inline-flex;align-items:center;gap:4px">
-                                            ✓ 100% Skill Coverage (0 Gaps)
-                                        </span>` : `
-                                        <div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center">
-                                            ${gaps.map(g => `<span style="font-size:11px;font-weight:600;background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;padding:2px 7px;border-radius:4px">${escapeHtml(g.skillName)}</span>`).join('')}
-                                        </div>`}
-                                </td>`;
+                                <tr style="${isTop ? 'background:rgba(236,253,245,0.45);' : ''}">
+                                    <td style="text-align:center">
+                                        ${isTop ? `<span style="display:inline-block;background:#059669;color:#ffffff;font-size:11px;font-weight:800;padding:2px 8px;border-radius:12px;white-space:nowrap">★ #1</span>` : `<span style="color:#64748b;font-weight:700">#${idx + 1}</span>`}
+                                    </td>
+                                    <td>
+                                        <div style="display:flex;align-items:center;gap:10px">
+                                            <div class="candidate-avatar" style="width:34px;height:34px;font-size:13px;border-radius:50%;background:${isTop ? '#059669' : '#64748b'};color:#ffffff;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">
+                                                ${escapeHtml(r.employeeName.charAt(0))}
+                                            </div>
+                                            <div>
+                                                <a href="javascript:void(0)" onclick="showEmployeeDetail(${r.employeeId})" style="font-weight:700;color:#0f172a;text-decoration:none;font-size:13.5px">
+                                                    ${escapeHtml(r.employeeName)}
+                                                </a>
+                                                <div style="font-size:11px;color:#64748b">${escapeHtml(r.employeeCode)} &bull; ${escapeHtml(r.department || 'Engineering')}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        ${r.locationMatch ? `
+                                            <span style="color:#059669;font-weight:600;font-size:12.5px;display:inline-flex;align-items:center;gap:3px">
+                                                ✓ ${escapeHtml(r.location)}
+                                            </span>` : `
+                                            <span style="color:#64748b;font-size:12.5px">
+                                                ${escapeHtml(r.location || 'Remote')}
+                                            </span>`}
+                                    </td>
+                                    <td style="text-align:center">
+                                        <div style="display:inline-flex;flex-direction:column;align-items:center;gap:2px">
+                                            <span style="font-size:15px;font-weight:800;color:${isTop ? '#059669' : score >= 60 ? '#0f172a' : '#64748b'}">${score}%</span>
+                                            <span style="font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:10px;${isReady ? 'background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0' : 'background:#fffbeb;color:#b45309;border:1px solid #fde68a'}">
+                                                ${isReady ? '✓ Ready' : 'Partial'}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td style="text-align:center">
+                                        <strong style="color:#0f172a;font-size:13px">${r.availablePercent}% Free</strong>
+                                        <div style="font-size:10.5px;color:${r.availablePercent >= selectedDemand.allocationPercent ? '#059669' : '#dc2626'}">
+                                            ${r.availablePercent >= selectedDemand.allocationPercent ? '✓ Meets req' : '⚠️ Deficit'}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div style="display:flex;flex-wrap:wrap;gap:4px">
+                                            ${matched.map(s => {
+                                                const lvl = Math.min(3, Math.max(1, s.proficiencyLevel || 1));
+                                                return `<span style="font-size:11px;font-weight:600;background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;padding:2px 7px;border-radius:6px" title="${escapeHtml(s.evidence || '')}">${escapeHtml(s.skillName)} (L${lvl})</span>`;
+                                            }).join('')}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        ${gaps.length === 0 ? `
+                                            <span style="color:#059669;font-weight:600;font-size:12px">✓ 0 Gaps</span>
+                                        ` : `
+                                            <div style="display:flex;flex-wrap:wrap;gap:4px">
+                                                ${gaps.map(g => `<span style="font-size:11px;font-weight:600;background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;padding:2px 7px;border-radius:6px">${escapeHtml(g.skillName)}</span>`).join('')}
+                                            </div>
+                                        `}
+                                    </td>
+                                    <td style="text-align:right">
+                                        <div style="display:inline-flex;gap:6px">
+                                            <button class="btn ${isTop ? 'btn-primary' : 'btn-secondary'} btn-sm" style="font-weight:700;padding:5px 10px;font-size:12px" onclick="showAllocateModal(${r.employeeId}, ${selectedDemand.id}, '${escapeHtml(r.employeeName)}')">
+                                                ${IC.check} Allocate
+                                            </button>
+                                            <button class="btn btn-secondary btn-sm" style="padding:5px 8px;font-size:12px" onclick="showEmployeeDetail(${r.employeeId})">
+                                                Profile
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>`;
                             }).join('')}
-                        </tr>
-
-                        <!-- ACTION DECISION ROW -->
-                        <tr style="background:#f8fafc">
-                            <td class="cmp-criteria-col" style="font-weight:800;color:#0f172a">Recommended Action</td>
-                            ${candidates.map((r, idx) => {
-                                const isWinner = idx === 0;
-                                return `
-                                <td class="cmp-cand-col ${isWinner ? 'is-winner' : ''}" style="padding:16px">
-                                    <div style="display:flex;flex-direction:column;gap:6px;max-width:200px;margin:0 auto">
-                                        <button class="btn ${isWinner ? 'btn-primary' : 'btn-secondary'} btn-sm" style="width:100%;padding:9px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:6px" onclick="showAllocateModal(${r.employeeId}, ${selectedDemand.id}, '${escapeHtml(r.employeeName)}')">
-                                            ${IC.check} Allocate ${escapeHtml(r.employeeName.split(' ')[0])}
-                                        </button>
-                                        <button class="btn btn-secondary btn-sm" style="width:100%;font-size:11.5px;padding:6px" onclick="showEmployeeDetail(${r.employeeId})">
-                                            View Profile
-                                        </button>
-                                    </div>
-                                </td>`;
-                            }).join('')}
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- 2. MODERN CARDS VIEW (SECONDARY OPTION) -->
-            <div id="cmp-cards-view" class="comparison-grid" style="display:${compareViewMode === 'cards' ? 'grid' : 'none'};grid-template-columns: repeat(${colCount}, minmax(280px, 1fr));gap:20px">
-                ${candidates.map((r, idx) => {
-                    const isBest = idx === 0;
-                    const score = Math.round(r.totalScore || 0);
-                    return `
-                    <div class="comparison-card ${isBest ? 'best-match' : ''}" style="background:#ffffff;border:1.5px solid ${isBest ? '#059669' : '#e2e8f0'};border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px;box-shadow:${isBest ? '0 8px 24px -4px rgba(5,150,105,0.15)' : '0 1px 3px rgba(0,0,0,0.03)'};position:relative">
-                        ${isBest ? '<span class="comparison-rank-badge top-pick" style="position:absolute;top:12px;right:12px;background:#ecfdf5;color:#059669;border:1px solid #6ee7b7;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:700">★ Top Pick</span>' : ''}
-
-                        <div style="display:flex;align-items:center;gap:12px;margin-top:${isBest ? '8px' : '0'}">
-                            <div class="candidate-avatar" style="width:48px;height:48px;font-size:18px;border-radius:50%;background:${isBest ? '#059669' : '#64748b'};color:#ffffff;display:flex;align-items:center;justify-content:center;font-weight:800">${escapeHtml(r.employeeName.charAt(0))}</div>
-                            <div>
-                                <div style="font-size:16px;font-weight:800;color:#0f172a">${escapeHtml(r.employeeName)}</div>
-                                <div style="font-size:12px;color:#64748b">${escapeHtml(r.employeeCode)} &bull; ${escapeHtml(r.department || 'Engineering')}</div>
-                            </div>
-                        </div>
-
-                        <!-- Match Score Progress Bar -->
-                        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;text-align:center">
-                            <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px">Match Score</div>
-                            <div style="font-size:32px;font-weight:800;color:${isBest ? '#059669' : '#0f172a'};margin:2px 0">${score}%</div>
-                            <div class="cmp-score-bar-bg" style="width:160px">
-                                <div class="cmp-score-bar-fill" style="width:${score}%;background:${isBest ? '#059669' : score >= 60 ? '#f59e0b' : '#94a3b8'}"></div>
-                            </div>
-                            <div style="margin-top:8px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:20px;${r.meetsSkillRequirements && r.meetsAvailabilityRequirement ? 'background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0' : 'background:#fffbeb;color:#94a3b8;border:1px solid #e2e8f0'}">
-                                ${r.meetsSkillRequirements && r.meetsAvailabilityRequirement ? '✓ Ready to Work' : 'Partial Skills Match'}
-                            </div>
-                        </div>
-
-                        <!-- Metrics Grid -->
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-                            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;text-align:center">
-                                <span style="font-size:11px;color:#64748b;display:block">Availability</span>
-                                <strong style="font-size:13px;color:#0f172a">${r.availablePercent}% Free</strong>
-                            </div>
-                            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;text-align:center">
-                                <span style="font-size:11px;color:#64748b;display:block">Location</span>
-                                <strong style="font-size:13px;color:${r.locationMatch ? '#059669' : '#0f172a'}">${escapeHtml(r.location || 'Remote')}</strong>
-                            </div>
-                        </div>
-
-                        <!-- Skills List -->
-                        <div>
-                            <div style="font-size:11.5px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Key Skills</div>
-                            <div style="display:flex;flex-direction:column;gap:6px">
-                                ${(r.matchedSkills || []).map(s => {
-                                    const lvl = Math.min(3, Math.max(1, s.proficiencyLevel || 1));
-                                    return `
-                                    <div style="display:flex;justify-content:space-between;align-items:center;background:#ffffff;border:1px solid #e2e8f0;border-radius:6px;padding:6px 10px">
-                                        <span style="font-weight:600;font-size:13px;color:#0f172a">${escapeHtml(s.skillName)}</span>
-                                        <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0">
-                                            Level ${lvl} (${getProfLabel(lvl)})
-                                        </span>
-                                    </div>`;
-                                }).join('')}
-                                ${(r.missingSkills || []).map(s => `
-                                    <div style="display:flex;justify-content:space-between;align-items:center;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:6px 10px">
-                                        <span style="color:#b91c1c;font-weight:600;font-size:13px">${escapeHtml(s.skillName)}</span>
-                                        <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;background:#fee2e2;color:#991b1b;border:1px solid #fca5a5">Skill Gap</span>
-                                    </div>`).join('')}
-                            </div>
-                        </div>
-
-                        <!-- Actions -->
-                        <div style="margin-top:auto;padding-top:10px;display:flex;flex-direction:column;gap:6px">
-                            <button class="btn ${isBest ? 'btn-primary' : 'btn-secondary'}" style="width:100%;padding:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:6px" onclick="showAllocateModal(${r.employeeId}, ${selectedDemand.id}, '${escapeHtml(r.employeeName)}')">
-                                ${IC.check} Allocate ${escapeHtml(r.employeeName.split(' ')[0])}
-                            </button>
-                            <button class="btn btn-secondary btn-sm" style="width:100%" onclick="showEmployeeDetail(${r.employeeId})">
-                                View Profile
-                            </button>
-                        </div>
-                    </div>`;
-                }).join('')}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         `}
         `);
