@@ -3460,7 +3460,7 @@ function setAllocStatusFilter(filter) {
 
 function setAllocSearchQuery(q) {
     allocState.searchQuery = (q || '').toLowerCase().trim();
-    renderAllocations();
+    renderAllocations(true);
 }
 
 function resetDemoAllocations() {
@@ -3470,7 +3470,7 @@ function resetDemoAllocations() {
     renderAllocations();
 }
 
-async function renderAllocations() {
+async function renderAllocations(keepSearchFocus = false) {
     showLoading();
     try {
         // Fetch background allocations if API is alive to sync any external records
@@ -3503,16 +3503,21 @@ async function renderAllocations() {
         const pendingCount = allocations.filter(a => a.status === 'PENDING APPROVAL').length;
         const rejectedCount = allocations.filter(a => a.status === 'REJECTED').length;
 
-        // Filter tabs: All | Approved | Pending | Rejected
-        let filtered = allocations.filter(a => {
+        // Pending allocations awaiting manager approval
+        const allPending = allocations.filter(a => a.status === 'PENDING APPROVAL');
+
+        // Audit log / committed allocations list
+        let auditLogAllocations = allocations.filter(a => {
             if (allocState.statusFilter === 'APPROVED') {
                 if (a.status !== 'APPROVED') return false;
-            } else if (allocState.statusFilter === 'PENDING') {
-                if (a.status !== 'PENDING APPROVAL') return false;
             } else if (allocState.statusFilter === 'REJECTED') {
                 if (a.status !== 'REJECTED') return false;
+            } else if (allocState.statusFilter === 'PENDING') {
+                if (a.status !== 'PENDING APPROVAL') return false;
+            } else {
+                // 'ALL': show committed & audited records in Section 2 (non-pending)
+                if (a.status === 'PENDING APPROVAL') return false;
             }
-            // If ALL: all allocations show (including CANCELLED)
 
             if (allocState.searchQuery) {
                 const matchEmp = (a.employeeName || '').toLowerCase().includes(allocState.searchQuery);
@@ -3578,13 +3583,102 @@ async function renderAllocations() {
             }
         }
 
+        const showPendingSection = (allocState.statusFilter === 'ALL' || allocState.statusFilter === 'PENDING');
+        let pendingSectionHtml = '';
+
+        if (showPendingSection) {
+            pendingSectionHtml = `
+            <!-- SECTION 1: PENDING ALLOCATIONS AWAITING MANAGER APPROVAL -->
+            <div class="card" style="margin-bottom:22px;border:1.5px solid rgba(245,158,11,0.35);border-top:3.5px solid #f59e0b;box-shadow:0 4px 14px rgba(245,158,11,0.06)">
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border-color);background:rgba(245,158,11,0.04)">
+                    <div style="display:flex;align-items:center;gap:10px">
+                        <span style="font-size:18px">⏳</span>
+                        <div>
+                            <span style="font-size:14px;font-weight:700;color:var(--text-primary)">Pending Allocations Awaiting Manager Approval</span>
+                            <span class="badge" style="background:rgba(245,158,11,0.18);color:#d97706;border:1px solid rgba(245,158,11,0.4);font-size:11px;padding:2px 8px;font-weight:700;margin-left:8px">
+                                ${allPending.length} Action Needed
+                            </span>
+                        </div>
+                    </div>
+                    <div style="font-size:12px;color:var(--text-secondary)">Requires Resource Manager authorization</div>
+                </div>
+
+                <div class="table-container"><table>
+                    <thead>
+                        <tr>
+                            <th>Resource / Employee</th>
+                            <th>Project Demand</th>
+                            <th>Period</th>
+                            <th>Capacity %</th>
+                            <th>Match Fit</th>
+                            <th>Status</th>
+                            <th style="text-align:right">Actions (Manager Only)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${!allPending.length
+                            ? `<tr><td colspan="7" style="text-align:center;padding:34px 20px;color:var(--text-muted)">
+                                <div style="font-size:24px;margin-bottom:6px">✓</div>
+                                <div style="font-weight:700;font-size:14px;color:var(--text-primary)">No Pending Allocations Awaiting Approval</div>
+                                <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">All resource assignments are currently committed or reviewed.</div>
+                            </td></tr>`
+                            : allPending.map(a => `
+                            <tr>
+                                <td>
+                                    <strong style="color:var(--text-primary);cursor:pointer" onclick="showEmployeeDetail(${a.employeeId})">
+                                        ${escapeHtml(a.employeeName)}
+                                    </strong>
+                                    <br><small style="color:var(--text-muted)">${escapeHtml(a.employeeCode || '')} &bull; ${escapeHtml(a.department || 'Engineering')}</small>
+                                </td>
+                                <td>
+                                    <strong style="color:var(--text-primary)">${escapeHtml(a.projectName)}</strong>
+                                    <br><small style="color:var(--accent-primary);font-weight:600">${escapeHtml(a.role || 'Staff')}</small>
+                                </td>
+                                <td style="font-size:12.5px;color:var(--text-secondary)">
+                                    ${escapeHtml(a.periodFormatted || (a.startDate + ' → ' + a.endDate))}
+                                </td>
+                                <td>
+                                    <div style="display:inline-flex;align-items:center;gap:6px">
+                                        <div style="width:40px;height:6px;border-radius:3px;background:rgba(255,255,255,0.1);overflow:hidden">
+                                            <div style="height:100%;width:${a.allocationPercent}%;background:#f59e0b"></div>
+                                        </div>
+                                        <span style="font-weight:700;color:var(--text-primary)">${a.allocationPercent}%</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge" style="background:rgba(16,185,129,0.12);color:#059669;border:1px solid rgba(16,185,129,0.3);font-size:11px;font-weight:700;padding:2px 8px">
+                                        ${a.matchScore || 88}% Fit
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge" style="background:rgba(245,158,11,0.14);color:#d97706;border:1px solid rgba(245,158,11,0.35);font-size:11px;padding:3px 8px;font-weight:700">
+                                        PENDING APPROVAL
+                                    </span>
+                                </td>
+                                <td style="text-align:right">
+                                    <div style="display:inline-flex;gap:8px">
+                                        <button class="btn btn-primary btn-sm" onclick="showPendingApprovalReviewModal('${a.id}')" style="font-weight:700;padding:5px 14px;box-shadow:0 0 10px rgba(99,102,241,0.25)">
+                                            Review / Approve
+                                        </button>
+                                        <button class="btn btn-secondary btn-sm" onclick="openRejectAllocationModal('${a.id}')" style="color:var(--accent-danger);border-color:rgba(239,68,68,0.3);padding:5px 12px;font-weight:600">
+                                            Reject
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            `).join('')}
+                    </tbody>
+                </table></div>
+            </div>`;
+        }
+
         setPageContent(`
         <!-- PAGE HEADER -->
         <div class="section-header" style="margin-bottom:18px">
             <div>
                 <span class="section-title">Allocations &amp; Approvals</span>
                 <div style="color:var(--text-secondary);font-size:13px;margin-top:2px">
-                    Manage the resource allocation lifecycle: Review proposals, authorize approvals, and audit historical staffing decisions.
+                    Manager-authorized commitment review. Revalidates demand status, skills, and committed capacity at approval time.
                 </div>
             </div>
             <div style="display:flex;gap:10px">
@@ -3650,37 +3744,43 @@ async function renderAllocations() {
             </div>
         </div>
 
-        <!-- SEARCH & COUNT TOOLBAR -->
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px">
-            <div style="font-size:13px;font-weight:600;color:var(--text-secondary)">
-                Showing <strong>${filtered.length}</strong> of ${totalCount} allocations (${allocState.statusFilter === 'ALL' ? 'All' : allocState.statusFilter})
-            </div>
-            <div style="min-width:280px">
-                <input type="text" class="form-input" placeholder="Search employee, project, role..." value="${escapeHtml(allocState.searchQuery)}" oninput="setAllocSearchQuery(this.value)" style="width:100%;padding:8px 12px;font-size:13px;border-radius:8px;background:#ffffff;border:1px solid var(--border-color);color:var(--text-primary)">
-            </div>
-        </div>
+        ${pendingSectionHtml}
 
-        <!-- ALLOCATIONS WORKFLOW TABLE -->
-        <div class="card">
+        <!-- SECTION 2: COMMITTED ALLOCATIONS & AUDIT LOG -->
+        <div class="card" style="border-top:3.5px solid #6366f1">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:12px 18px;border-bottom:1px solid var(--border-color);background:rgba(255,255,255,0.02)">
+                <div style="display:flex;align-items:center;gap:10px">
+                    <span style="font-size:18px">📋</span>
+                    <div>
+                        <span style="font-size:14px;font-weight:700;color:var(--text-primary)">Committed Allocations &amp; Audit Log</span>
+                        <span class="badge" style="background:rgba(99,102,241,0.12);color:var(--text-accent);border:1px solid rgba(99,102,241,0.25);font-size:11px;padding:2px 8px;font-weight:700;margin-left:8px">
+                            ${auditLogAllocations.length} Records (${allocState.statusFilter === 'ALL' ? 'Audit Log' : allocState.statusFilter})
+                        </span>
+                    </div>
+                </div>
+                <div style="min-width:280px">
+                    <input type="text" id="allocSearchInput" class="form-input" placeholder="Search employee, project, role..." value="${escapeHtml(allocState.searchQuery)}" oninput="setAllocSearchQuery(this.value)" style="width:100%;padding:7px 12px;font-size:12.5px;border-radius:8px;background:#ffffff;border:1px solid var(--border-color);color:var(--text-primary)">
+                </div>
+            </div>
             <div class="table-container"><table>
                 <thead>
                     <tr>
                         <th>Employee</th>
                         <th>Project &amp; Role</th>
                         <th>Period</th>
-                        <th>Allocation %</th>
-                        <th>Decision By</th>
+                        <th>Committed %</th>
                         <th>Status</th>
+                        <th>Approved / Decided By</th>
                         <th style="text-align:right">Actions</th>
                     </tr>
                 </thead>
-                <tbody>${!filtered.length
-                    ? `<tr><td colspan="7" style="text-align:center;padding:48px;color:var(--text-muted)">
-                        <div style="font-size:28px;margin-bottom:8px">📋</div>
-                        <div style="font-weight:700;font-size:15px;color:var(--text-primary)">No allocations match your filter</div>
-                        <div style="font-size:13px;color:var(--text-secondary);margin-top:4px">Submit proposals from Resource Search or use the New Allocation button.</div>
+                <tbody>${!auditLogAllocations.length
+                    ? `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">
+                        <div style="font-size:24px;margin-bottom:6px">📋</div>
+                        <div style="font-weight:700;font-size:14px;color:var(--text-primary)">No allocations match your filter</div>
+                        <div style="font-size:12px;color:var(--text-secondary);margin-top:3px">Try clearing search or switching status filter above.</div>
                     </td></tr>`
-                    : filtered.map(a => {
+                    : auditLogAllocations.map(a => {
                         const isPending = a.status === 'PENDING APPROVAL';
                         const isApproved = a.status === 'APPROVED';
                         const isRejected = a.status === 'REJECTED';
@@ -3688,19 +3788,19 @@ async function renderAllocations() {
 
                         let decisionByHtml = '';
                         if (isPending) {
-                            decisionByHtml = `<span style="color:var(--text-muted);font-weight:700">—</span>`;
+                            decisionByHtml = `<span style="color:var(--text-muted);font-weight:600">—</span>`;
                         } else if (isApproved) {
-                            decisionByHtml = `<span style="color:var(--text-primary);font-weight:600">${escapeHtml(a.approvedBy || a.decisionBy || 'Resource Manager')}</span>`;
+                            decisionByHtml = `<strong style="color:var(--text-primary)">${escapeHtml(a.approvedBy || a.decisionBy || 'Resource Manager')}</strong>${a.approvedAtFormatted ? `<br><small style="color:var(--text-muted)">${escapeHtml(a.approvedAtFormatted)}</small>` : ''}`;
                         } else if (isRejected) {
-                            decisionByHtml = `<span style="color:var(--text-primary);font-weight:600">${escapeHtml(a.rejectedBy || a.decisionBy || 'Resource Manager')}</span>`;
+                            decisionByHtml = `<strong style="color:var(--text-primary)">${escapeHtml(a.rejectedBy || a.decisionBy || 'Resource Manager')}</strong>${a.rejectedAtFormatted ? `<br><small style="color:var(--text-muted)">${escapeHtml(a.rejectedAtFormatted)}</small>` : ''}`;
                         } else if (isCancelled) {
-                            decisionByHtml = `<span style="color:var(--text-secondary);font-weight:600">${escapeHtml(a.cancelledBy || a.decisionBy || 'Resource Manager')}</span>`;
+                            decisionByHtml = `<strong style="color:var(--text-secondary)">${escapeHtml(a.cancelledBy || a.decisionBy || 'Resource Manager')}</strong>${a.cancelledAtFormatted ? `<br><small style="color:var(--text-muted)">${escapeHtml(a.cancelledAtFormatted)}</small>` : ''}`;
                         }
 
                         let actionsHtml = '';
                         if (isPending) {
                             actionsHtml = `
-                                <button class="btn btn-primary btn-sm" onclick="showPendingApprovalReviewModal('${a.id}')" style="font-weight:700;padding:5px 14px;box-shadow:0 0 10px rgba(99,102,241,0.3)">
+                                <button class="btn btn-primary btn-sm" onclick="showPendingApprovalReviewModal('${a.id}')" style="font-weight:700;padding:5px 12px">
                                     Review
                                 </button>
                             `;
@@ -3746,11 +3846,11 @@ async function renderAllocations() {
                                     <span style="font-weight:700;color:var(--text-primary)">${a.allocationPercent}%</span>
                                 </div>
                             </td>
-                            <td style="font-size:12.5px">
-                                ${decisionByHtml}
-                            </td>
                             <td>
                                 ${badgeHtml(a.status, a.status.toLowerCase().replace(/[\s_]/g,'-'))}
+                            </td>
+                            <td style="font-size:12.5px">
+                                ${decisionByHtml}
                             </td>
                             <td style="text-align:right">
                                 ${actionsHtml}
@@ -3760,6 +3860,14 @@ async function renderAllocations() {
                 </tbody>
             </table></div>
         </div>`);
+
+        if (keepSearchFocus) {
+            const inp = document.getElementById('allocSearchInput');
+            if (inp) {
+                inp.focus();
+                inp.setSelectionRange(inp.value.length, inp.value.length);
+            }
+        }
     } catch (err) {
         showApiError(err);
     }
