@@ -425,27 +425,25 @@ async function renderDashboard() {
             const dept = e.department || 'Engineering';
             if (!deptMap[dept]) deptMap[dept] = { count: 0, committed: 0 };
             deptMap[dept].count++;
-            let c = 0;
-            if (e.availabilityStatus === 'FULLY_ALLOCATED') c = 100;
-            else if (e.availabilityStatus === 'PARTIALLY_AVAILABLE') c = 50;
-            else if (e.currentProject) c = 30;
-            deptMap[dept].committed += c;
         });
 
-        // Compute overall utilization from real allocations or availability commitments
+        // Compute workforce utilization strictly from approved database allocations
+        const approvedAllocations = (allocations || []).filter(a => a.status === 'APPROVED' || a.status === 'CONFIRMED');
         let totalCommittedPercent = 0;
-        const approvedAllocations = allocations.filter(a => a.status === 'APPROVED' || a.status === 'CONFIRMED');
-        if (approvedAllocations.length > 0) {
-            approvedAllocations.forEach(a => totalCommittedPercent += (a.allocationPercent || 0));
-        } else {
-            Object.values(deptMap).forEach(d => totalCommittedPercent += d.committed);
-        }
+        approvedAllocations.forEach(a => {
+            totalCommittedPercent += (a.allocationPercent || 0);
+            const emp = activeEmployees.find(e => e.id === a.employeeId);
+            const dept = (emp && emp.department) || a.department;
+            if (dept && deptMap[dept]) {
+                deptMap[dept].committed += (a.allocationPercent || 0);
+            }
+        });
 
         const totalCapacity = activeCount * 100;
-        const avgUtilDisplay = (totalCommittedPercent / totalCapacity * 100).toFixed(1);
+        const avgUtilDisplay = totalCapacity > 0 ? (totalCommittedPercent / totalCapacity * 100).toFixed(1) : '0.0';
         const benchCapacityDisplay = (Math.max(0, 100 - parseFloat(avgUtilDisplay))).toFixed(1);
 
-        const openDemandsList = demands.filter(d => d.status === 'OPEN' || d.status === 'IN_PROGRESS');
+        const openDemandsList = (demands || []).filter(d => d.status === 'OPEN' || d.status === 'IN_PROGRESS');
         const openDemandsCount = openDemandsList.length;
 
         // Skill Demand & Supply matching by skill name and requiredSkills
@@ -494,14 +492,15 @@ async function renderDashboard() {
         const totalDeficitsCount = skillGapsTable.filter(s => s.deficit > 0).length;
 
         const unstaffedDemandsCount = openDemandsList.filter(d => {
-            const hasAlloc = allocations.some(a => a.demandId === d.id && (a.status === 'APPROVED' || a.status === 'CONFIRMED'));
+            const hasAlloc = approvedAllocations.some(a => a.demandId === d.id);
             return !hasAlloc;
         }).length;
 
         const deptPalette = ['#059669', '#2563eb', '#d97706', '#8b5cf6', '#ec4899'];
         const departmentList = Object.keys(deptMap).map((name, i) => {
             const d = deptMap[name];
-            const util = Math.min(100, Math.round(d.committed / (d.count * 100) * 100));
+            const maxCap = d.count * 100;
+            const util = maxCap > 0 ? Math.min(100, Math.round(d.committed / maxCap * 100)) : 0;
             return {
                 name,
                 count: d.count,
@@ -560,7 +559,7 @@ async function renderDashboard() {
                                 <span style="color:${d.color};font-weight:700">${d.util}%</span>
                             </div>
                             <div style="width:100%;height:7px;background:#f1f5f9;border-radius:4px;overflow:hidden">
-                                <div style="width:${Math.max(4, d.util)}%;height:100%;background:${d.color};border-radius:4px"></div>
+                                <div style="width:${Math.max(d.util > 0 ? 4 : 0, d.util)}%;height:100%;background:${d.color};border-radius:4px"></div>
                             </div>
                         </div>
                     `).join('')}
@@ -633,7 +632,7 @@ async function renderDashboard() {
                 </span>
             </div>
             <div style="width:100%;height:8px;background:#e2e8f0;border-radius:5px;overflow:hidden;display:flex">
-                <div style="width:${Math.max(2, parseFloat(avgUtilDisplay))}%;height:100%;background:linear-gradient(90deg, #059669, #10b981)" title="Committed: ${avgUtilDisplay}%"></div>
+                <div style="width:${parseFloat(avgUtilDisplay)}%;height:100%;background:linear-gradient(90deg, #059669, #10b981)" title="Committed: ${avgUtilDisplay}%"></div>
                 <div style="width:${parseFloat(benchCapacityDisplay)}%;height:100%;background:#f1f5f9" title="Available Bench: ${benchCapacityDisplay}%"></div>
             </div>
             <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#64748b;margin-top:5px">
