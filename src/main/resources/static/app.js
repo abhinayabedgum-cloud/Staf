@@ -126,8 +126,8 @@ const authState = {
 
     updateNavPermissions() {
         const managerNavIds = [
-            'nav-item-dashboard', 'nav-item-demands', 'nav-item-skills',
-            'nav-item-search', 'nav-item-compare', 'nav-item-allocations', 'nav-item-ai'
+            'nav-item-demands', 'nav-item-skills', 'nav-item-search',
+            'nav-item-compare', 'nav-item-allocations', 'nav-item-dashboard', 'nav-item-ai'
         ];
         const selfServiceNav = document.getElementById('nav-item-self-service');
         const portalNav = document.getElementById('nav-item-portal');
@@ -170,12 +170,12 @@ function logout() {
 const pageTitles = {
     portal: 'Employee Workforce Portal',
     'self-service': 'Employee Workforce Portal',
-    dashboard: 'Utilization & Skill-Gap Dashboard',
-    demands: 'Project Demands & Intake',
-    compare: 'Candidate Comparison',
+    demands: 'Demand Intake Form',
     skills: 'Employee Skills Matrix',
     search: 'Resource Search & Ranking',
+    compare: 'Candidate Comparison',
     allocations: 'Allocation Approval Workflow',
+    dashboard: 'Utilization & Skill-Gap Dashboard',
     ai: 'AI Staffing Assistant'
 };
 
@@ -192,7 +192,7 @@ const router = {
         }
 
         // Seamless navigation ensuring manager routes have active session
-        const managerRoutes = ['dashboard', 'demands', 'compare', 'skills', 'search', 'allocations', 'ai'];
+        const managerRoutes = ['demands', 'skills', 'search', 'compare', 'allocations', 'dashboard', 'ai'];
         if (managerRoutes.includes(page) && !authState.isManager()) {
             authState.setSession(authState.token || 'manager-demo-token', 'ROLE_MANAGER', { username: 'manager', role: 'ROLE_MANAGER' });
         }
@@ -6726,7 +6726,7 @@ async function initApp() {
     authState.updateNavPermissions();
 
     const initialHash = window.location.hash.replace('#', '');
-    let initialPage = 'dashboard';
+    let initialPage = 'demands';
     if (initialHash === 'portal') {
         initialPage = 'portal';
     } else if (pageTitles[initialHash] && initialHash !== 'self-service') {
