@@ -170,13 +170,13 @@ function logout() {
 const pageTitles = {
     portal: 'Employee Workforce Portal',
     'self-service': 'Employee Workforce Portal',
-    demands: 'Demand Intake Form',
-    skills: 'Employee Skills Matrix',
-    search: 'Resource Search & Ranking',
+    demands: 'Demand Intake',
+    skills: 'Skill matrix',
+    search: 'Resource Search',
     compare: 'Candidate Comparison',
-    allocations: 'Allocation Approval Workflow',
-    dashboard: 'Utilization & Skill-Gap Dashboard',
-    ai: 'AI Staffing Assistant'
+    allocations: 'Allocation Approval',
+    dashboard: 'Utilization Dashboard',
+    ai: 'AI Assistant'
 };
 
 const router = {
