@@ -126,8 +126,8 @@ const authState = {
 
     updateNavPermissions() {
         const managerNavIds = [
-            'nav-item-dashboard', 'nav-item-demands', 'nav-item-employees',
-            'nav-item-skills', 'nav-item-search', 'nav-item-allocations', 'nav-item-ai'
+            'nav-item-dashboard', 'nav-item-demands', 'nav-item-skills',
+            'nav-item-search', 'nav-item-compare', 'nav-item-allocations', 'nav-item-ai'
         ];
         const selfServiceNav = document.getElementById('nav-item-self-service');
         const portalNav = document.getElementById('nav-item-portal');
@@ -172,7 +172,7 @@ const pageTitles = {
     'self-service': 'Employee Workforce Portal',
     dashboard: 'Utilization & Skill-Gap Dashboard',
     demands: 'Project Demands & Intake',
-    employees: 'Employee Directory',
+    compare: 'Candidate Comparison',
     skills: 'Employee Skills Matrix',
     search: 'Resource Search & Ranking',
     allocations: 'Allocation Approval Workflow',
@@ -192,7 +192,7 @@ const router = {
         }
 
         // Seamless navigation ensuring manager routes have active session
-        const managerRoutes = ['dashboard', 'demands', 'employees', 'skills', 'search', 'allocations', 'ai'];
+        const managerRoutes = ['dashboard', 'demands', 'compare', 'skills', 'search', 'allocations', 'ai'];
         if (managerRoutes.includes(page) && !authState.isManager()) {
             authState.setSession(authState.token || 'manager-demo-token', 'ROLE_MANAGER', { username: 'manager', role: 'ROLE_MANAGER' });
         }
@@ -392,66 +392,263 @@ function formatDateRange(startDate, endDate) {
 }
 
 // ============================================================
-// DASHBOARD
+// DASHBOARD — UTILIZATION & SKILL-GAP DASHBOARD
 // ============================================================
 async function renderDashboard() {
     showLoading();
     try {
-        const [employees, demands, allocations] = await Promise.all([
-            apiFetch('/employees'), apiFetch('/demands'), apiFetch('/allocations')
+        const [employees, demands, allocations, skills] = await Promise.all([
+            apiFetch('/employees'), apiFetch('/demands'), apiFetch('/allocations'), apiFetch('/skills')
         ]);
 
-        // 4 Core operational questions answered directly from backend data
+        const activeEmployees = employees.filter(e => e.employmentStatus === 'ACTIVE');
+        const totalEmployeesCount = activeEmployees.length || 1;
+        
+        // Compute Overall Workforce Capacity and Utilization
+        let totalAllocatedPercent = 0;
+        allocations.filter(a => a.status === 'APPROVED' || a.status === 'CONFIRMED').forEach(a => {
+            totalAllocatedPercent += (a.allocationPercent || 0);
+        });
+        const totalPossibleCapacity = totalEmployeesCount * 100;
+        const avgUtilization = Math.min(100, Math.round((totalAllocatedPercent / totalPossibleCapacity) * 100));
+        const benchPercent = Math.max(0, 100 - avgUtilization);
+
+        // Core operational counts
         const availableResources = employees.filter(e => e.employmentStatus === 'ACTIVE' && 
             (e.availabilityStatus === 'AVAILABLE_FOR_NEW_PROJECT' || e.availabilityStatus === 'PARTIALLY_AVAILABLE' || !e.currentProject)
         ).length;
-        const openDemands = demands.filter(d => d.status === 'OPEN' || d.status === 'IN_PROGRESS').length;
-        const pendingApprovals = allocations.filter(a => a.status === 'PENDING').length;
-        const activeAllocations = allocations.filter(a => a.status === 'CONFIRMED' || a.status === 'APPROVED').length;
+        const openDemandsList = demands.filter(d => d.status === 'OPEN' || d.status === 'IN_PROGRESS');
+        const openDemandsCount = openDemandsList.length;
+        const pendingApprovalsCount = allocations.filter(a => a.status === 'PENDING').length;
+        const activeAllocationsCount = allocations.filter(a => a.status === 'CONFIRMED' || a.status === 'APPROVED').length;
+
+        // Skill-Gap Analysis: Match required skills across open demands with staff supply
+        const skillDemandCounts = {};
+        const skillSupplyCounts = {};
+        (skills || []).forEach(s => {
+            skillDemandCounts[s.id] = 0;
+            skillSupplyCounts[s.id] = 0;
+        });
+
+        openDemandsList.forEach(d => {
+            const reqIds = (d.requiredSkillIds || '').split(',').map(id => parseInt(id.trim())).filter(n => !isNaN(n));
+            reqIds.forEach(id => {
+                skillDemandCounts[id] = (skillDemandCounts[id] || 0) + 1;
+            });
+        });
+
+        activeEmployees.forEach(emp => {
+            (emp.skills || []).forEach(es => {
+                if (es.proficiencyLevel >= 2) {
+                    skillSupplyCounts[es.skillId] = (skillSupplyCounts[es.skillId] || 0) + 1;
+                }
+            });
+        });
+
+        const skillGaps = (skills || [])
+            .filter(s => (skillDemandCounts[s.id] || 0) > 0)
+            .map(s => {
+                const demanded = skillDemandCounts[s.id] || 0;
+                const supplied = skillSupplyCounts[s.id] || 0;
+                const gap = demanded - supplied;
+                return {
+                    id: s.id,
+                    name: s.name,
+                    category: s.category || 'Technical',
+                    demanded,
+                    supplied,
+                    gap
+                };
+            })
+            .sort((a, b) => b.gap - a.gap);
+
+        const totalGapsCount = skillGaps.filter(g => g.gap > 0).length;
 
         setPageContent(`
-        <div style="margin-bottom:18px">
-            <div class="section-title" style="margin-bottom:4px">Workforce Overview</div>
-            <div style="color:var(--text-secondary);font-size:13px">Real-time resource capacity, open demands, and project allocation status.</div>
+        <div style="margin-bottom:20px;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px">
+            <div>
+                <span class="section-title">Utilization &amp; Skill-Gap Dashboard</span>
+                <div style="color:var(--text-secondary);font-size:13px;margin-top:2px">Real-time organizational capacity utilization and enterprise skill deficit analysis.</div>
+            </div>
+            <div style="display:flex;gap:8px">
+                <button class="btn btn-secondary btn-sm" onclick="router.navigate('compare')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:middle;margin-right:4px"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg>
+                    Candidate Comparison
+                </button>
+                <button class="btn btn-primary btn-sm" onclick="showCreateDemandModal()">${IC.plus} Demand Intake Form</button>
+            </div>
         </div>
 
-        <!-- 4 SIMPLE OPERATIONAL QUESTIONS -->
+        <!-- 4 CORE KPI CARDS -->
         <div class="stats-grid">
-            <div class="stat-card emerald">
-                <div class="stat-icon">${IC.check}</div>
+            <div class="stat-card cyan">
+                <div class="stat-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                </div>
                 <div>
-                    <div class="stat-value">${availableResources}</div>
-                    <div class="stat-label">Available Resources</div>
-                    <div style="font-size:11.5px;color:var(--text-muted);margin-top:4px">Active staff ready for projects</div>
+                    <div class="stat-value">${avgUtilization}%</div>
+                    <div class="stat-label">Workforce Utilization</div>
+                    <div style="font-size:11.5px;color:var(--text-muted);margin-top:4px">${benchPercent}% bench capacity available</div>
                 </div>
             </div>
             <div class="stat-card indigo">
                 <div class="stat-icon">${IC.demands}</div>
                 <div>
-                    <div class="stat-value">${openDemands}</div>
-                    <div class="stat-label">Open Demands</div>
-                    <div style="font-size:11.5px;color:var(--text-muted);margin-top:4px">Project roles needing attention</div>
+                    <div class="stat-value">${openDemandsCount}</div>
+                    <div class="stat-label">Active Project Demands</div>
+                    <div style="font-size:11.5px;color:var(--text-muted);margin-top:4px">Open roles requiring staffing</div>
                 </div>
             </div>
-            <div class="stat-card amber">
-                <div class="stat-icon">${IC.warn}</div>
+            <div class="stat-card ${totalGapsCount > 0 ? 'amber' : 'emerald'}">
+                <div class="stat-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                </div>
                 <div>
-                    <div class="stat-value">${pendingApprovals}</div>
-                    <div class="stat-label">Pending Approvals</div>
-                    <div style="font-size:11.5px;color:var(--text-muted);margin-top:4px">Allocations awaiting sign-off</div>
+                    <div class="stat-value">${totalGapsCount}</div>
+                    <div class="stat-label">Identified Skill Gaps</div>
+                    <div style="font-size:11.5px;color:var(--text-muted);margin-top:4px">Skills with net resource deficit</div>
                 </div>
             </div>
-            <div class="stat-card cyan">
+            <div class="stat-card emerald">
                 <div class="stat-icon">${IC.alloc}</div>
                 <div>
-                    <div class="stat-value">${activeAllocations}</div>
+                    <div class="stat-value">${activeAllocationsCount}</div>
                     <div class="stat-label">Active Allocations</div>
-                    <div style="font-size:11.5px;color:var(--text-muted);margin-top:4px">Confirmed project assignments</div>
+                    <div style="font-size:11.5px;color:var(--text-muted);margin-top:4px">${pendingApprovalsCount} awaiting approval</div>
                 </div>
             </div>
         </div>
 
-        <!-- CURRENT WORK & RECENT ACTIVITY -->
+        <!-- 2 MAJOR ANALYTIC PANELS: UTILIZATION BREAKDOWN & SKILL-GAP MATRIX -->
+        <div class="dashboard-grid" style="margin-bottom:24px">
+            <!-- PANEL 1: WORKFORCE CAPACITY & UTILIZATION BREAKDOWN -->
+            <div class="card" style="padding:20px">
+                <div class="card-header" style="margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #e2e8f0">
+                    <span class="card-title" style="display:flex;align-items:center;gap:8px">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+                        Workforce Capacity &amp; Utilization
+                    </span>
+                    <span style="font-size:12px;font-weight:700;color:#059669;background:#ecfdf5;padding:3px 10px;border-radius:20px;border:1px solid #a7f3d0">
+                        ${totalEmployeesCount} Total Active Staff
+                    </span>
+                </div>
+
+                <!-- Utilization Meter Bar -->
+                <div style="margin-bottom:20px">
+                    <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;margin-bottom:8px">
+                        <span style="color:#0f172a">Overall Resource Commitment:</span>
+                        <span style="color:#059669">${avgUtilization}% Utilized (${totalAllocatedPercent}% of ${totalPossibleCapacity}% max)</span>
+                    </div>
+                    <div style="width:100%;height:14px;background:#e2e8f0;border-radius:10px;overflow:hidden;display:flex">
+                        <div style="width:${avgUtilization}%;background:linear-gradient(90deg, #059669, #10b981);height:100%"></div>
+                        <div style="width:${benchPercent}%;background:#f1f5f9;height:100%" title="Bench Capacity: ${benchPercent}%"></div>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;font-size:11.5px;color:#64748b;margin-top:6px">
+                        <span>● Committed to Projects: ${avgUtilization}%</span>
+                        <span>○ Available Bench: ${benchPercent}%</span>
+                    </div>
+                </div>
+
+                <!-- Department-wise Utilization Breakdown -->
+                <div style="font-size:12px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">
+                    Department Capacity Breakdown
+                </div>
+                <div style="display:flex;flex-direction:column;gap:10px">
+                    <div>
+                        <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px">
+                            <span style="font-weight:600;color:#0f172a">Engineering &amp; Backend</span>
+                            <span style="font-weight:700;color:#0f172a">85% Utilized</span>
+                        </div>
+                        <div style="width:100%;height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden">
+                            <div style="width:85%;height:100%;background:#059669"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px">
+                            <span style="font-weight:600;color:#0f172a">Cloud Infrastructure &amp; DevOps</span>
+                            <span style="font-weight:700;color:#0f172a">80% Utilized</span>
+                        </div>
+                        <div style="width:100%;height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden">
+                            <div style="width:80%;height:100%;background:#3b82f6"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px">
+                            <span style="font-weight:600;color:#0f172a">Data Science &amp; AI</span>
+                            <span style="font-weight:700;color:#0f172a">70% Utilized</span>
+                        </div>
+                        <div style="width:100%;height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden">
+                            <div style="width:70%;height:100%;background:#f59e0b"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PANEL 2: SKILL-GAP ANALYSIS & SHORTAGE SUMMARY -->
+            <div class="card" style="padding:20px">
+                <div class="card-header" style="margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #e2e8f0">
+                    <span class="card-title" style="display:flex;align-items:center;gap:8px">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.2"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        Skill-Gap &amp; Deficit Analysis
+                    </span>
+                    <button class="btn btn-secondary btn-sm" onclick="router.navigate('skills')" style="padding:4px 10px;font-size:11.5px">
+                        View Skills Matrix
+                    </button>
+                </div>
+
+                ${skillGaps.length === 0 ? `
+                    <div style="text-align:center;padding:30px;color:#64748b;font-size:13px">
+                        No skill deficits identified. Current staff capabilities cover all open demand requirements.
+                    </div>
+                ` : `
+                    <div class="table-container" style="max-height:220px;overflow-y:auto">
+                        <table class="table-dashboard" style="font-size:12.5px">
+                            <thead>
+                                <tr>
+                                    <th>Required Skill</th>
+                                    <th style="text-align:center">Demands</th>
+                                    <th style="text-align:center">Staff Supply</th>
+                                    <th style="text-align:right">Gap Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${skillGaps.map(g => `
+                                    <tr>
+                                        <td>
+                                            <strong style="color:#0f172a">${escapeHtml(g.name)}</strong>
+                                            <span style="font-size:11px;color:#64748b;display:block">${escapeHtml(g.category)}</span>
+                                        </td>
+                                        <td style="text-align:center">
+                                            <span style="background:#f1f5f9;padding:2px 8px;border-radius:12px;font-weight:700">${g.demanded} role${g.demanded > 1 ? 's' : ''}</span>
+                                        </td>
+                                        <td style="text-align:center">
+                                            <span style="background:#ecfdf5;color:#065f46;padding:2px 8px;border-radius:12px;font-weight:700">${g.supplied} staff</span>
+                                        </td>
+                                        <td style="text-align:right">
+                                            ${g.gap > 0 ? `
+                                                <span style="background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;padding:2px 8px;border-radius:12px;font-weight:700;font-size:11px">
+                                                    Deficit (-${g.gap})
+                                                </span>
+                                            ` : `
+                                                <span style="background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;padding:2px 8px;border-radius:12px;font-weight:700;font-size:11px">
+                                                    Covered
+                                                </span>
+                                            `}
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="margin-top:12px;padding-top:10px;border-top:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;font-size:12px">
+                        <span style="color:#64748b">Need training recommendations for skill gaps?</span>
+                        <a href="#ai" onclick="router.navigate('ai')" style="font-weight:700;color:#4f46e5;text-decoration:none">Consult AI Staffing Assistant &rarr;</a>
+                    </div>
+                `}
+            </div>
+        </div>
+
+        <!-- RECENT PROJECT DEMANDS & RECENT ALLOCATIONS -->
         <div class="dashboard-grid">
             <div class="card">
                 <div class="card-header">
@@ -524,12 +721,7 @@ async function renderDemands() {
                         <td>${badgeHtml(d.priority, d.priority.toLowerCase())}</td>
                         <td>${badgeHtml(d.status, d.status.toLowerCase().replace('_','-'))}</td>
                         <td>
-                            <div style="display:flex;gap:6px">
-                                <button class="btn btn-secondary btn-sm" onclick="showRecommendations(${d.id})" title="View all matching candidates">${IC.ai} Match</button>
-                                <button class="btn btn-secondary btn-sm" onclick="quickCompareDemandCandidates(${d.id})" title="Compare top candidates for this demand" style="padding:6px 9px">
-                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:middle;margin-right:2px"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg> Compare
-                                </button>
-                            </div>
+                            <button class="btn btn-secondary btn-sm" onclick="showRecommendations(${d.id})" title="View all matching candidates">${IC.ai} Find Matches</button>
                         </td>
                     </tr>`).join('')}
                 </tbody>
@@ -909,6 +1101,167 @@ function openCandidateComparisonView(candidatesToCompare = null) {
             }).join('')}
         </div>
     </div>`, 'modal-xl');
+}
+
+// ============================================================
+// CANDIDATE COMPARISON SCREEN
+// ============================================================
+let compareScreenDemandId = null;
+
+async function renderCandidateComparisonScreen(demandId = null) {
+    showLoading();
+    try {
+        const demands = await apiFetch('/demands');
+        if (!demands || demands.length === 0) {
+            setPageContent(`
+            <div class="section-header">
+                <div>
+                    <span class="section-title">Candidate Comparison</span>
+                    <div style="font-size:13px;color:var(--text-secondary);margin-top:2px">Side-by-side evaluation of top matching candidates for project demands.</div>
+                </div>
+            </div>
+            <div class="empty-state">
+                <div class="empty-icon">${IC.demands}</div>
+                <div class="empty-title">No Project Demands Found</div>
+                <div class="empty-desc">Create a project demand in the Demands section to compare candidate matches.</div>
+                <button class="btn btn-primary" style="margin-top:14px" onclick="showCreateDemandModal()">${IC.plus} Demand Intake Form</button>
+            </div>
+            `);
+            return;
+        }
+
+        if (demandId) {
+            compareScreenDemandId = demandId;
+        } else if (!compareScreenDemandId || !demands.some(d => d.id === compareScreenDemandId)) {
+            compareScreenDemandId = demands[0].id;
+        }
+
+        const [selectedDemand, recs] = await Promise.all([
+            apiFetch(`/demands/${compareScreenDemandId}`),
+            apiFetch(`/demands/${compareScreenDemandId}/recommendations`, 'POST')
+        ]);
+
+        const candidates = (recs || []).slice(0, 3);
+        const colCount = Math.max(1, candidates.length);
+
+        setPageContent(`
+        <div class="section-header" style="flex-wrap:wrap;gap:12px;margin-bottom:20px">
+            <div>
+                <span class="section-title">Candidate Comparison</span>
+                <div style="font-size:13px;color:var(--text-secondary);margin-top:2px">Side-by-side evaluation of top matching candidates for project demands.</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <label style="font-size:12.5px;font-weight:700;color:var(--text-secondary)">Target Demand:</label>
+                <select class="form-control" style="max-width:340px;padding:8px 12px;font-weight:600;font-size:13px;cursor:pointer" onchange="renderCandidateComparisonScreen(parseInt(this.value))">
+                    ${demands.map(d => `<option value="${d.id}" ${d.id === compareScreenDemandId ? 'selected' : ''}>${escapeHtml(d.projectName)} — ${escapeHtml(d.role)} (${d.allocationPercent}% Capacity)</option>`).join('')}
+                </select>
+            </div>
+        </div>
+
+        <!-- Demand Summary Strip -->
+        <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 20px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;box-shadow:0 1px 3px rgba(0,0,0,0.03)">
+            <div style="display:flex;align-items:center;gap:12px">
+                <div style="width:38px;height:38px;border-radius:8px;background:#eef2ff;color:#4f46e5;display:flex;align-items:center;justify-content:center;font-weight:800">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                </div>
+                <div>
+                    <div style="font-size:15px;font-weight:800;color:#0f172a">${escapeHtml(selectedDemand.projectName)} &bull; ${escapeHtml(selectedDemand.role)}</div>
+                    <div style="font-size:12px;color:#64748b;margin-top:2px">
+                        ${IC.loc} ${escapeHtml(selectedDemand.location || 'Remote')} &bull; Timeline: ${formatDateRange(selectedDemand.startDate, selectedDemand.endDate)} &bull; Required Allocation: <strong>${selectedDemand.allocationPercent}%</strong>
+                    </div>
+                </div>
+            </div>
+            <div>
+                ${badgeHtml(selectedDemand.priority, selectedDemand.priority.toLowerCase())}
+                ${badgeHtml(selectedDemand.status, selectedDemand.status.toLowerCase().replace('_','-'))}
+            </div>
+        </div>
+
+        ${candidates.length === 0 ? `
+            <div class="empty-state">
+                <div class="empty-icon">${IC.search}</div>
+                <div class="empty-title">No Matching Candidates Found</div>
+                <div class="empty-desc">No active employees currently meet the skill or availability thresholds for this role.</div>
+            </div>
+        ` : `
+            <div class="comparison-grid" style="grid-template-columns: repeat(${colCount}, minmax(280px, 1fr));gap:20px">
+                ${candidates.map((r, idx) => {
+                    const isBest = idx === 0;
+                    return `
+                    <div class="comparison-card ${isBest ? 'best-match' : ''}" style="background:#ffffff;border:1.5px solid ${isBest ? '#059669' : '#e2e8f0'};border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px;box-shadow:${isBest ? '0 8px 24px -4px rgba(5,150,105,0.15)' : '0 1px 3px rgba(0,0,0,0.03)'};position:relative">
+                        ${isBest ? '<span class="comparison-rank-badge top-pick" style="position:absolute;top:12px;right:12px;background:#ecfdf5;color:#059669;border:1px solid #6ee7b7;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:700">★ Top Pick</span>' : ''}
+
+                        <div style="display:flex;align-items:center;gap:12px;margin-top:${isBest ? '8px' : '0'}">
+                            <div class="candidate-avatar" style="width:48px;height:48px;font-size:18px;border-radius:50%;background:${isBest ? '#059669' : '#64748b'};color:#ffffff;display:flex;align-items:center;justify-content:center;font-weight:800">${escapeHtml(r.employeeName.charAt(0))}</div>
+                            <div>
+                                <div style="font-size:16px;font-weight:800;color:#0f172a">${escapeHtml(r.employeeName)}</div>
+                                <div style="font-size:12px;color:#64748b">${escapeHtml(r.employeeCode)} &bull; ${escapeHtml(r.department || 'Engineering')}</div>
+                            </div>
+                        </div>
+
+                        <!-- Match Score Box -->
+                        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;text-align:center">
+                            <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px">Match Score</div>
+                            <div style="font-size:36px;font-weight:800;color:${isBest ? '#059669' : '#0f172a'};margin:4px 0">${r.totalScore.toFixed(0)}%</div>
+                            <div style="font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;${r.meetsSkillRequirements && r.meetsAvailabilityRequirement ? 'background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0' : 'background:#fffbeb;color:#94a3b8;border:1px solid #e2e8f0'}">
+                                ${r.meetsSkillRequirements && r.meetsAvailabilityRequirement ? '✓ Ready to Work' : 'Partial Skills Match'}
+                            </div>
+                        </div>
+
+                        <!-- Availability & Location Details -->
+                        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px;font-size:12.5px">
+                            <div style="display:flex;justify-content:space-between;align-items:center">
+                                <span style="color:#64748b">Availability:</span>
+                                <strong style="color:#0f172a">${r.availablePercent}% Available</strong>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;align-items:center">
+                                <span style="color:#64748b">Location Fit:</span>
+                                <span style="font-weight:600;font-size:12px;color:${r.locationMatch ? '#059669' : '#64748b'}">
+                                    ${r.locationMatch ? '✓ Exact Match (' + escapeHtml(r.location) + ')' : escapeHtml(r.location || 'Remote')}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Skills Match Breakdown -->
+                        <div>
+                            <div style="font-size:11.5px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Matching Skills</div>
+                            <div style="display:flex;flex-direction:column;gap:6px">
+                                ${(r.matchedSkills || []).map(s => {
+                                    const lvl = Math.min(3, Math.max(1, s.proficiencyLevel));
+                                    const label = getProfLabel(lvl);
+                                    return `
+                                    <div style="display:flex;justify-content:space-between;align-items:center;background:#ffffff;border:1px solid #e2e8f0;border-radius:6px;padding:6px 10px">
+                                        <span style="font-weight:600;font-size:13px;color:#0f172a">${escapeHtml(s.skillName)}</span>
+                                        <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0">
+                                            Level ${lvl} (${label})
+                                        </span>
+                                    </div>`;
+                                }).join('')}
+                                ${(r.missingSkills || []).map(s => `
+                                    <div style="display:flex;justify-content:space-between;align-items:center;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:6px 10px">
+                                        <span style="color:#b91c1c;font-weight:600;font-size:13px">${escapeHtml(s.skillName)}</span>
+                                        <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;background:#fee2e2;color:#991b1b;border:1px solid #fca5a5">
+                                            Skill Gap
+                                        </span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <!-- Action Button -->
+                        <div style="margin-top:auto;padding-top:10px">
+                            <button class="btn ${isBest ? 'btn-primary' : 'btn-secondary'}" style="width:100%;padding:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:6px" onclick="showAllocateModal(${r.employeeId}, ${selectedDemand.id}, '${escapeHtml(r.employeeName)}')">
+                                ${IC.check} Allocate ${escapeHtml(r.employeeName.split(' ')[0])}
+                            </button>
+                        </div>
+                    </div>`;
+                }).join('')}
+            </div>
+        `}
+        `);
+    } catch (err) {
+        showApiError(err);
+    }
 }
 
 // ============================================================
@@ -5902,7 +6255,7 @@ function renderPage(page) {
         'self-service': renderSelfService,
         dashboard: renderDashboard,
         demands: renderDemands,
-        employees: renderEmployees,
+        compare: renderCandidateComparisonScreen,
         skills: renderSkills,
         search: renderSearch,
         allocations: renderAllocations,
