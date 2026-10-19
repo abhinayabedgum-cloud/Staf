@@ -36,6 +36,50 @@ SkillMatch is an enterprise talent allocation platform that matches employees to
 
 ---
 
+## Application Screens & Visual Walkthrough
+
+### 1. Demand Intake (`#demands`)
+Create and manage project staffing demands with role definitions, location, dates, capacity targets, and skill requirements.
+![Demand Intake](docs/screenshots/01_demand_intake.png)
+
+---
+
+### 2. Candidate Comparison & Benchmarking (`#compare`)
+Side-by-side candidate ranking against target project demands, matching skills, experience levels, and availability.
+![Candidate Comparison](docs/screenshots/02_candidate_comparison.png)
+
+---
+
+### 3. Allocation Approval & Governance (`#allocations`)
+Manager-authorized commitment review queue with interactive KPI filter cards (`Total Requests`, `Approved`, `Pending`, `Rejected`), streamlined columns, and committed audit log.
+![Allocation Approval](docs/screenshots/03_allocation_approval.png)
+
+---
+
+### 4. Utilization & Skill-Gap Dashboard (`#dashboard`)
+Workforce utilization analytics, departmental load distribution, skill gap metrics, and real-time bench availability.
+![Utilization Dashboard](docs/screenshots/04_utilization_dashboard.png)
+
+---
+
+### 5. Skill Matrix (`#skills`)
+Organization-wide skill matrix tracking employee competencies across key technologies and proficiency tiers (L1–L3).
+![Skill Matrix](docs/screenshots/05_skill_matrix.png)
+
+---
+
+### 6. Resource Search & Discovery (`#search`)
+Comprehensive talent search filterable by primary skill, work location, availability status, and department.
+![Resource Search](docs/screenshots/06_resource_search.png)
+
+---
+
+### 7. Employee Workforce Portal (`#portal`)
+Dedicated employee self-service portal to update availability, view assigned project commitments, and manage skill proficiencies.
+![Employee Workforce Portal](docs/screenshots/07_employee_portal.png)
+
+---
+
 ## Technology Stack
 
 - **Backend**: Java 21, Spring Boot 3.2, Spring Data JPA, Hibernate, Maven 3.9
