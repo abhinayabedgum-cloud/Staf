@@ -106,11 +106,8 @@ const authState = {
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="position:absolute;right:12px;pointer-events:none;color:#4338ca"><polyline points="6 9 12 15 18 9"/></svg>
                     </div>
                     <div class="user-session-pill">
-                        <div class="user-session-avatar" style="background:#d97706;color:#ffffff">M</div>
-                        <div style="display:flex;flex-direction:column;line-height:1.2">
-                            <span class="user-session-name" style="font-size:13px;font-weight:700;color:var(--text-primary)">Manager Cockpit</span>
-                            <span style="font-size:10px;font-weight:700;color:var(--accent-primary)">ROLE_MANAGER</span>
-                        </div>
+                        <div class="user-session-avatar" style="background:#059669;color:#ffffff">M</div>
+                        <span class="user-session-name" style="font-size:13px;font-weight:600;color:var(--text-primary)">Manager</span>
                         <button class="btn-logout" onclick="managerExit()" title="Logout / Exit" style="margin-left:4px">Exit</button>
                     </div>
                 </div>
